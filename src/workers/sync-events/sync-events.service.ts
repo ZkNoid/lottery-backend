@@ -30,10 +30,10 @@ export class SyncEventsService implements OnApplicationBootstrap {
 
       const events = await StateSinglton.fetchEvents(
         network.networkID,
-        lastEvent ? lastEvent.blockHeight + 1 : 0,
+        lastEvent ? lastEvent.blockHeight : 0,
       );
 
-      const newEvents = events.map(
+      let newEvents = events.map(
         (x) =>
           new this.minaEventData({
             type: x.type,
@@ -52,6 +52,13 @@ export class SyncEventsService implements OnApplicationBootstrap {
             chainStatus: x.chainStatus,
           }),
       );
+
+      if (Number(events[0].blockHeight.toBigint()) != lastEvent.blockHeight) {
+        console.log('Found orphaned block', events[0].blockHeight);
+        await this.minaEventData.deleteOne({_id: lastEvent._id})
+      } else {
+        newEvents = newEvents.splice(1)
+      }
 
       await this.minaEventData.insertMany(newEvents);
       
