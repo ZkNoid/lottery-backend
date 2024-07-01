@@ -3,15 +3,17 @@ import { Cron } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
 import { StateSinglton } from 'src/state-manager';
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  BaseEventDocument,
-  MinaEventData,
-  MinaEventDocument,
-} from '../schema/events.schema';
 import { Model } from 'mongoose';
-import { Field, Mina, PrivateKey, UInt32, fetchLastBlock } from 'o1js';
+import {
+  Field,
+  Mina,
+  PrivateKey,
+  PublicKey,
+  UInt32,
+  fetchLastBlock,
+} from 'o1js';
 import { HttpService } from '@nestjs/axios';
-import { NumberPacked } from 'l1-lottery-contracts';
+import { NumberPacked, Ticket } from 'l1-lottery-contracts';
 import { RoundsData } from '../schema/rounds.schema';
 
 function randomIntFromInterval(min, max) {
@@ -20,15 +22,17 @@ function randomIntFromInterval(min, max) {
 }
 
 @Injectable()
-export class ProduceResultService implements OnApplicationBootstrap {
+export class DistributionProvingService implements OnApplicationBootstrap {
   constructor(
     private readonly httpService: HttpService,
+    @InjectModel(RoundsData.name)
+    private rounds: Model<RoundsData>,
   ) {}
   async onApplicationBootstrap() {
     await this.handleCron();
   }
 
-  @Cron('45 * * * * *')
+  // @Cron('45 * * * * *')
   async handleCron() {
     for (let network of ALL_NETWORKS) {
       console.log(
@@ -73,41 +77,30 @@ export class ProduceResultService implements OnApplicationBootstrap {
       console.log('Current round id', currentRoundId);
 
       for (let roundId = 0; roundId < currentRoundId; roundId++) {
-        const result = StateSinglton.state[
-          network.networkID
-        ].roundResultMap.get(Field.from(roundId));
+        console.log('Round', roundId);
+        if (!(await this.rounds.findOne({ roundId: roundId }))?.dp) {
+          console.log('Generation of DP', roundId);
 
-        console.log('Round', roundId, 'Result', result.toBigInt());
+          let dp = await StateSinglton.state[network.networkID].getDP(roundId);
 
-        if (result.toBigInt() == 0n) {
-          console.log('Producing resukt', roundId);
+          console.log('DP generated');
 
-          let resultWiness =
-            StateSinglton.state[network.networkID].updateResult(roundId);
-
-          // console.log(`Digest: `, await MockLottery.digest());
-          const sender = PrivateKey.fromBase58(process.env.PK);
-          console.log('Tx init');
-
-          const randomCombilation = Array.from({ length: 6 }, () =>
-            randomIntFromInterval(1, 9),
-          );
-          console.log('Setting combination', randomCombilation);
-          let tx = await Mina.transaction(
-            { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
-            async () => {
-              await StateSinglton.lottery[network.networkID].produceResult(
-                resultWiness,
-                NumberPacked.pack(randomCombilation.map((x) => UInt32.from(x))),
-              );
-            },
-          );
-          console.log('Proving tx');
-          await tx.prove();
-          console.log('Proved tx');
-          let txResult = await tx.sign([sender]).send();
-
-          console.log(`Tx successful. Hash: `, txResult.hash);
+          // console.log('Distribution proof', dp.toJSON());
+          await this.rounds
+            .updateOne(
+              {
+                roundId,
+              },
+              {
+                $set: {
+                  dp: JSON.stringify(dp.toJSON()),
+                },
+              },
+              {
+                upsert: true,
+              },
+            )
+            .exec();
         }
       }
     }

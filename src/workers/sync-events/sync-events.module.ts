@@ -3,10 +3,6 @@ import { MinaEventData, MinaEventDataSchema } from '../schema/events.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { SyncEventsService } from './sync-events.service';
 import { ScheduleModule } from '@nestjs/schedule';
-import {
-  SyncStateData,
-  SyncStateDataSchema,
-} from '../schema/sync-state.schema';
 
 @Module({
   imports: [
@@ -15,10 +11,6 @@ import {
       {
         name: MinaEventData.name,
         schema: MinaEventDataSchema,
-      },
-      {
-        name: SyncStateData.name,
-        schema: SyncStateDataSchema,
       },
     ]),
   ],

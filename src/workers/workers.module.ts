@@ -7,10 +7,11 @@ import { ConfigService } from '@nestjs/config';
 import { SyncEventsModule } from './sync-events/sync-events.module';
 import { ProduceResultEvent } from 'l1-lottery-contracts/build/src/Lottery';
 import { ProduceResultModule } from './produce-result/produce-result.module';
+import { DistributionProvingModule } from './distribution-proving/distribution-proving.module';
 
 @Module({
   imports: [MongooseModule.forRootAsync({
-    imports: [ZknoidConfigModule, SyncEventsModule, ProduceResultModule],
+    imports: [ZknoidConfigModule, SyncEventsModule, ProduceResultModule, DistributionProvingModule],
     useFactory: async () => ({
       uri: process.env.MONGODB_URI,
       dbName: process.env.MONGODB_DB,

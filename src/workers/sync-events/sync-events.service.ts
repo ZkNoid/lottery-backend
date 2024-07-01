@@ -9,15 +9,12 @@ import {
   MinaEventDocument,
 } from '../schema/events.schema';
 import { Model } from 'mongoose';
-import { SyncStateData } from '../schema/sync-state.schema';
 
 @Injectable()
 export class SyncEventsService implements OnApplicationBootstrap {
   constructor(
     @InjectModel(MinaEventData.name)
     private minaEventData: Model<MinaEventData>,
-    @InjectModel(SyncStateData.name)
-    private syncState: Model<SyncStateData>,
   ) {}
   async onApplicationBootstrap() {
     await StateSinglton.initialize();
