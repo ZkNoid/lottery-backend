@@ -2,14 +2,25 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Mixed, SchemaTypes, Types } from 'mongoose';
 
 export type RoundsDocument = BaseRoundsDocument & Document;
-
+class Proof {
+  @Prop()
+  publicInput: string[];
+  @Prop()
+  publicOutput: string[];
+  @Prop()
+  maxProofsVerified: 0 | 1 | 2;
+  @Prop()
+  proof: string;
+}
 class BaseRoundsDocument extends Document {
   @Prop({ type: SchemaTypes.ObjectId, auto: true })
   _id: Types.ObjectId;
   @Prop()
   roundId: number;
   @Prop()
-  dp: string;
+  dp: Proof;
+  @Prop()
+  total: number
 }
 
 @Schema({ timestamps: true, collection: 'rounds' })

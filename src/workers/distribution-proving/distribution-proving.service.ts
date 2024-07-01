@@ -93,7 +93,8 @@ export class DistributionProvingService implements OnApplicationBootstrap {
               },
               {
                 $set: {
-                  dp: JSON.stringify(dp.toJSON()),
+                  dp: dp.toJSON(),
+                  total: Number(dp.publicOutput.total.toBigInt())
                 },
               },
               {
