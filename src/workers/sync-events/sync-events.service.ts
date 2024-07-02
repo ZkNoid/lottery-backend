@@ -23,9 +23,9 @@ export class SyncEventsService implements OnApplicationBootstrap {
 
   @Cron('45 * * * * *')
   async handleCron() {
+    console.log('Events sync');
     for (let network of ALL_NETWORKS) {
       const dbEvents = await this.minaEventData.find({});
-      // console.log('Db events', dbEvents);
       const lastEvent = await this.minaEventData.findOne({}).sort({ _id: -1 });
 
       const events = await StateSinglton.fetchEvents(
@@ -33,7 +33,7 @@ export class SyncEventsService implements OnApplicationBootstrap {
         lastEvent ? lastEvent.blockHeight : 0,
       );
 
-      let newEvents = events.map(
+      let fetchedEvents = events.map(
         (x) =>
           new this.minaEventData({
             type: x.type,
@@ -53,18 +53,29 @@ export class SyncEventsService implements OnApplicationBootstrap {
           }),
       );
 
-      if (Number(events[0].blockHeight.toBigint()) != lastEvent.blockHeight) {
-        console.log('Found orphaned block', events[0].blockHeight);
-        await this.minaEventData.deleteOne({_id: lastEvent._id})
-      } else {
-        newEvents = newEvents.splice(1)
+      console.log('New events', events);
+
+      const eventsToVerifyUncles = fetchedEvents.filter((x) =>
+        lastEvent ? x.blockHeight == lastEvent.blockHeight : false,
+      );
+      const newFetchedEvents = fetchedEvents.filter((x) =>
+        lastEvent ? x.blockHeight > lastEvent.blockHeight : true,
+      );
+
+      if (eventsToVerifyUncles.length == 0) {
+        await this.minaEventData.deleteMany({
+          blockHeight: lastEvent.blockHeight,
+        });
       }
 
-      await this.minaEventData.insertMany(newEvents);
-      
-      const allEvents = [...dbEvents, ...newEvents];
+      await this.minaEventData.insertMany(newFetchedEvents);
 
-      if (newEvents.length > 0 || !StateSinglton.stateInitialized[network.networkID])
+      const allEvents = [...dbEvents, ...newFetchedEvents];
+
+      if (
+        newFetchedEvents.length > 0 ||
+        !StateSinglton.stateInitialized[network.networkID]
+      )
         StateSinglton.initState(network.networkID, allEvents);
     }
   }
