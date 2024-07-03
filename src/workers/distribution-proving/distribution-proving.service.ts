@@ -1,5 +1,5 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
 import { StateSinglton } from 'src/state-manager';
 import { InjectModel } from '@nestjs/mongoose';
@@ -29,10 +29,10 @@ export class DistributionProvingService implements OnApplicationBootstrap {
     private rounds: Model<RoundsData>,
   ) {}
   async onApplicationBootstrap() {
-    await this.handleCron();
+    // await this.handleCron();
   }
 
-  @Cron('45 * * * * *')
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async handleCron() {
     for (let network of ALL_NETWORKS) {
       console.log(
