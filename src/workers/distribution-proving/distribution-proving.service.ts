@@ -32,7 +32,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
     await this.handleCron();
   }
 
-  // @Cron('45 * * * * *')
+  @Cron('45 * * * * *')
   async handleCron() {
     for (let network of ALL_NETWORKS) {
       console.log(
