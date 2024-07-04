@@ -25,7 +25,7 @@ import { MinaEventDocument } from './workers/schema/events.schema';
 
 export class StateSinglton {
   static initialized: boolean;
-  static stateInitialized: Record<string, boolean> = {};;
+  static stateInitialized: Record<string, boolean> = {};
 
   static distributionProof: DistributionProof;
   static lottery: Record<string, Lottery> = {};
@@ -148,6 +148,10 @@ export class StateSinglton {
   }
 
   static async initState(networkID: string, events: MinaEventDocument[]) {
+    this.state[networkID] = new StateManager(
+      UInt32.from(this.lottery[networkID].startBlock.get()).toFields()[0],
+      false,
+    );
     this.state[networkID].syncWithCurBlock(events.at(-1).globalSlot);
     for (let event of events) {
       const data = this.lottery[networkID].events[event.type].fromJSON(
