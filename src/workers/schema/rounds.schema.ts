@@ -20,6 +20,8 @@ class BaseRoundsDocument extends Document {
   @Prop()
   dp: Proof;
   @Prop()
+  events: Mixed[];
+  @Prop()
   total: number
 }
 
