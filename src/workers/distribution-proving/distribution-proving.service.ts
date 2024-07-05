@@ -94,7 +94,14 @@ export class DistributionProvingService implements OnApplicationBootstrap {
               {
                 $set: {
                   dp: dp.toJSON(),
-                  total: Number(dp.publicOutput.total.toBigInt())
+                  events: StateSinglton.state[network.networkID]!.roundTickets[
+                    roundId
+                  ].map((x) => ({
+                    amount: Number(x.amount.toBigInt()),
+                    numbers: x.numbers.map(x => x.toBigint()),
+                    owner: x.owner.toBase58()
+                  })),
+                  total: Number(dp.publicOutput.total.toBigInt()),
                 },
               },
               {
