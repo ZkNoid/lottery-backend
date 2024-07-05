@@ -78,7 +78,12 @@ export class DistributionProvingService implements OnApplicationBootstrap {
 
       for (let roundId = 0; roundId < currentRoundId; roundId++) {
         console.log('Round', roundId);
-        if (!(await this.rounds.findOne({ roundId: roundId }))?.dp) {
+        const result = StateSinglton.state[
+          network.networkID
+        ].roundResultMap.get(Field.from(roundId));
+
+        console.log('Round result', result.toBigInt())
+        if (!(await this.rounds.findOne({ roundId: roundId }))?.dp && result.toBigInt() > 0) {
           console.log('Generation of DP', roundId);
 
           let dp = await StateSinglton.state[network.networkID].getDP(roundId);
