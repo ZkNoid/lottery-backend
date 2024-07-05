@@ -90,7 +90,14 @@ export class DistributionProvingService implements OnApplicationBootstrap {
 
           console.log('DP generated');
 
-          // console.log('Distribution proof', dp.toJSON());
+          const events = StateSinglton.state[network.networkID]!.roundTickets[
+            roundId
+          ].map((x) => ({
+            amount: Number(x.amount.toBigInt()),
+            numbers: x.numbers.map(x => Number(x.toBigint())),
+            owner: x.owner.toBase58()
+          }));
+          console.log('Distribution proof events', events);
           await this.rounds
             .updateOne(
               {
@@ -99,13 +106,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
               {
                 $set: {
                   dp: dp.toJSON(),
-                  events: StateSinglton.state[network.networkID]!.roundTickets[
-                    roundId
-                  ].map((x) => ({
-                    amount: Number(x.amount.toBigInt()),
-                    numbers: x.numbers.map(x => x.toBigint()),
-                    owner: x.owner.toBase58()
-                  })),
+                  events: events,
                   total: Number(dp.publicOutput.total.toBigInt()),
                 },
               },
