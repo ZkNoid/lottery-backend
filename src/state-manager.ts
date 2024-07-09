@@ -11,8 +11,9 @@ import {
 import { ALL_NETWORKS, NETWORKS, NetworkIds } from './constants/networks';
 import {
   DistibutionProgram,
-  Lottery,
-  StateManager,
+  PLottery,
+  PStateManager,
+  TicketReduceProgram,
   getNullifierId,
 } from 'l1-lottery-contracts';
 import { LOTTERY_ADDRESS } from './constants/addresses';
@@ -28,8 +29,8 @@ export class StateSinglton {
   static stateInitialized: Record<string, boolean> = {};
 
   static distributionProof: DistributionProof;
-  static lottery: Record<string, Lottery> = {};
-  static state: Record<string, StateManager> = {};
+  static lottery: Record<string, PLottery> = {};
+  static state: Record<string, PStateManager> = {};
 
   static async initialize(): Promise<void> {
     if (this.initialized) return;
@@ -48,7 +49,7 @@ export class StateSinglton {
     console.log('Network set');
 
     for (let network of ALL_NETWORKS) {
-      const lottery = new Lottery(
+      const lottery = new PLottery(
         PublicKey.fromBase58(LOTTERY_ADDRESS[network.networkID]),
       );
       await fetchAccount({
@@ -57,7 +58,8 @@ export class StateSinglton {
       console.log('Lottery', lottery.startBlock.get());
 
       this.lottery[network.networkID] = lottery;
-      this.state[network.networkID] = new StateManager(
+      this.state[network.networkID] = new PStateManager(
+        lottery,
         UInt32.from(lottery.startBlock.get()).toFields()[0],
         false,
       );
@@ -70,9 +72,17 @@ export class StateSinglton {
     console.log('Compilation ended');
 
     console.log('Compilation');
-    await Lottery.compile({
+    await TicketReduceProgram.compile({
       cache: Cache.FileSystem('./cache'),
     });
+
+    console.log('Compilation ended');
+
+    console.log('Compilation');
+    await PLottery.compile({
+      cache: Cache.FileSystem('./cache'),
+    });
+
     console.log('Compilation ended');
 
     this.initialized = true;
@@ -148,7 +158,8 @@ export class StateSinglton {
   }
 
   static async initState(networkID: string, events: MinaEventDocument[]) {
-    this.state[networkID] = new StateManager(
+    this.state[networkID] = new PStateManager(
+      this.lottery[networkID],
       UInt32.from(this.lottery[networkID].startBlock.get()).toFields()[0],
       false,
     );

@@ -62,7 +62,7 @@ export class SyncEventsService implements OnApplicationBootstrap {
         lastEvent ? x.blockHeight > lastEvent.blockHeight : true,
       );
 
-      if (eventsToVerifyUncles.length == 0) {
+      if (lastEvent && eventsToVerifyUncles.length == 0) {
         await this.minaEventData.deleteMany({
           blockHeight: lastEvent.blockHeight,
         });
