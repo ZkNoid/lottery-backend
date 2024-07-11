@@ -8,16 +8,24 @@ import { SyncEventsModule } from './sync-events/sync-events.module';
 import { ProduceResultEvent } from 'l1-lottery-contracts/build/src/Lottery';
 import { ProduceResultModule } from './produce-result/produce-result.module';
 import { DistributionProvingModule } from './distribution-proving/distribution-proving.module';
+import { ProveReduceModule } from './reduce-proving/reduce-proving.module';
 
 @Module({
-  imports: [MongooseModule.forRootAsync({
-    imports: [ZknoidConfigModule, SyncEventsModule, ProduceResultModule, DistributionProvingModule],
-    useFactory: async () => ({
-      uri: process.env.MONGODB_URI,
-      dbName: process.env.MONGODB_DB,
+  imports: [
+    MongooseModule.forRootAsync({
+      imports: [
+        ZknoidConfigModule,
+        SyncEventsModule,
+        ProduceResultModule,
+        DistributionProvingModule,
+        ProveReduceModule,
+      ],
+      useFactory: async () => ({
+        uri: process.env.MONGODB_URI,
+        dbName: process.env.MONGODB_DB,
+      }),
+      inject: [ConfigService],
     }),
-    inject: [ConfigService],
-  }),
-],
+  ],
 })
 export class WorkersModule {}
