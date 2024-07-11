@@ -30,6 +30,9 @@ export class ProduceResultService implements OnApplicationBootstrap {
 
   @Cron('45 * * * * *')
   async handleCron() {
+    if (StateSinglton.inReduceProving) return;
+    StateSinglton.inReduceProving = true;
+
     for (let network of ALL_NETWORKS) {
       console.log(
         'StateSinglton state',
@@ -110,5 +113,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
         }
       }
     }
+
+    StateSinglton.inReduceProving = false;
   }
 }
