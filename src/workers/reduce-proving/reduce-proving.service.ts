@@ -75,9 +75,9 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
         console.log('Reduce proof', reduceProof);
 
-        // let tx2_1 = await Mina.transaction({ sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 }, async () => {
-        //   await StateSinglton.lottery[network.networkID].reduceTickets(reduceProof, Field(1));
-        // });
+        let tx2_1 = await Mina.transaction({ sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 }, async () => {
+          await StateSinglton.lottery[network.networkID].reduceTickets(reduceProof, Field(1));
+        });
       }
     }
   }
