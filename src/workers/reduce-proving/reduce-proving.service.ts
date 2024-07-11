@@ -23,6 +23,9 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
   @Cron('45 * * * * *')
   async handleCron() {
+    if (StateSinglton.inReduceProving) return;
+    StateSinglton.inReduceProving = true;
+    
     console.log('REDUCE PROVING');
     for (let network of ALL_NETWORKS) {
       const data = await this.httpService.axiosRef.post(
@@ -80,5 +83,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
         });
       }
     }
+
+    StateSinglton.inReduceProving = false;
   }
 }

@@ -28,6 +28,8 @@ export class StateSinglton {
   static initialized: boolean;
   static stateInitialized: Record<string, boolean> = {};
 
+  static inReduceProving = false;
+
   static distributionProof: DistributionProof;
   static lottery: Record<string, PLottery> = {};
   static state: Record<string, PStateManager> = {};
