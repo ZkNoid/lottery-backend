@@ -13,7 +13,7 @@ import {
   fetchLastBlock,
 } from 'o1js';
 import { HttpService } from '@nestjs/axios';
-import { NumberPacked, Ticket } from 'l1-lottery-contracts';
+import { BLOCK_PER_ROUND, NumberPacked, Ticket } from 'l1-lottery-contracts';
 import { RoundsData } from '../schema/rounds.schema';
 
 function randomIntFromInterval(min, max) {
@@ -69,7 +69,6 @@ export class DistributionProvingService implements OnApplicationBootstrap {
           .slotSinceGenesis;
       const startBlock =
         StateSinglton.lottery[network.networkID].startBlock.get();
-      const BLOCK_PER_ROUND = 480;
 
       const currentRoundId = Math.floor(
         (slotSinceGenesis - Number(startBlock)) / BLOCK_PER_ROUND,

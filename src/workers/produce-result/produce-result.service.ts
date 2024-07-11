@@ -11,7 +11,7 @@ import {
 import { Model } from 'mongoose';
 import { Field, Mina, PrivateKey, UInt32, fetchLastBlock } from 'o1js';
 import { HttpService } from '@nestjs/axios';
-import { NumberPacked } from 'l1-lottery-contracts';
+import { BLOCK_PER_ROUND, NumberPacked } from 'l1-lottery-contracts';
 import { RoundsData } from '../schema/rounds.schema';
 
 function randomIntFromInterval(min, max) {
@@ -65,7 +65,6 @@ export class ProduceResultService implements OnApplicationBootstrap {
           .slotSinceGenesis;
       const startBlock =
         StateSinglton.lottery[network.networkID].startBlock.get();
-      const BLOCK_PER_ROUND = 480;
 
       const currentRoundId = Math.floor(
         (slotSinceGenesis - Number(startBlock)) / BLOCK_PER_ROUND,
