@@ -21,9 +21,7 @@ function randomIntFromInterval(min, max) {
 
 @Injectable()
 export class ProduceResultService implements OnApplicationBootstrap {
-  constructor(
-    private readonly httpService: HttpService,
-  ) {}
+  constructor(private readonly httpService: HttpService) {}
   async onApplicationBootstrap() {
     await this.handleCron();
   }
@@ -34,6 +32,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
     StateSinglton.inReduceProving = true;
 
     for (let network of ALL_NETWORKS) {
+      try {
       console.log(
         'StateSinglton state',
         StateSinglton.initialized,
@@ -110,9 +109,13 @@ export class ProduceResultService implements OnApplicationBootstrap {
           let txResult = await tx.sign([sender]).send();
 
           console.log(`Tx successful. Hash: `, txResult.hash);
+          console.log('Waiting for tx');
+          await txResult.wait();
         }
       }
-    }
+    } catch(e) {
+      console.log('Error', e)
+    }}
 
     StateSinglton.inReduceProving = false;
   }

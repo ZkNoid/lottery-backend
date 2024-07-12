@@ -1,5 +1,5 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
 import { StateSinglton } from 'src/state-manager';
 import { InjectModel } from '@nestjs/mongoose';
@@ -21,7 +21,7 @@ export class SyncEventsService implements OnApplicationBootstrap {
     await this.handleCron();
   }
 
-  @Cron('45 * * * * *')
+  @Cron(CronExpression.EVERY_5_SECONDS)
   async handleCron() {
     console.log('Events sync');
     for (let network of ALL_NETWORKS) {

@@ -165,7 +165,8 @@ export class StateSinglton {
       UInt32.from(this.lottery[networkID].startBlock.get()).toFields()[0],
       false,
     );
-    this.state[networkID].syncWithCurBlock(events.at(-1).globalSlot);
+    if (events.length != 0)
+      this.state[networkID].syncWithCurBlock(events.at(-1).globalSlot);
     for (let event of events) {
       const data = this.lottery[networkID].events[event.type].fromJSON(
         event.event.data as undefined as any,

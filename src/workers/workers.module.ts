@@ -16,8 +16,8 @@ import { ProveReduceModule } from './reduce-proving/reduce-proving.module';
       imports: [
         ZknoidConfigModule,
         SyncEventsModule,
-        ProduceResultModule,
-        DistributionProvingModule,
+        // ProduceResultModule,
+        // DistributionProvingModule,
         ProveReduceModule,
       ],
       useFactory: async () => ({
