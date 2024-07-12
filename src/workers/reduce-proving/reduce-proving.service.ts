@@ -94,6 +94,14 @@ export class ProveReduceService implements OnApplicationBootstrap {
               );
             },
           );
+          console.log('Proving reduce tx');
+          await tx2_1.prove();
+          console.log('Proved reduce tx');
+          let txResult = await tx2_1.sign([sender]).send();
+
+          console.log(`Reduce tx successful. Hash: `, txResult.hash);
+          console.log('Waiting for reduce tx');
+          await txResult.wait();
         }
       }
     } catch (e) {
