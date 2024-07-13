@@ -180,7 +180,7 @@ export class StateSinglton {
           data.round,
         );
 
-        this.state[networkID].addTicket(data.ticket, +data.round);
+        this.state[networkID].addTicket(data.ticket, +data.round, true);
       }
       if (event.type == 'produce-result') {
         console.log('Produced result', event.event.data, 'round' + data.round);

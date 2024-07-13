@@ -33,6 +33,8 @@ export class SyncEventsService implements OnApplicationBootstrap {
         lastEvent ? lastEvent.blockHeight : 0,
       );
 
+      const tickets = await StateSinglton.lottery[network.networkID].reducer.fetchActions();
+
       let fetchedEvents = events.map(
         (x) =>
           new this.minaEventData({

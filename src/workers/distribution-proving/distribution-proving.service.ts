@@ -81,7 +81,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
           network.networkID
         ].roundResultMap.get(Field.from(roundId));
 
-        console.log('Round result', result.toBigInt())
+        console.log('Round result', result.toBigInt(), Field.empty().toBigInt())
         if (!(await this.rounds.findOne({ roundId: roundId }))?.dp && result.toBigInt() > 0) {
           console.log('Generation of DP', roundId);
 
