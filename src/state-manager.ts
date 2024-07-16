@@ -180,7 +180,13 @@ export class StateSinglton {
           data.round,
         );
 
-        this.state[networkID].addTicket(data.ticket, +data.round, true);
+        console.log(
+          `Root before add ticket: ${this.state[networkID].ticketMap.getRoot().toString()}`,
+        );
+        this.state[networkID].addTicket(data.ticket, +data.round, false);
+        console.log(
+          `Root after add ticket: ${this.state[networkID].ticketMap.getRoot().toString()}`,
+        );
       }
       if (event.type == 'produce-result') {
         console.log('Produced result', event.event.data, 'round' + data.round);
@@ -215,6 +221,30 @@ export class StateSinglton {
           getNullifierId(Field.from(data.round), Field.from(ticketId)),
           Field(1),
         );
+      }
+
+      if (event.type == 'reduce') {
+        console.log('Reduce: ', event.event.data, 'round' + data.round);
+        let fromActionState = data.startActionState;
+        let endActionState = data.endActionState;
+
+        let actions = await this.lottery[networkID].reducer.fetchActions({
+          fromActionState,
+          endActionState,
+        });
+
+        actions.flat(1).map((action) => {
+          this.state[networkID].addTicket(action.ticket, +action.round, true);
+
+          if (
+            this.state[networkID].processedTicketData.round == +action.round
+          ) {
+            this.state[networkID].processedTicketData.ticketId++;
+          } else {
+            this.state[networkID].processedTicketData.ticketId = 0;
+            this.state[networkID].processedTicketData.round = +action.round;
+          }
+        });
       }
     }
     this.stateInitialized[networkID] = true;
