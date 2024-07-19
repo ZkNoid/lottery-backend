@@ -21,7 +21,7 @@ export class SyncEventsService implements OnApplicationBootstrap {
     await this.handleCron();
   }
 
-  @Cron(CronExpression.EVERY_5_SECONDS)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
     console.log('Events sync');
     for (let network of ALL_NETWORKS) {
@@ -33,7 +33,7 @@ export class SyncEventsService implements OnApplicationBootstrap {
         lastEvent ? lastEvent.blockHeight : 0,
       );
 
-      const tickets = await StateSinglton.lottery[network.networkID].reducer.fetchActions();
+      // const tickets = await StateSinglton.lottery[network.networkID].reducer.fetchActions();
 
       let fetchedEvents = events.map(
         (x) =>
