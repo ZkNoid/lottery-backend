@@ -180,13 +180,7 @@ export class StateSinglton {
           data.round,
         );
 
-        console.log(
-          `Root before add ticket: ${this.state[networkID].ticketMap.getRoot().toString()}`,
-        );
         this.state[networkID].addTicket(data.ticket, +data.round, false);
-        console.log(
-          `Root after add ticket: ${this.state[networkID].ticketMap.getRoot().toString()}`,
-        );
       }
       if (event.type == 'produce-result') {
         console.log('Produced result', event.event.data, 'round' + data.round);
