@@ -178,7 +178,6 @@ export class StateSinglton {
     if (events.length != 0)
       this.state[networkID].syncWithCurBlock(events.at(-1).globalSlot);
 
-
     this.state[networkID].processedTicketData.ticketId = Number(
       this.lottery[networkID].lastProcessedTicketId.get().toBigInt(),
     );
@@ -261,7 +260,7 @@ export class StateSinglton {
           ) {
             this.state[networkID].processedTicketData.ticketId++;
           } else {
-            this.state[networkID].processedTicketData.ticketId = 0;
+            this.state[networkID].processedTicketData.ticketId = 1;
             this.state[networkID].processedTicketData.round = +action.round;
           }
         });
