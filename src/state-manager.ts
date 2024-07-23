@@ -13,6 +13,7 @@ import {
   DistibutionProgram,
   PLottery,
   PStateManager,
+  Ticket,
   TicketReduceProgram,
   getNullifierId,
 } from 'l1-lottery-contracts';
@@ -35,6 +36,7 @@ export class StateSinglton {
   static distributionProof: DistributionProof;
   static lottery: Record<string, PLottery> = {};
   static state: Record<string, PStateManager> = {};
+  static boughtTickets: Record<string, Ticket[][]> = {};
 
   static async initialize(): Promise<void> {
     if (this.initialized) return;
@@ -169,19 +171,24 @@ export class StateSinglton {
   }
 
   static async initState(networkID: string, events: MinaEventDocument[]) {
-    this.state[networkID] = new PStateManager(
+    const stateM = new PStateManager(
       this.lottery[networkID],
       UInt32.from(this.lottery[networkID].startBlock.get()).toFields()[0],
       false,
     );
     console.log('Sync with block', events.at(-1).globalSlot);
-    if (events.length != 0)
-      this.state[networkID].syncWithCurBlock(events.at(-1).globalSlot);
+    if (events.length != 0) stateM.syncWithCurBlock(events.at(-1).globalSlot);
 
-    this.state[networkID].processedTicketData.ticketId = Number(
+    const boughtTickets = [] as Ticket[][];
+
+    for (let i = 0; i < stateM.roundTickets.length; i++) {
+      boughtTickets.push([]);
+    }
+
+    stateM.processedTicketData.ticketId = Number(
       this.lottery[networkID].lastProcessedTicketId.get().toBigInt(),
     );
-    this.state[networkID].processedTicketData.round = Number(
+    stateM.processedTicketData.round = Number(
       this.lottery[networkID].lastReduceInRound.get().toBigInt(),
     );
 
@@ -198,13 +205,14 @@ export class StateSinglton {
           data.round,
         );
 
+        boughtTickets[data.round].push(data.ticket);
         // this.state[networkID].addTicket(data.ticket, +data.round, false);
         console.log('Adding ticket');
       }
       if (event.type == 'produce-result') {
         console.log('Produced result', event.event.data, 'round' + data.round);
 
-        this.state[networkID].roundResultMap.set(data.round, data.result);
+        stateM.roundResultMap.set(data.round, data.result);
       }
       if (event.type == 'get-reward') {
         console.log('Got reward', event.event.data, 'round' + data.round);
@@ -212,25 +220,21 @@ export class StateSinglton {
         let ticketId = 0;
         let roundTicketWitness;
 
-        for (
-          ;
-          ticketId < this.state[networkID].lastTicketInRound[+data.round];
-          ticketId++
-        ) {
+        for (; ticketId < stateM.lastTicketInRound[+data.round]; ticketId++) {
           if (
-            this.state[networkID].roundTicketMap[+data.round]
+            stateM.roundTicketMap[+data.round]
               .get(Field(ticketId))
               .equals(data.ticket.hash())
               .toBoolean()
           ) {
-            roundTicketWitness = this.state[networkID].roundTicketMap[
-              +data.round
-            ].getWitness(Field.from(ticketId));
+            roundTicketWitness = stateM.roundTicketMap[+data.round].getWitness(
+              Field.from(ticketId),
+            );
             break;
           }
         }
 
-        this.state[networkID].ticketNullifierMap.set(
+        stateM.ticketNullifierMap.set(
           getNullifierId(Field.from(data.round), Field.from(ticketId)),
           Field(1),
         );
@@ -253,19 +257,19 @@ export class StateSinglton {
             +action.round,
           );
 
-          this.state[networkID].addTicket(action.ticket, +action.round, true);
+          stateM.addTicket(action.ticket, +action.round, true);
 
-          if (
-            this.state[networkID].processedTicketData.round == +action.round
-          ) {
-            this.state[networkID].processedTicketData.ticketId++;
+          if (stateM.processedTicketData.round == +action.round) {
+            stateM.processedTicketData.ticketId++;
           } else {
-            this.state[networkID].processedTicketData.ticketId = 1;
-            this.state[networkID].processedTicketData.round = +action.round;
+            stateM.processedTicketData.ticketId = 1;
+            stateM.processedTicketData.round = +action.round;
           }
         });
       }
     }
+    this.state[networkID] = stateM;
     this.stateInitialized[networkID] = true;
+    this.boughtTickets[networkID] = boughtTickets;
   }
 }

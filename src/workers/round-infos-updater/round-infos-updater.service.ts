@@ -56,18 +56,21 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
         console.log('Current round id', currentRoundId);
 
         for (let roundId = 0; roundId <= currentRoundId; roundId++) {
+          const boughtTickets =
+            StateSinglton.boughtTickets[network.networkID][roundId];
+
           const winningCombination = NumberPacked.unpackToBigints(
             stateM.roundResultMap.get(Field.from(roundId)),
           )
             .map((v) => Number(v))
             .slice(0, 6);
 
-          const roundBank = stateM.roundTickets[roundId]
+          const roundBank = boughtTickets
             .filter((x) => !x.numbers.every((x) => x.toBigint() == 0n))
             .map((x) => x.amount.toBigInt() * TICKET_PRICE.toBigInt())
             .reduce((x, y) => x + y, 0n);
 
-          const ticketsShares = stateM.roundTickets[roundId].map((x) => {
+          const ticketsShares = boughtTickets.map((x) => {
             const ticketShares =
               SCORE_COEFFICIENTS[
                 Array.from({ length: 6 }, (p, i) => i)
@@ -92,10 +95,10 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
               {
                 $set: {
                   roundId,
-                  bank: stateM.roundTickets[roundId]
+                  bank: boughtTickets
                     .map((x) => x.amount.toBigInt())
                     .reduce((x, y) => x + y, 0n),
-                  tickets: stateM.roundTickets[roundId].map((x, i) => ({
+                  tickets: boughtTickets.map((x, i) => ({
                     amount: x.amount.toBigInt(),
                     numbers: x.numbers.map((x) => Number(x.toBigint())),
                     owner: x.owner.toBase58(),
