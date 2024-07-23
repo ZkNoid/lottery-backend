@@ -87,6 +87,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
           });
 
           const totalShares = ticketsShares.reduce((x, y) => x + y, 0n);
+
           await this.rounds
             .updateOne(
               {
@@ -111,11 +112,9 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
                       .equals(Field.from(1))
                       .toBoolean(),
                   })),
-                  winningCombination:
-                    !winningCombination ||
-                    winningCombination.every((x) => x == 0)
-                      ? undefined
-                      : winningCombination,
+                  winningCombination: winningCombination.every((x) => !x)
+                    ? null
+                    : winningCombination,
                 },
               },
               {
@@ -127,7 +126,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
       }
     } catch (e) {
       console.log('Round info update error', e);
-      this.running = false;
     }
+    this.running = false;
   }
 }

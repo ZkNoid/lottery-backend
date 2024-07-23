@@ -31,7 +31,7 @@ class BaseRoundsDocument extends Document {
   @Prop()
   tickets: RoundTickets[]
   @Prop()
-  winningCombination: number[] | undefined
+  winningCombination: number[] | null
   @Prop()
   dp: Proof;
   @Prop()

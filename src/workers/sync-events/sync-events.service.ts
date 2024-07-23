@@ -125,7 +125,7 @@ export class SyncEventsService implements OnApplicationBootstrap {
       }
     } catch (e) {
       console.log('Events sync error', e);
-      this.running = false;
     }
+    this.running = false;
   }
 }

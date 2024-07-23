@@ -17,8 +17,8 @@ import { RoundInfoUpdaterModule } from './round-infos-updater/round-infos-update
       imports: [
         ZknoidConfigModule,
         SyncEventsModule,
-        // ProduceResultModule,
-        // DistributionProvingModule,
+        ProduceResultModule,
+        DistributionProvingModule,
         RoundInfoUpdaterModule,
         ProveReduceModule,
       ],

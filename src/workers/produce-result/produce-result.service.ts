@@ -26,7 +26,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
     await this.handleCron();
   }
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
     if (StateSinglton.inReduceProving) return;
     StateSinglton.inReduceProving = true;
@@ -68,7 +68,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
 
           const randomCombilation = Array.from({ length: 6 }, () =>
             randomIntFromInterval(1, 9),
-          );
+          );  
           console.log('Setting combination', randomCombilation);
           let tx = await Mina.transaction(
             { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
