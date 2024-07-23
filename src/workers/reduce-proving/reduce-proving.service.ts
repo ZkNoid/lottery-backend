@@ -1,5 +1,5 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
 import { StateSinglton } from 'src/state-manager';
 import { InjectModel } from '@nestjs/mongoose';
@@ -16,12 +16,12 @@ import { RoundsData } from '../schema/rounds.schema';
 
 @Injectable()
 export class ProveReduceService implements OnApplicationBootstrap {
-  constructor(private readonly httpService: HttpService) {}
+  constructor() {}
   async onApplicationBootstrap() {
     await this.handleCron();
   }
 
-  @Cron('45 * * * * *')
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async handleCron() {
     if (StateSinglton.inReduceProving) return;
     StateSinglton.inReduceProving = true;
@@ -29,32 +29,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
     try {
       console.log('REDUCE PROVING');
       for (let network of ALL_NETWORKS) {
-        const data = await this.httpService.axiosRef.post(
-          network.graphql,
-          JSON.stringify({
-            query: `
-        query {
-          bestChain(maxLength:1) {
-            protocolState {
-              consensusState {
-                blockHeight,
-                slotSinceGenesis
-              }
-            }
-          }
-        }
-      `,
-          }),
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            responseType: 'json',
-          },
-        );
-        const slotSinceGenesis =
-          data.data.data.bestChain[0].protocolState.consensusState
-            .slotSinceGenesis;
+        const slotSinceGenesis = StateSinglton.slotSinceGenesis[network.networkID];
         const startBlock =
           StateSinglton.lottery[network.networkID].startBlock.get();
 
@@ -79,9 +54,11 @@ export class ProveReduceService implements OnApplicationBootstrap {
           console.log('Time to reduce');
           const sender = PrivateKey.fromBase58(process.env.PK);
 
+          const stateM = StateSinglton.state[network.networkID];
+          console.log('processedTicketData', stateM.processedTicketData);
           // Reduce tickets
           let reduceProof =
-            await StateSinglton.state[network.networkID].reduceTickets();
+            await stateM.reduceTickets();
 
           console.log(
             'Reduce proof',

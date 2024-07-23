@@ -25,6 +25,8 @@ import {
 import { MinaEventDocument } from './workers/schema/events.schema';
 
 export class StateSinglton {
+  static blockHeight: Record<string, number> = {};
+  static slotSinceGenesis: Record<string, number> = {};
   static initialized: boolean;
   static stateInitialized: Record<string, boolean> = {};
 
@@ -60,10 +62,17 @@ export class StateSinglton {
       console.log('Lottery', lottery.startBlock.get());
 
       this.lottery[network.networkID] = lottery;
+
       this.state[network.networkID] = new PStateManager(
         lottery,
         UInt32.from(lottery.startBlock.get()).toFields()[0],
         false,
+      );
+      this.state[network.networkID].processedTicketData.ticketId = Number(
+        lottery.lastProcessedTicketId.get().toBigInt(),
+      );
+      this.state[network.networkID].processedTicketData.round = Number(
+        lottery.lastReduceInRound.get().toBigInt(),
       );
     }
 
@@ -165,8 +174,18 @@ export class StateSinglton {
       UInt32.from(this.lottery[networkID].startBlock.get()).toFields()[0],
       false,
     );
+    console.log('Sync with block', events.at(-1).globalSlot);
     if (events.length != 0)
       this.state[networkID].syncWithCurBlock(events.at(-1).globalSlot);
+
+
+    this.state[networkID].processedTicketData.ticketId = Number(
+      this.lottery[networkID].lastProcessedTicketId.get().toBigInt(),
+    );
+    this.state[networkID].processedTicketData.round = Number(
+      this.lottery[networkID].lastReduceInRound.get().toBigInt(),
+    );
+
     for (let event of events) {
       const data = this.lottery[networkID].events[event.type].fromJSON(
         event.event.data as undefined as any,
@@ -180,7 +199,8 @@ export class StateSinglton {
           data.round,
         );
 
-        this.state[networkID].addTicket(data.ticket, +data.round, false);
+        // this.state[networkID].addTicket(data.ticket, +data.round, false);
+        console.log('Adding ticket');
       }
       if (event.type == 'produce-result') {
         console.log('Produced result', event.event.data, 'round' + data.round);
@@ -228,6 +248,12 @@ export class StateSinglton {
         });
 
         actions.flat(1).map((action) => {
+          console.log(
+            'Adding ticket in reduce',
+            action.ticket.numbers.map((x) => x.toString()),
+            +action.round,
+          );
+
           this.state[networkID].addTicket(action.ticket, +action.round, true);
 
           if (

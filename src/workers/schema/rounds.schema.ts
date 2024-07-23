@@ -12,11 +12,26 @@ class Proof {
   @Prop()
   proof: string;
 }
+class RoundTickets {
+  @Prop()
+  amount: number;
+  @Prop()
+  numbers: number[];
+  @Prop()
+  owner: string;
+}
+
 class BaseRoundsDocument extends Document {
   @Prop({ type: SchemaTypes.ObjectId, auto: true })
   _id: Types.ObjectId;
   @Prop()
   roundId: number;
+  @Prop()
+  bank: bigint;
+  @Prop()
+  tickets: RoundTickets[]
+  @Prop()
+  winningCombination: number[] | undefined
   @Prop()
   dp: Proof;
   @Prop()

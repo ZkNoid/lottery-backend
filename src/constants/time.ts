@@ -1,1 +1,1 @@
-export const BLOCK_PER_ROUND = 10;
+export const BLOCK_PER_ROUND = 480;

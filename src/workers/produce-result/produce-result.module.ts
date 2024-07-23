@@ -8,13 +8,6 @@ import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
-    HttpModule.registerAsync({
-      useFactory: () => ({
-        timeout: 5000,
-        maxRedirects: 5,
-      }),
-    })
-    ,
     ScheduleModule.forRoot(),
     MongooseModule.forFeature([
       {

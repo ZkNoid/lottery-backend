@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
-import { MinaEventData, MinaEventDataSchema } from '../schema/events.schema';
 import { MongooseModule } from '@nestjs/mongoose';
-import { DistributionProvingService } from './distribution-proving.service';
+import { RoundInfoUpdaterService } from './round-infos-updater.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HttpModule } from '@nestjs/axios';
 import { RoundsData, RoundsDataSchema } from '../schema/rounds.schema';
@@ -15,7 +14,13 @@ import { RoundsData, RoundsDataSchema } from '../schema/rounds.schema';
         schema: RoundsDataSchema,
       },
     ]),
+    HttpModule.registerAsync({
+      useFactory: () => ({
+        timeout: 5000,
+        maxRedirects: 5,
+      }),
+    }),
   ],
-  providers: [DistributionProvingService],
+  providers: [RoundInfoUpdaterService],
 })
-export class DistributionProvingModule {}
+export class RoundInfoUpdaterModule {}

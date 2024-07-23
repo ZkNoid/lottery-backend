@@ -24,7 +24,6 @@ function randomIntFromInterval(min, max) {
 @Injectable()
 export class DistributionProvingService implements OnApplicationBootstrap {
   constructor(
-    private readonly httpService: HttpService,
     @InjectModel(RoundsData.name)
     private rounds: Model<RoundsData>,
   ) {}
@@ -41,32 +40,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
         StateSinglton.stateInitialized,
       );
 
-      const data = await this.httpService.axiosRef.post(
-        network.graphql,
-        JSON.stringify({
-          query: `
-        query {
-          bestChain(maxLength:1) {
-            protocolState {
-              consensusState {
-                blockHeight,
-                slotSinceGenesis
-              }
-            }
-          }
-        }
-      `,
-        }),
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          responseType: 'json',
-        },
-      );
-      const slotSinceGenesis =
-        data.data.data.bestChain[0].protocolState.consensusState
-          .slotSinceGenesis;
+      const slotSinceGenesis = StateSinglton.slotSinceGenesis[network.networkID];
       const startBlock =
         StateSinglton.lottery[network.networkID].startBlock.get();
 
@@ -81,8 +55,15 @@ export class DistributionProvingService implements OnApplicationBootstrap {
           network.networkID
         ].roundResultMap.get(Field.from(roundId));
 
-        console.log('Round result', result.toBigInt(), Field.empty().toBigInt())
-        if (!(await this.rounds.findOne({ roundId: roundId }))?.dp && result.toBigInt() > 0) {
+        console.log(
+          'Round result',
+          result.toBigInt(),
+          Field.empty().toBigInt(),
+        );
+        if (
+          !(await this.rounds.findOne({ roundId: roundId }))?.dp &&
+          result.toBigInt() > 0
+        ) {
           console.log('Generation of DP', roundId);
 
           let dp = await StateSinglton.state[network.networkID].getDP(roundId);
@@ -93,8 +74,8 @@ export class DistributionProvingService implements OnApplicationBootstrap {
             roundId
           ].map((x) => ({
             amount: Number(x.amount.toBigInt()),
-            numbers: x.numbers.map(x => Number(x.toBigint())),
-            owner: x.owner.toBase58()
+            numbers: x.numbers.map((x) => Number(x.toBigint())),
+            owner: x.owner.toBase58(),
           }));
           console.log('Distribution proof events', events);
           await this.rounds
