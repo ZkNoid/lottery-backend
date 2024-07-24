@@ -23,7 +23,7 @@ function randomIntFromInterval(min, max) {
 export class ProduceResultService implements OnApplicationBootstrap {
   constructor() {}
   async onApplicationBootstrap() {
-    await this.handleCron();
+    // await this.handleCron();
   }
 
   @Cron(CronExpression.EVERY_30_SECONDS)
@@ -39,14 +39,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
         StateSinglton.stateInitialized,
       );
 
-      const slotSinceGenesis = StateSinglton.slotSinceGenesis[network.networkID];
-
-      const startBlock =
-        StateSinglton.lottery[network.networkID].startBlock.get();
-
-      const currentRoundId = Math.floor(
-        (slotSinceGenesis - Number(startBlock)) / BLOCK_PER_ROUND,
-      );
+      const currentRoundId = StateSinglton.roundIds[network.networkID];
       console.log('Current round id', currentRoundId);
 
       for (let roundId = 0; roundId < currentRoundId; roundId++) {

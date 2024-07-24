@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { MinaEventData } from '../schema/events.schema';
 import { Model } from 'mongoose';
 import { HttpService } from '@nestjs/axios';
+import { BLOCK_PER_ROUND } from 'l1-lottery-contracts';
 
 @Injectable()
 export class SyncEventsService implements OnApplicationBootstrap {
@@ -120,8 +121,13 @@ export class SyncEventsService implements OnApplicationBootstrap {
         )
           StateSinglton.initState(network.networkID, allEvents);
 
+        const currentRoundId = Math.floor(
+          (slotSinceGenesis - Number(StateSinglton.lottery[network.networkID].startBlock.get())) / BLOCK_PER_ROUND
+        );
+
         StateSinglton.blockHeight[network.networkID] = currBlockHeight;
         StateSinglton.slotSinceGenesis[network.networkID] = slotSinceGenesis;
+        StateSinglton.roundIds[network.networkID] = currentRoundId;
       }
     } catch (e) {
       console.log('Events sync error', e);

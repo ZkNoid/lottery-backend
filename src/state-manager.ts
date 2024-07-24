@@ -28,6 +28,7 @@ import { MinaEventDocument } from './workers/schema/events.schema';
 export class StateSinglton {
   static blockHeight: Record<string, number> = {};
   static slotSinceGenesis: Record<string, number> = {};
+  static roundIds: Record<string, number> = {};
   static initialized: boolean;
   static stateInitialized: Record<string, boolean> = {};
 

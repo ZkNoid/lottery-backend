@@ -18,7 +18,7 @@ import { RoundsData } from '../schema/rounds.schema';
 export class ProveReduceService implements OnApplicationBootstrap {
   constructor() {}
   async onApplicationBootstrap() {
-    await this.handleCron();
+    // await this.handleCron();
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES)
@@ -29,13 +29,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
     try {
       console.log('REDUCE PROVING');
       for (let network of ALL_NETWORKS) {
-        const slotSinceGenesis = StateSinglton.slotSinceGenesis[network.networkID];
-        const startBlock =
-          StateSinglton.lottery[network.networkID].startBlock.get();
-
-        const currentRoundId = Math.floor(
-          (slotSinceGenesis - Number(startBlock)) / BLOCK_PER_ROUND,
-        );
+        const currentRoundId = StateSinglton.roundIds[network.networkID];
 
         const lastReduceInRound = StateSinglton.lottery[
           network.networkID
@@ -57,8 +51,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
           const stateM = StateSinglton.state[network.networkID];
           console.log('processedTicketData', stateM.processedTicketData);
           // Reduce tickets
-          let reduceProof =
-            await stateM.reduceTickets();
+          let reduceProof = await stateM.reduceTickets();
 
           console.log(
             'Reduce proof',

@@ -40,13 +40,8 @@ export class DistributionProvingService implements OnApplicationBootstrap {
         StateSinglton.stateInitialized,
       );
 
-      const slotSinceGenesis = StateSinglton.slotSinceGenesis[network.networkID];
-      const startBlock =
-        StateSinglton.lottery[network.networkID].startBlock.get();
+      const currentRoundId = StateSinglton.roundIds[network.networkID];
 
-      const currentRoundId = Math.floor(
-        (slotSinceGenesis - Number(startBlock)) / BLOCK_PER_ROUND,
-      );
       console.log('Current round id', currentRoundId);
 
       for (let roundId = 0; roundId < currentRoundId; roundId++) {

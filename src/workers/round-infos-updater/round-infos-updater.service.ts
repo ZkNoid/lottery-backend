@@ -50,9 +50,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
         const startBlock =
           StateSinglton.lottery[network.networkID].startBlock.get();
 
-        const currentRoundId = Math.floor(
-          (slotSinceGenesis - Number(startBlock)) / BLOCK_PER_ROUND,
-        );
+        const currentRoundId = StateSinglton.roundIds[network.networkID];
         console.log('Current round id', currentRoundId);
 
         for (let roundId = 0; roundId <= currentRoundId; roundId++) {
