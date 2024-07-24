@@ -109,8 +109,20 @@ export class SyncEventsService implements OnApplicationBootstrap {
           });
         }
 
+        const lastEvent2 = await this.minaEventData
+          .findOne({})
+          .sort({ _id: -1 });
+
+        for (const newFetchedEvent of newFetchedEvents) {
+          await this.minaEventData.updateOne({
+            'event.transactionInfo.transactionHash': newFetchedEvent.event.transactionInfo.transactionHash
+          }, {
+            $set: newFetchedEvent
+          }, {
+            upsert: true
+          });
+        }
         // Adding new events to mongodb
-        await this.minaEventData.insertMany(newFetchedEvents);
 
         const allEvents = [...dbEvents, ...newFetchedEvents];
 
@@ -122,7 +134,9 @@ export class SyncEventsService implements OnApplicationBootstrap {
           StateSinglton.initState(network.networkID, allEvents);
 
         const currentRoundId = Math.floor(
-          (slotSinceGenesis - Number(StateSinglton.lottery[network.networkID].startBlock.get())) / BLOCK_PER_ROUND
+          (slotSinceGenesis -
+            Number(StateSinglton.lottery[network.networkID].startBlock.get())) /
+            BLOCK_PER_ROUND,
         );
 
         StateSinglton.blockHeight[network.networkID] = currBlockHeight;
