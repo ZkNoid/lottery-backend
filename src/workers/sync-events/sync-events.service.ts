@@ -109,10 +109,6 @@ export class SyncEventsService implements OnApplicationBootstrap {
           });
         }
 
-        const lastEvent2 = await this.minaEventData
-          .findOne({})
-          .sort({ _id: -1 });
-
         for (const newFetchedEvent of newFetchedEvents) {
           await this.minaEventData.updateOne({
             'event.transactionInfo.transactionHash': newFetchedEvent.event.transactionInfo.transactionHash
