@@ -40,14 +40,12 @@ export class ClaimApiService implements OnApplicationBootstrap {
       PublicKey.fromBase58(senderAccount),
       amount,
     );
-
-    const rp = await stateM.getReward(roundId, ticket);
-
     const round = await this.rounds.findOne({ roundId });
 
+    const rp = await stateM.getReward(roundId, ticket, round.dp);
+
     return {
-      rp,
-      dp: round.dp,
+      rp
     };
   }
 }
