@@ -176,6 +176,7 @@ export class StateSinglton {
     events: MinaEventDocument[],
     stateM?: PStateManager,
   ) {
+    const updateOnly: boolean = stateM != undefined;
     if (!stateM) {
       stateM = new PStateManager(
         this.lottery[networkID],
@@ -186,10 +187,18 @@ export class StateSinglton {
     console.log('Sync with block', events.at(-1).globalSlot);
     if (events.length != 0) stateM.syncWithCurBlock(events.at(-1).globalSlot);
 
-    const boughtTickets = [] as Ticket[][];
+    const boughtTickets = updateOnly
+      ? this.boughtTickets[networkID]
+      : ([] as Ticket[][]);
 
-    for (let i = 0; i < stateM.roundTickets.length; i++) {
-      boughtTickets.push([]);
+    if (updateOnly) {
+      for (let i = 0; i < stateM.roundTickets.length; i++) {
+        boughtTickets.push([]);
+      }
+    } else {
+      for (let i = boughtTickets.length; i < stateM.roundTickets.length; i++) {
+        boughtTickets.push([]);
+      }
     }
 
     stateM.processedTicketData.ticketId = Number(
