@@ -9,7 +9,7 @@ export class ClaimApiController {
   @Post('get-claim-data')
   async generateClaimParams(
     @Body() claimData: ClaimRequestDTO,
-  ): Promise<{ dp: any; rp: any }> {
+  ): Promise<{ rp: any }> {
     console.log('Received model', claimData);
     try {
       return await this.claimApiService.getClaimData(
