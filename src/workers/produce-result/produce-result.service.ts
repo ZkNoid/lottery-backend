@@ -33,58 +33,63 @@ export class ProduceResultService implements OnApplicationBootstrap {
 
     for (let network of ALL_NETWORKS) {
       try {
-      console.log(
-        'StateSinglton state',
-        StateSinglton.initialized,
-        StateSinglton.stateInitialized,
-      );
+        console.log(
+          'StateSinglton state',
+          StateSinglton.initialized,
+          StateSinglton.stateInitialized,
+        );
 
-      const currentRoundId = StateSinglton.roundIds[network.networkID];
-      console.log('Current round id', currentRoundId);
+        const currentRoundId = StateSinglton.roundIds[network.networkID];
+        console.log('Current round id', currentRoundId);
 
-      for (let roundId = 0; roundId < currentRoundId; roundId++) {
-        const result = StateSinglton.state[
-          network.networkID
-        ].roundResultMap.get(Field.from(roundId));
+        for (let roundId = 0; roundId < currentRoundId; roundId++) {
+          const result = StateSinglton.state[
+            network.networkID
+          ].roundResultMap.get(Field.from(roundId));
 
-        console.log('Round', roundId, 'Result', result.toBigInt());
+          console.log('Round', roundId, 'Result', result.toBigInt());
 
-        if (result.toBigInt() == 0n) {
-          console.log('Producing resukt', roundId);
+          if (result.toBigInt() == 0n) {
+            console.log('Producing resukt', roundId);
 
-          let resultWiness =
-            StateSinglton.state[network.networkID].updateResult(roundId);
+            let { resultWitness, bankValue, bankWitness } =
+              StateSinglton.state[network.networkID].updateResult(roundId);
 
-          // console.log(`Digest: `, await MockLottery.digest());
-          const sender = PrivateKey.fromBase58(process.env.PK);
-          console.log('Tx init');
+            // console.log(`Digest: `, await MockLottery.digest());
+            const sender = PrivateKey.fromBase58(process.env.PK);
+            console.log('Tx init');
 
-          const randomCombilation = Array.from({ length: 6 }, () =>
-            randomIntFromInterval(1, 9),
-          );  
-          console.log('Setting combination', randomCombilation);
-          let tx = await Mina.transaction(
-            { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
-            async () => {
-              await StateSinglton.lottery[network.networkID].produceResult(
-                resultWiness,
-                NumberPacked.pack(randomCombilation.map((x) => UInt32.from(x))),
-              );
-            },
-          );
-          console.log('Proving tx');
-          await tx.prove();
-          console.log('Proved tx');
-          let txResult = await tx.sign([sender]).send();
+            const randomCombilation = Array.from({ length: 6 }, () =>
+              randomIntFromInterval(1, 9),
+            );
+            console.log('Setting combination', randomCombilation);
+            let tx = await Mina.transaction(
+              { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
+              async () => {
+                await StateSinglton.lottery[network.networkID].produceResult(
+                  resultWitness,
+                  NumberPacked.pack(
+                    randomCombilation.map((x) => UInt32.from(x)),
+                  ),
+                  bankValue,
+                  bankWitness,
+                );
+              },
+            );
+            console.log('Proving tx');
+            await tx.prove();
+            console.log('Proved tx');
+            let txResult = await tx.sign([sender]).send();
 
-          console.log(`Tx successful. Hash: `, txResult.hash);
-          console.log('Waiting for tx');
-          await txResult.wait();
+            console.log(`Tx successful. Hash: `, txResult.hash);
+            console.log('Waiting for tx');
+            await txResult.wait();
+          }
         }
+      } catch (e) {
+        console.log('Error', e);
       }
-    } catch(e) {
-      console.log('Error', e)
-    }}
+    }
 
     StateSinglton.inReduceProving = false;
   }
