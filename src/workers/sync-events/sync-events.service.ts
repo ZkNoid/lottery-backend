@@ -110,24 +110,34 @@ export class SyncEventsService implements OnApplicationBootstrap {
         }
 
         for (const newFetchedEvent of newFetchedEvents) {
-          await this.minaEventData.updateOne({
-            'event.transactionInfo.transactionHash': newFetchedEvent.event.transactionInfo.transactionHash
-          }, {
-            $set: newFetchedEvent
-          }, {
-            upsert: true
-          });
+          await this.minaEventData.updateOne(
+            {
+              'event.transactionInfo.transactionHash':
+                newFetchedEvent.event.transactionInfo.transactionHash,
+            },
+            {
+              $set: newFetchedEvent,
+            },
+            {
+              upsert: true,
+            },
+          );
         }
         // Adding new events to mongodb
 
         const allEvents = [...dbEvents, ...newFetchedEvents];
 
         // Update state if not initially updated or if there are new events
-        if (
-          newFetchedEvents.length > 0 ||
-          !StateSinglton.stateInitialized[network.networkID]
-        )
+        if (!StateSinglton.stateInitialized[network.networkID])
           StateSinglton.initState(network.networkID, allEvents);
+
+        if (newFetchedEvents.length) {
+          StateSinglton.initState(
+            network.networkID,
+            allEvents,
+            StateSinglton.state[network.networkID],
+          );
+        }
 
         const currentRoundId = Math.floor(
           (slotSinceGenesis -

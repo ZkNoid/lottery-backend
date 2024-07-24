@@ -171,12 +171,18 @@ export class StateSinglton {
     });
   }
 
-  static async initState(networkID: string, events: MinaEventDocument[]) {
-    const stateM = new PStateManager(
-      this.lottery[networkID],
-      UInt32.from(this.lottery[networkID].startBlock.get()).toFields()[0],
-      false,
-    );
+  static async initState(
+    networkID: string,
+    events: MinaEventDocument[],
+    stateM?: PStateManager,
+  ) {
+    if (!stateM) {
+      stateM = new PStateManager(
+        this.lottery[networkID],
+        UInt32.from(this.lottery[networkID].startBlock.get()).toFields()[0],
+        false,
+      );
+    }
     console.log('Sync with block', events.at(-1).globalSlot);
     if (events.length != 0) stateM.syncWithCurBlock(events.at(-1).globalSlot);
 
