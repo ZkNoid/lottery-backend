@@ -28,7 +28,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/schedule": "^4.0.2",
     "axios": "^1.7.2",
-    "l1-lottery-contracts": "^0.7.10",
+    "l1-lottery-contracts": "^0.7.12",
     "mongoose": "^8.4.4",
     "o1js": "^1.4.0",
     "reflect-metadata": "^0.2.0",

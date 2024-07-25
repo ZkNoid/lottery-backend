@@ -30,8 +30,8 @@ dependencies:
     specifier: ^1.7.2
     version: 1.7.2
   l1-lottery-contracts:
-    specifier: ^0.7.10
-    version: 0.7.10(o1js@1.4.0)
+    specifier: ^0.7.12
+    version: 0.7.12(o1js@1.4.0)
   mongoose:
     specifier: ^8.4.4
     version: 8.4.4
@@ -4247,8 +4247,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /l1-lottery-contracts@0.7.10(o1js@1.4.0):
-    resolution: {integrity: sha512-6LMp2Gz+kj2x5sW8upNM2zfE1eNGKdYyYEGtZ4Oijlc1+1wYsFct9KvZonAL07oeeUBh78h6qCXbs73qaMHxmw==}
+  /l1-lottery-contracts@0.7.12(o1js@1.4.0):
+    resolution: {integrity: sha512-O/00Ec2xPgZ3jdtzjYB8X6wSB3lgSWHd71cS2Jo3zPlpHMx3nOo8mLSAxSKOP0/wEq3ZxSojQB2gpSs7PWxCHQ==}
     engines: {node: '>=18.14.0'}
     peerDependencies:
       o1js: 1.3.1
