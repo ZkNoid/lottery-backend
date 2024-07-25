@@ -128,13 +128,12 @@ export class SyncEventsService implements OnApplicationBootstrap {
         const allEvents = [...dbEvents, ...newFetchedEvents];
 
         // Update state if not initially updated or if there are new events
-        if (!StateSinglton.stateInitialized[network.networkID])
+        if (!StateSinglton.stateInitialized[network.networkID]) {
           StateSinglton.initState(network.networkID, allEvents);
-
-        if (newFetchedEvents.length) {
+        } else if (newFetchedEvents.length) {
           StateSinglton.initState(
             network.networkID,
-            allEvents,
+            newFetchedEvents,
             StateSinglton.state[network.networkID],
           );
         }

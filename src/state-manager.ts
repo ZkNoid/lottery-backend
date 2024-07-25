@@ -177,26 +177,30 @@ export class StateSinglton {
     stateM?: PStateManager,
   ) {
     const updateOnly: boolean = stateM != undefined;
+    const startBlock = this.lottery[networkID].startBlock.get();
     if (!stateM) {
       stateM = new PStateManager(
         this.lottery[networkID],
-        UInt32.from(this.lottery[networkID].startBlock.get()).toFields()[0],
+        UInt32.from(startBlock).toFields()[0],
         false,
       );
     }
-    console.log('Sync with block', events.at(-1).globalSlot);
-    if (events.length != 0) stateM.syncWithCurBlock(events.at(-1).globalSlot);
+
+    const syncBlockSlot =
+      events.length > 0 ? events.at(-1).globalSlot : +startBlock;
+
+    if (events.length != 0) stateM.syncWithCurBlock(syncBlockSlot);
 
     const boughtTickets = updateOnly
       ? this.boughtTickets[networkID]
       : ([] as Ticket[][]);
 
     if (updateOnly) {
-      for (let i = 0; i < stateM.roundTickets.length; i++) {
+      for (let i = boughtTickets.length; i < stateM.roundTickets.length; i++) {
         boughtTickets.push([]);
       }
     } else {
-      for (let i = boughtTickets.length; i < stateM.roundTickets.length; i++) {
+      for (let i = 0; i < stateM.roundTickets.length; i++) {
         boughtTickets.push([]);
       }
     }
