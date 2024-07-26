@@ -121,6 +121,7 @@ export class StateSinglton {
         });
       })
       .flat();
+
     // .filter((x) => x.event.transactionInfo.transactionStatus == 'applied');
 
     let sortedEventTypes = Object.keys(lottery.events).sort();
@@ -205,13 +206,6 @@ export class StateSinglton {
       }
     }
 
-    stateM.processedTicketData.ticketId = Number(
-      this.lottery[networkID].lastProcessedTicketId.get().toBigInt(),
-    );
-    stateM.processedTicketData.round = Number(
-      this.lottery[networkID].lastReduceInRound.get().toBigInt(),
-    );
-
     for (let event of events) {
       const data = this.lottery[networkID].events[event.type].fromJSON(
         event.event.data as undefined as any,
@@ -281,7 +275,7 @@ export class StateSinglton {
           if (stateM.processedTicketData.round == +action.round) {
             stateM.processedTicketData.ticketId++;
           } else {
-            stateM.processedTicketData.ticketId = 1;
+            stateM.processedTicketData.ticketId = 0;
             stateM.processedTicketData.round = +action.round;
           }
         });
@@ -290,5 +284,113 @@ export class StateSinglton {
     this.state[networkID] = stateM;
     this.stateInitialized[networkID] = true;
     this.boughtTickets[networkID] = boughtTickets;
+  }
+
+  // !processedTicketData should be update according to contract state after that call
+  static async undoLastEvents(
+    networkID: string,
+    events: MinaEventDocument[],
+    stateM: PStateManager,
+  ) {
+    const boughtTickets = this.boughtTickets[networkID];
+
+    for (let event of events) {
+      const data = this.lottery[networkID].events[event.type].fromJSON(
+        event.event.data as undefined as any,
+      );
+
+      if (event.type == 'buy-ticket') {
+        console.log(
+          'Removing ticket from state',
+          event.event.data,
+          'round',
+          data.round,
+        );
+
+        boughtTickets[data.round].pop();
+      }
+      if (event.type == 'produce-result') {
+        console.log(
+          'Remove Produced result',
+          event.event.data,
+          'round' + data.round,
+        );
+
+        stateM.roundResultMap.set(data.round, Field(0));
+      }
+      if (event.type == 'get-reward') {
+        console.log(
+          'Remove got reward',
+          event.event.data,
+          'round' + data.round,
+        );
+
+        let ticketId = 0;
+        let roundTicketWitness;
+
+        for (; ticketId < stateM.lastTicketInRound[+data.round]; ticketId++) {
+          if (
+            stateM.roundTicketMap[+data.round]
+              .get(Field(ticketId))
+              .equals(data.ticket.hash())
+              .toBoolean()
+          ) {
+            roundTicketWitness = stateM.roundTicketMap[+data.round].getWitness(
+              Field.from(ticketId),
+            );
+            break;
+          }
+        }
+
+        stateM.ticketNullifierMap.set(
+          getNullifierId(Field.from(data.round), Field.from(ticketId)),
+          Field(0),
+        );
+      }
+
+      if (event.type == 'reduce') {
+        console.log('Remove Reduce: ', event.event.data, 'round' + data.round);
+        let fromActionState = data.startActionState;
+        let endActionState = data.endActionState;
+
+        let actions = await this.lottery[networkID].reducer.fetchActions({
+          fromActionState,
+          endActionState,
+        });
+
+        actions.flat(1).map((action) => {
+          console.log(
+            'Remove ticket in reduce',
+            action.ticket.numbers.map((x) => x.toString()),
+            +action.round,
+          );
+
+          stateM.removeLastTicket(+action.round);
+
+          // if (stateM.processedTicketData.round == +action.round) {
+          //   stateM.processedTicketData.ticketId--;
+          // } else {
+          //   stateM.processedTicketData.ticketId = 1;
+          //   stateM.processedTicketData.round = +action.round;
+          // }
+        });
+      }
+    }
+
+    this.state[networkID] = stateM;
+    this.boughtTickets[networkID] = boughtTickets;
+  }
+
+  static updateProcessedTicketData(stateM: PStateManager) {
+    const ticketIdField = stateM.contract.lastProcessedTicketId.get();
+    const round = +stateM.contract.lastReduceInRound.get();
+    const ticketId = ticketIdField.equals(Field(-1)).toBoolean()
+      ? -1
+      : +ticketIdField;
+
+    stateM.processedTicketData = {
+      ticketId,
+      round,
+    };
   }
 }

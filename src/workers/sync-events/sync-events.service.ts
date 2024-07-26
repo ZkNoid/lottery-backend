@@ -8,6 +8,8 @@ import { Model } from 'mongoose';
 import { HttpService } from '@nestjs/axios';
 import { BLOCK_PER_ROUND } from 'l1-lottery-contracts';
 
+const BLOCK_UPDATE_DEPTH = 6;
+
 @Injectable()
 export class SyncEventsService implements OnApplicationBootstrap {
   constructor(
@@ -23,8 +25,12 @@ export class SyncEventsService implements OnApplicationBootstrap {
 
   running = false;
 
-  @Interval('events_sync', 5_000)
+  @Interval('events_sync', 30_000)
   async handleCron() {
+    if (StateSinglton.inReduceProving) {
+      console.log('It will kill reduce. Do not do it');
+      return;
+    }
     if (this.running) return;
     this.running = true;
 
@@ -61,14 +67,18 @@ export class SyncEventsService implements OnApplicationBootstrap {
         const currBlockHeight =
           data.data.data.bestChain[0].protocolState.consensusState.blockHeight;
 
-        const dbEvents = await this.minaEventData.find({});
+        // const dbEvents = await this.minaEventData.find({});
         const lastEvent = await this.minaEventData
           .findOne({})
           .sort({ _id: -1 });
 
+        const updateEventsFrom = lastEvent
+          ? lastEvent.blockHeight - BLOCK_UPDATE_DEPTH
+          : 0;
+
         const events = await StateSinglton.fetchEvents(
           network.networkID,
-          lastEvent ? lastEvent.blockHeight : 0,
+          lastEvent ? updateEventsFrom : 0,
         );
 
         let fetchedEvents = events.map(
@@ -93,6 +103,7 @@ export class SyncEventsService implements OnApplicationBootstrap {
 
         console.log('New events', events);
 
+        /*
         // Events that was previously recorded from archive node. If they're dropped, they was orphaned
         const eventsToVerifyUncles = fetchedEvents.filter((x) =>
           lastEvent ? x.blockHeight == lastEvent.blockHeight : false,
@@ -123,17 +134,53 @@ export class SyncEventsService implements OnApplicationBootstrap {
             },
           );
         }
-        // Adding new events to mongodb
+        */
 
-        const allEvents = [...dbEvents, ...newFetchedEvents];
+        const eventsToBeDeleted = await this.minaEventData.find({
+          blockHeight: { $gte: updateEventsFrom },
+        });
+
+        // Removing old event and adding new events to mongodb
+        await this.minaEventData.deleteMany({
+          blockHeight: { $gte: updateEventsFrom },
+        });
+
+        for (const fetchedEvent of fetchedEvents) {
+          await this.minaEventData.updateOne(
+            {
+              'event.transactionInfo.transactionHash':
+                fetchedEvent.event.transactionInfo.transactionHash,
+            },
+            {
+              $set: fetchedEvent,
+            },
+            {
+              upsert: true,
+            },
+          );
+        }
 
         // Update state if not initially updated or if there are new events
         if (!StateSinglton.stateInitialized[network.networkID]) {
-          StateSinglton.initState(network.networkID, allEvents);
-        } else if (newFetchedEvents.length) {
-          StateSinglton.initState(
+          const dbEvents = await this.minaEventData.find({
+            blockHeight: { $lt: updateEventsFrom },
+          });
+          const allEvents = [...dbEvents, ...fetchedEvents];
+          await StateSinglton.initState(network.networkID, allEvents);
+        } else {
+          await StateSinglton.undoLastEvents(
             network.networkID,
-            newFetchedEvents,
+            eventsToBeDeleted,
+            StateSinglton.state[network.networkID],
+          );
+
+          await StateSinglton.initState(
+            network.networkID,
+            fetchedEvents,
+            StateSinglton.state[network.networkID],
+          );
+
+          StateSinglton.updateProcessedTicketData(
             StateSinglton.state[network.networkID],
           );
         }
