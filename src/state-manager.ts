@@ -224,8 +224,7 @@ export class StateSinglton {
           'round',
           data.round,
         );
-
-        boughtTickets[data.round].push(data.ticket);
+        if (updateOnly) boughtTickets[data.round].push(data.ticket);
         // this.state[networkID].addTicket(data.ticket, +data.round, false);
         console.log('Adding ticket');
       }
