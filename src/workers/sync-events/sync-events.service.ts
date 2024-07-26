@@ -136,23 +136,49 @@ export class SyncEventsService implements OnApplicationBootstrap {
         }
         */
 
-        const eventsToBeDeleted = await this.minaEventData.find({
+        let eventsToBeDeleted = await this.minaEventData.find({
           blockHeight: { $gte: updateEventsFrom },
         });
+
+        let eventsIdForDelete = [];
+
+        let deleteStartIndex = 0;
+        // Find equal prefix of eventsToBeDeleted and fetchedEvents. We can ommit it
+        for (
+          ;
+          deleteStartIndex < eventsToBeDeleted.length;
+          deleteStartIndex++
+        ) {
+          let dbEvent = eventsToBeDeleted[deleteStartIndex];
+          let nodeEvent = fetchedEvents[deleteStartIndex];
+
+          if (
+            dbEvent.event.transactionInfo.transactionHash !==
+            nodeEvent.event.transactionInfo.transactionHash
+          ) {
+            break;
+          }
+        }
+
+        eventsIdForDelete = eventsToBeDeleted
+          .slice(deleteStartIndex)
+          .map((event) => event._id);
+        eventsToBeDeleted = eventsToBeDeleted.slice(deleteStartIndex);
+        const newEventsToAdd = fetchedEvents.slice(deleteStartIndex);
 
         // Removing old event and adding new events to mongodb
         await this.minaEventData.deleteMany({
-          blockHeight: { $gte: updateEventsFrom },
+          _id: { $in: eventsIdForDelete },
         });
 
-        for (const fetchedEvent of fetchedEvents) {
+        for (const eventToAdd of newEventsToAdd) {
           await this.minaEventData.updateOne(
             {
               'event.transactionInfo.transactionHash':
-                fetchedEvent.event.transactionInfo.transactionHash,
+                eventToAdd.event.transactionInfo.transactionHash,
             },
             {
-              $set: fetchedEvent,
+              $set: eventToAdd,
             },
             {
               upsert: true,
@@ -162,10 +188,7 @@ export class SyncEventsService implements OnApplicationBootstrap {
 
         // Update state if not initially updated or if there are new events
         if (!StateSinglton.stateInitialized[network.networkID]) {
-          const dbEvents = await this.minaEventData.find({
-            blockHeight: { $lt: updateEventsFrom },
-          });
-          const allEvents = [...dbEvents, ...fetchedEvents];
+          const allEvents = await this.minaEventData.find({});
           await StateSinglton.initState(network.networkID, allEvents);
         } else {
           await StateSinglton.undoLastEvents(
@@ -176,7 +199,7 @@ export class SyncEventsService implements OnApplicationBootstrap {
 
           await StateSinglton.initState(
             network.networkID,
-            fetchedEvents,
+            newEventsToAdd,
             StateSinglton.state[network.networkID],
           );
 
