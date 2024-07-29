@@ -233,7 +233,7 @@ export class StateSinglton {
         const newBankValue = curBankValue
           .mul(PRESICION - COMMISION)
           .div(PRESICION);
-        stateM.roundResultMap.set(data.round, newBankValue);
+        stateM.bankMap.set(data.round, newBankValue);
       }
       if (event.type == 'get-reward') {
         console.log('Got reward', event.event.data, 'round' + data.round);
