@@ -22,7 +22,7 @@ import {
   BuyTicketEvent,
   GetRewardEvent,
   ProduceResultEvent,
-} from 'l1-lottery-contracts/build/src/Lottery';
+} from 'l1-lottery-contracts/build/src/PLottery';
 import { MinaEventDocument } from './workers/schema/events.schema';
 
 export class StateSinglton {

@@ -5,7 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ZknoidConfigModule } from 'src/config/config.module';
 import { ConfigService } from '@nestjs/config';
 import { SyncEventsModule } from './sync-events/sync-events.module';
-import { ProduceResultEvent } from 'l1-lottery-contracts/build/src/Lottery';
+import { ProduceResultEvent } from 'l1-lottery-contracts/build/src/PLottery';
 import { ProduceResultModule } from './produce-result/produce-result.module';
 import { DistributionProvingModule } from './distribution-proving/distribution-proving.module';
 import { ProveReduceModule } from './reduce-proving/reduce-proving.module';
