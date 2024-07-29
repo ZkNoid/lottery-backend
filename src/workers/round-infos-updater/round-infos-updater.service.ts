@@ -106,7 +106,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
                         ((totalShares * 103n) / 100n)
                       : 0n,
                     claimed: stateM.ticketNullifierMap
-                      .get(getNullifierId(Field.from(roundId), Field.from(i + 1)))
+                      .get(getNullifierId(Field.from(roundId), Field.from(i)))
                       .equals(Field.from(1))
                       .toBoolean(),
                   })),
