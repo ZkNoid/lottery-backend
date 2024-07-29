@@ -1,1 +1,1 @@
-export const BLOCK_PER_ROUND = 480;
+export { BLOCK_PER_ROUND } from 'l1-lottery-contracts';
