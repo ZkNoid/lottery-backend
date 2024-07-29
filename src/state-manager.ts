@@ -10,8 +10,10 @@ import {
 } from 'o1js';
 import { ALL_NETWORKS, NETWORKS, NetworkIds } from './constants/networks';
 import {
+  COMMISION,
   DistibutionProgram,
   PLottery,
+  PRESICION,
   PStateManager,
   Ticket,
   TicketReduceProgram,
@@ -226,6 +228,12 @@ export class StateSinglton {
         console.log('Produced result', event.event.data, 'round' + data.round);
 
         stateM.roundResultMap.set(data.round, data.result);
+
+        const curBankValue = stateM.bankMap.get(data.round);
+        const newBankValue = curBankValue
+          .mul(PRESICION - COMMISION)
+          .div(PRESICION);
+        stateM.bankMap.set(data.round, newBankValue);
       }
       if (event.type == 'get-reward') {
         console.log('Got reward', event.event.data, 'round' + data.round);
