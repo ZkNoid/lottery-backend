@@ -1,4 +1,4 @@
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
 import { StateSinglton } from 'src/state-manager';
@@ -23,6 +23,8 @@ function randomIntFromInterval(min, max) {
 
 @Injectable()
 export class DistributionProvingService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(DistributionProvingService.name);
+
   constructor(
     @InjectModel(RoundsData.name)
     private rounds: Model<RoundsData>,
@@ -34,7 +36,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
   @Cron(CronExpression.EVERY_10_MINUTES)
   async handleCron() {
     for (let network of ALL_NETWORKS) {
-      console.log(
+      this.logger.debug(
         'StateSinglton state',
         StateSinglton.initialized,
         StateSinglton.stateInitialized,
@@ -42,15 +44,15 @@ export class DistributionProvingService implements OnApplicationBootstrap {
 
       const currentRoundId = StateSinglton.roundIds[network.networkID];
 
-      console.log('Current round id', currentRoundId);
+      this.logger.debug('Current round id', currentRoundId);
 
       for (let roundId = 0; roundId < currentRoundId; roundId++) {
-        console.log('Round', roundId);
+        this.logger.debug('Round', roundId);
         const result = StateSinglton.state[
           network.networkID
         ].roundResultMap.get(Field.from(roundId));
 
-        console.log(
+        this.logger.debug(
           'Round result',
           result.toBigInt(),
           Field.empty().toBigInt(),
@@ -59,11 +61,11 @@ export class DistributionProvingService implements OnApplicationBootstrap {
           !(await this.rounds.findOne({ roundId: roundId }))?.dp &&
           result.toBigInt() > 0
         ) {
-          console.log('Generation of DP', roundId);
+          this.logger.debug('Generation of DP', roundId);
 
           let dp = await StateSinglton.state[network.networkID].getDP(roundId);
 
-          console.log('DP generated');
+          this.logger.debug('DP generated');
 
           const events = StateSinglton.state[network.networkID]!.roundTickets[
             roundId
@@ -72,7 +74,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
             numbers: x.numbers.map((x) => Number(x.toBigint())),
             owner: x.owner.toBase58(),
           }));
-          console.log('Distribution proof events', events);
+          this.logger.debug('Distribution proof events', events);
           await this.rounds
             .updateOne(
               {

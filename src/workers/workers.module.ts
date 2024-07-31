@@ -10,6 +10,7 @@ import { ProduceResultModule } from './produce-result/produce-result.module';
 import { DistributionProvingModule } from './distribution-proving/distribution-proving.module';
 import { ProveReduceModule } from './reduce-proving/reduce-proving.module';
 import { RoundInfoUpdaterModule } from './round-infos-updater/round-infos-updater.module';
+import { EmptyTicketBuyingModule } from './empty-ticket-buying/empty-ticket-buying.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { RoundInfoUpdaterModule } from './round-infos-updater/round-infos-update
         DistributionProvingModule,
         RoundInfoUpdaterModule,
         ProveReduceModule,
+        EmptyTicketBuyingModule
       ],
       useFactory: async () => ({
         uri: process.env.MONGODB_URI,

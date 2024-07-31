@@ -1,18 +1,9 @@
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
 import { StateSinglton } from 'src/state-manager';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  BaseEventDocument,
-  MinaEventData,
-  MinaEventDocument,
-} from '../schema/events.schema';
-import { Model } from 'mongoose';
 import { Field, Mina, PrivateKey, UInt32, fetchLastBlock } from 'o1js';
-import { HttpService } from '@nestjs/axios';
-import { BLOCK_PER_ROUND, NumberPacked } from 'l1-lottery-contracts';
-import { RoundsData } from '../schema/rounds.schema';
+import { NumberPacked } from 'l1-lottery-contracts';
 
 function randomIntFromInterval(min, max) {
   // min and max included
@@ -21,6 +12,8 @@ function randomIntFromInterval(min, max) {
 
 @Injectable()
 export class ProduceResultService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(ProduceResultService.name);
+
   constructor() {}
   async onApplicationBootstrap() {
     // await this.handleCron();
@@ -33,36 +26,36 @@ export class ProduceResultService implements OnApplicationBootstrap {
 
     for (let network of ALL_NETWORKS) {
       try {
-        console.log(
+        this.logger.debug(
           'StateSinglton state',
           StateSinglton.initialized,
           StateSinglton.stateInitialized,
         );
 
         const currentRoundId = StateSinglton.roundIds[network.networkID];
-        console.log('Current round id', currentRoundId);
+        this.logger.debug('Current round id', currentRoundId);
 
         for (let roundId = 0; roundId < currentRoundId; roundId++) {
           const result = StateSinglton.state[
             network.networkID
           ].roundResultMap.get(Field.from(roundId));
 
-          console.log('Round', roundId, 'Result', result.toBigInt());
+          this.logger.debug('Round', roundId, 'Result', result.toBigInt());
 
           if (result.toBigInt() == 0n) {
-            console.log('Producing resukt', roundId);
+            this.logger.debug('Producing result', roundId);
 
             let { resultWitness, bankValue, bankWitness } =
               StateSinglton.state[network.networkID].updateResult(roundId);
 
             // console.log(`Digest: `, await MockLottery.digest());
             const sender = PrivateKey.fromBase58(process.env.PK);
-            console.log('Tx init');
+            this.logger.debug('Tx init');
 
             const randomCombilation = Array.from({ length: 6 }, () =>
               randomIntFromInterval(1, 9),
             );
-            console.log('Setting combination', randomCombilation);
+            this.logger.log('Setting combination', randomCombilation);
             let tx = await Mina.transaction(
               { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
               async () => {
@@ -76,18 +69,18 @@ export class ProduceResultService implements OnApplicationBootstrap {
                 );
               },
             );
-            console.log('Proving tx');
+            this.logger.debug('Proving tx');
             await tx.prove();
-            console.log('Proved tx');
+            this.logger.debug('Proved tx');
             let txResult = await tx.sign([sender]).send();
 
-            console.log(`Tx successful. Hash: `, txResult.hash);
-            console.log('Waiting for tx');
+            this.logger.debug(`Tx successful. Hash: `, txResult.hash);
+            this.logger.debug('Waiting for tx');
             await txResult.wait();
           }
         }
       } catch (e) {
-        console.log('Error', e);
+        this.logger.error('Error', e);
       }
     }
 

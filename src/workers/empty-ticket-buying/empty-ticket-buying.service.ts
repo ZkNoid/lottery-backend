@@ -3,10 +3,11 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
 import { StateSinglton } from 'src/state-manager';
 import { Mina, PrivateKey } from 'o1js';
+import { ProduceResultService } from '../produce-result/produce-result.service';
 
 @Injectable()
-export class ProveReduceService implements OnApplicationBootstrap {
-  private readonly logger = new Logger(ProveReduceService.name);
+export class EmptyTicketBuyinService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(ProduceResultService.name);
 
   constructor() {}
   async onApplicationBootstrap() {
@@ -19,7 +20,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
     StateSinglton.inReduceProving = true;
 
     try {
-      this.logger.debug('REDUCE PROVING');
+      this.logger.debug('Empty ticket buying');
       for (let network of ALL_NETWORKS) {
         const currentRoundId = StateSinglton.roundIds[network.networkID];
 
@@ -30,11 +31,12 @@ export class ProveReduceService implements OnApplicationBootstrap {
           .toBigInt();
 
         this.logger.debug(
-          'Current round id',
+          'Checking round id',
           currentRoundId,
-          'ttr',
+          'ttb',
           lastReduceInRound,
         );
+        const stateM = StateSinglton.state[network.networkID];
 
         // Checking that at least one ticket bought after the last reduce round
         let ticketBoughtAfterReduce = false;
@@ -46,15 +48,13 @@ export class ProveReduceService implements OnApplicationBootstrap {
           }
         }
 
-        if (lastReduceInRound < currentRoundId && !ticketBoughtAfterReduce) {
-          this.logger.debug('No tickets bought in the round');
+        if (lastReduceInRound < currentRoundId && ticketBoughtAfterReduce) {
+          this.logger.debug('There is ticket in current round');
         }
 
-        if (lastReduceInRound < currentRoundId && ticketBoughtAfterReduce) {
-          this.logger.debug('Time to reduce');
+        if (lastReduceInRound < currentRoundId && !ticketBoughtAfterReduce) {
+          this.logger.debug('Time to buy empty ticket');
           const sender = PrivateKey.fromBase58(process.env.PK);
-
-          const stateM = StateSinglton.state[network.networkID];
 
           // Reduce tickets
           let reduceProof = await stateM.reduceTickets();
@@ -80,13 +80,16 @@ export class ProveReduceService implements OnApplicationBootstrap {
           this.logger.debug('Proved reduce tx');
           let txResult = await tx2_1.sign([sender]).send();
 
-          this.logger.debug(`Reduce tx successful. Hash: `, txResult.hash);
+          this.logger.debug(
+            `Reduce tx successful. Hash: `,
+            txResult.hash,
+          );
           this.logger.debug('Waiting for reduce tx');
           await txResult.wait();
         }
       }
     } catch (e) {
-      console.error('Error in reduce proving', e);
+      this.logger.error('Error', e);
     }
     StateSinglton.inReduceProving = false;
   }

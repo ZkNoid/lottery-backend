@@ -1,4 +1,4 @@
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
 import { StateSinglton } from 'src/state-manager';
@@ -26,6 +26,8 @@ const SCORE_COEFFICIENTS: bigint[] = [
 
 @Injectable()
 export class RoundInfoUpdaterService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(RoundInfoUpdaterService.name);
+
   constructor(
     @InjectModel(RoundsData.name)
     private rounds: Model<RoundsData>,
@@ -51,7 +53,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
           StateSinglton.lottery[network.networkID].startBlock.get();
 
         const currentRoundId = StateSinglton.roundIds[network.networkID];
-        console.log('Current round id', currentRoundId);
+        this.logger.debug('Current round id', currentRoundId);
 
         for (let roundId = 0; roundId <= currentRoundId; roundId++) {
           const boughtTickets =
@@ -123,7 +125,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
         }
       }
     } catch (e) {
-      console.log('Round info update error', e);
+      this.logger.error('Round info update error', e);
     }
     this.running = false;
   }
