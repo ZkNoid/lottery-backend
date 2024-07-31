@@ -40,7 +40,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
         let ticketBoughtAfterReduce = false;
 
         for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
-          if (StateSinglton.boughtTickets[i].length > 0) {
+          if (StateSinglton.boughtTickets[network.networkID][i].length > 0) {
             ticketBoughtAfterReduce = true;
             break;
           }
