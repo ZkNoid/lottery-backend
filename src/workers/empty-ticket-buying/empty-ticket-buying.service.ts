@@ -3,11 +3,10 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
 import { StateSinglton } from 'src/state-manager';
 import { Mina, PrivateKey } from 'o1js';
-import { ProduceResultService } from '../produce-result/produce-result.service';
 
 @Injectable()
 export class EmptyTicketBuyinService implements OnApplicationBootstrap {
-  private readonly logger = new Logger(ProduceResultService.name);
+  private readonly logger = new Logger(EmptyTicketBuyinService.name);
 
   constructor() {}
   async onApplicationBootstrap() {
