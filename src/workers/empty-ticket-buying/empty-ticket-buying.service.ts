@@ -2,7 +2,8 @@ import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
 import { StateSinglton } from 'src/state-manager';
-import { Mina, PrivateKey } from 'o1js';
+import { Field, Mina, PrivateKey, PublicKey } from 'o1js';
+import { Ticket } from 'l1-lottery-contracts';
 
 @Injectable()
 export class EmptyTicketBuyinService implements OnApplicationBootstrap {
@@ -41,7 +42,9 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
         let ticketBoughtAfterReduce = false;
 
         for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
-          if (StateSinglton.boughtTickets[i].length > 0) {
+          if (StateSinglton.boughtTickets[network.networkID][i].length > 0) {
+            this.logger.debug(`Found ticket in round ${i}`);
+
             ticketBoughtAfterReduce = true;
             break;
           }
@@ -54,36 +57,26 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
         if (lastReduceInRound < currentRoundId && !ticketBoughtAfterReduce) {
           this.logger.debug('Time to buy empty ticket');
           const sender = PrivateKey.fromBase58(process.env.PK);
+          const ticket = Ticket.from([1, 1, 1, 1, 1, 1], PublicKey.empty(), 0);
 
-          // Reduce tickets
-          let reduceProof = await stateM.reduceTickets();
-
-          this.logger.debug(
-            'Reduce proof',
-            'initial state',
-            reduceProof.publicOutput.initialState.toString(),
-            'Final state',
-            reduceProof.publicOutput.finalState.toString(),
-          );
-
+          // Buy empty ticket
           let tx2_1 = await Mina.transaction(
             { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
             async () => {
-              await StateSinglton.lottery[network.networkID].reduceTickets(
-                reduceProof,
+              await StateSinglton.lottery[network.networkID].buyTicket(
+                ticket,
+                Field.from(StateSinglton.roundIds[network.networkID]),
               );
             },
           );
-          this.logger.debug('Proving reduce tx');
+          
+          this.logger.debug('Proving buy tx');
           await tx2_1.prove();
-          this.logger.debug('Proved reduce tx');
+          this.logger.debug('Proved buy tx');
           let txResult = await tx2_1.sign([sender]).send();
 
-          this.logger.debug(
-            `Reduce tx successful. Hash: `,
-            txResult.hash,
-          );
-          this.logger.debug('Waiting for reduce tx');
+          this.logger.debug(`Buy tx successful. Hash: `, txResult.hash);
+          this.logger.debug('Waiting for buy tx');
           await txResult.wait();
         }
       }
