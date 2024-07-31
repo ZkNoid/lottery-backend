@@ -41,6 +41,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
         for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
           if (StateSinglton.boughtTickets[network.networkID][i].length > 0) {
+            this.logger.debug(`Found ticket in round ${i}`)
             ticketBoughtAfterReduce = true;
             break;
           }
