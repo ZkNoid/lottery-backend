@@ -80,7 +80,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
           }
         }
       } catch (e) {
-        this.logger.error('Error', e);
+        this.logger.error('Error', e.stack);
       }
     }
 

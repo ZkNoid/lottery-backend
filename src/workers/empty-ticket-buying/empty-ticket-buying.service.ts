@@ -88,7 +88,7 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
         }
       }
     } catch (e) {
-      this.logger.error('Error', e);
+      this.logger.error('Error', e.stack);
     }
     StateSinglton.inReduceProving = false;
   }

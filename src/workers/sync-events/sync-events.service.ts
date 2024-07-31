@@ -219,7 +219,7 @@ export class SyncEventsService implements OnApplicationBootstrap {
         StateSinglton.roundIds[network.networkID] = currentRoundId;
       }
     } catch (e) {
-      console.log('Events sync error', e);
+      console.log('Events sync error', e.stack);
     }
     this.running = false;
   }

@@ -20,7 +20,7 @@ export class ClaimApiController {
         claimData.amount,
       );
     } catch (e) {
-      console.log('Claim error', e);
+      console.log('Claim error', e.stack);
     }
   }
 }

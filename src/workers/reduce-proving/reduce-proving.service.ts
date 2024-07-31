@@ -86,7 +86,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
         }
       }
     } catch (e) {
-      console.error('Error in reduce proving', e);
+      console.error('Error in reduce proving', e.stack);
     }
     StateSinglton.inReduceProving = false;
   }
