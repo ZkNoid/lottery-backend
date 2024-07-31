@@ -125,7 +125,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
         }
       }
     } catch (e) {
-      this.logger.error('Round info update error', e);
+      this.logger.error('Round info update error', e.stack);
     }
     this.running = false;
   }
