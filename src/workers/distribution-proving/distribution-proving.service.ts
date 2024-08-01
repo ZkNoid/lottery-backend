@@ -32,35 +32,28 @@ export class DistributionProvingService implements OnApplicationBootstrap {
   async onApplicationBootstrap() {
     // await this.handleCron();
   }
+  async checkConditionsForRound(networkId: string, roundId: number) {
+    const result = StateSinglton.state[networkId].roundResultMap.get(
+      Field.from(roundId),
+    );
+
+    return (
+      !(await this.rounds.findOne({ roundId: roundId }))?.dp &&
+      result.toBigInt() > 0
+    );
+  }
 
   @Cron(CronExpression.EVERY_10_MINUTES)
   async handleCron() {
     for (let network of ALL_NETWORKS) {
-      this.logger.debug(
-        'StateSinglton state',
-        StateSinglton.initialized,
-        StateSinglton.stateInitialized,
-      );
-
       const currentRoundId = StateSinglton.roundIds[network.networkID];
 
       this.logger.debug('Current round id', currentRoundId);
 
       for (let roundId = 0; roundId < currentRoundId; roundId++) {
         this.logger.debug('Round', roundId);
-        const result = StateSinglton.state[
-          network.networkID
-        ].roundResultMap.get(Field.from(roundId));
 
-        this.logger.debug(
-          'Round result',
-          result.toBigInt(),
-          Field.empty().toBigInt(),
-        );
-        if (
-          !(await this.rounds.findOne({ roundId: roundId }))?.dp &&
-          result.toBigInt() > 0
-        ) {
+        if (await this.checkConditionsForRound(network.networkID, roundId)) {
           this.logger.debug('Generation of DP', roundId);
 
           let dp = await StateSinglton.state[network.networkID].getDP(roundId);

@@ -19,6 +19,20 @@ export class ProduceResultService implements OnApplicationBootstrap {
     // await this.handleCron();
   }
 
+  async checkRoundConditions(networkId: string, roundId: number) {
+    const lastReduceInRound = StateSinglton.lottery[networkId].lastReduceInRound
+      .get()
+      .toBigInt();
+
+    const result = StateSinglton.state[networkId].roundResultMap.get(
+      Field.from(roundId),
+    );
+
+    this.logger.debug('Round', roundId, 'Result', result.toBigInt());
+
+    return roundId >= lastReduceInRound && result.toBigInt() == 0n;
+  }
+
   @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
     if (StateSinglton.inReduceProving) return;
@@ -36,13 +50,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
         this.logger.debug('Current round id', currentRoundId);
 
         for (let roundId = 0; roundId < currentRoundId; roundId++) {
-          const result = StateSinglton.state[
-            network.networkID
-          ].roundResultMap.get(Field.from(roundId));
-
-          this.logger.debug('Round', roundId, 'Result', result.toBigInt());
-
-          if (result.toBigInt() == 0n) {
+          if (await this.checkRoundConditions(network.networkID, roundId)) {
             this.logger.debug('Producing result', roundId);
 
             let { resultWitness, bankValue, bankWitness } =

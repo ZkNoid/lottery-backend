@@ -13,6 +13,37 @@ export class ProveReduceService implements OnApplicationBootstrap {
     // await this.handleCron();
   }
 
+  async checkConditions(networkId: string) {
+    const currentRoundId = StateSinglton.roundIds[networkId];
+
+    const lastReduceInRound = StateSinglton.lottery[networkId].lastReduceInRound
+      .get()
+      .toBigInt();
+
+    this.logger.debug(
+      'Current round id',
+      currentRoundId,
+      'ttr',
+      lastReduceInRound,
+    );
+
+    // Checking that at least one ticket bought after the last reduce round
+    let ticketBoughtAfterReduce = false;
+
+    for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
+      if (StateSinglton.boughtTickets[networkId][i].length > 0) {
+        this.logger.debug(`Found ticket in round ${i}`);
+        ticketBoughtAfterReduce = true;
+        break;
+      }
+    }
+
+    if (lastReduceInRound < currentRoundId && !ticketBoughtAfterReduce) {
+      this.logger.debug('No tickets bought in the round');
+    }
+    return lastReduceInRound < currentRoundId && ticketBoughtAfterReduce;
+  }
+
   @Cron(CronExpression.EVERY_5_MINUTES)
   async handleCron() {
     if (StateSinglton.inReduceProving) return;
@@ -21,37 +52,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
     try {
       this.logger.debug('REDUCE PROVING');
       for (let network of ALL_NETWORKS) {
-        const currentRoundId = StateSinglton.roundIds[network.networkID];
-
-        const lastReduceInRound = StateSinglton.lottery[
-          network.networkID
-        ].lastReduceInRound
-          .get()
-          .toBigInt();
-
-        this.logger.debug(
-          'Current round id',
-          currentRoundId,
-          'ttr',
-          lastReduceInRound,
-        );
-
-        // Checking that at least one ticket bought after the last reduce round
-        let ticketBoughtAfterReduce = false;
-
-        for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
-          if (StateSinglton.boughtTickets[network.networkID][i].length > 0) {
-            this.logger.debug(`Found ticket in round ${i}`)
-            ticketBoughtAfterReduce = true;
-            break;
-          }
-        }
-
-        if (lastReduceInRound < currentRoundId && !ticketBoughtAfterReduce) {
-          this.logger.debug('No tickets bought in the round');
-        }
-
-        if (lastReduceInRound < currentRoundId && ticketBoughtAfterReduce) {
+        if (await this.checkConditions(network.networkID)) {
           this.logger.debug('Time to reduce');
           const sender = PrivateKey.fromBase58(process.env.PK);
 

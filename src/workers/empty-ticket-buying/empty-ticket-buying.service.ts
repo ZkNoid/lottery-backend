@@ -14,6 +14,49 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
     // await this.handleCron();
   }
 
+  async checkConditions(networkId: string) {
+    const currentRoundId = StateSinglton.roundIds[networkId];
+
+    const lastReduceInRound = StateSinglton.lottery[networkId].lastReduceInRound
+      .get()
+      .toBigInt();
+
+    this.logger.debug(
+      'Checking round id',
+      currentRoundId,
+      'ttb',
+      lastReduceInRound,
+    );
+    const stateM = StateSinglton.state[networkId];
+
+    // Checking that at least one ticket bought after the last reduce round
+    let ticketBoughtAfterReduce = false;
+
+    for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
+      if (StateSinglton.boughtTickets[networkId][i].length > 0) {
+        this.logger.debug(`Found ticket in round ${i}`);
+
+        ticketBoughtAfterReduce = true;
+        break;
+      }
+    }
+
+    for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
+      if (StateSinglton.boughtTickets[networkId][i].length > 0) {
+        this.logger.debug(`Found ticket in round ${i}`);
+
+        ticketBoughtAfterReduce = true;
+        break;
+      }
+    }
+
+    if (lastReduceInRound < currentRoundId && ticketBoughtAfterReduce) {
+      this.logger.debug('There is ticket in current round');
+    }
+
+    return lastReduceInRound < currentRoundId && !ticketBoughtAfterReduce;
+  }
+
   @Cron(CronExpression.EVERY_5_MINUTES)
   async handleCron() {
     if (StateSinglton.inReduceProving) return;
@@ -22,39 +65,7 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
     try {
       this.logger.debug('Empty ticket buying');
       for (let network of ALL_NETWORKS) {
-        const currentRoundId = StateSinglton.roundIds[network.networkID];
-
-        const lastReduceInRound = StateSinglton.lottery[
-          network.networkID
-        ].lastReduceInRound
-          .get()
-          .toBigInt();
-
-        this.logger.debug(
-          'Checking round id',
-          currentRoundId,
-          'ttb',
-          lastReduceInRound,
-        );
-        const stateM = StateSinglton.state[network.networkID];
-
-        // Checking that at least one ticket bought after the last reduce round
-        let ticketBoughtAfterReduce = false;
-
-        for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
-          if (StateSinglton.boughtTickets[network.networkID][i].length > 0) {
-            this.logger.debug(`Found ticket in round ${i}`);
-
-            ticketBoughtAfterReduce = true;
-            break;
-          }
-        }
-
-        if (lastReduceInRound < currentRoundId && ticketBoughtAfterReduce) {
-          this.logger.debug('There is ticket in current round');
-        }
-
-        if (lastReduceInRound < currentRoundId && !ticketBoughtAfterReduce) {
+        if (await this.checkConditions(network.networkID)) {
           this.logger.debug('Time to buy empty ticket');
           const sender = PrivateKey.fromBase58(process.env.PK);
           const ticket = Ticket.from([1, 1, 1, 1, 1, 1], PublicKey.empty(), 0);
@@ -69,7 +80,7 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
               );
             },
           );
-          
+
           this.logger.debug('Proving buy tx');
           await tx2_1.prove();
           this.logger.debug('Proved buy tx');
