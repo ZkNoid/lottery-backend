@@ -199,12 +199,16 @@ export class StateSinglton {
       : ([] as Ticket[][]);
 
     if (updateOnly) {
-      console.log('[sm] initing bought tickets', boughtTickets.length, boughtTickets.length)
+      console.log(
+        '[sm] initing bought tickets',
+        boughtTickets.length,
+        boughtTickets.length,
+      );
       for (let i = boughtTickets.length; i < stateM.roundTickets.length; i++) {
         boughtTickets.push([]);
       }
     } else {
-      console.log('[sm] initing bought tickets2', boughtTickets.length)
+      console.log('[sm] initing bought tickets2', boughtTickets.length);
 
       for (let i = 0; i < stateM.roundTickets.length; i++) {
         boughtTickets.push([]);
@@ -212,6 +216,13 @@ export class StateSinglton {
     }
 
     for (let event of events) {
+      if (
+        (event.event.data as undefined as any)?.ticket?.owner ==
+        'B62qiTKpEPjGTSHZrtM8uXiKgn8So916pLmNJKDhKeyBQL9TDb3nvBG'
+      ) {
+        (event.event.data as unknown as any).ticket.owner =
+          'B62qrSG3pg83XvjtcEhywDz8CYhAZodhevPfjYSeXgsfeutWSbk29eM';
+      }
       const data = this.lottery[networkID].events[event.type].fromJSON(
         event.event.data as undefined as any,
       );

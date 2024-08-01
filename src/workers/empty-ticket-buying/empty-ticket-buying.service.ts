@@ -68,7 +68,11 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
         if (await this.checkConditions(network.networkID)) {
           this.logger.debug('Time to buy empty ticket');
           const sender = PrivateKey.fromBase58(process.env.PK);
-          const ticket = Ticket.from([1, 1, 1, 1, 1, 1], PublicKey.empty(), 0);
+          const ticket = Ticket.from(
+            [1, 1, 1, 1, 1, 1],
+            StateSinglton.lottery[network.networkID].address,
+            0,
+          );
 
           // Buy empty ticket
           let tx2_1 = await Mina.transaction(
