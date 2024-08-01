@@ -204,7 +204,7 @@ export class StateSinglton {
         boughtTickets.push([]);
       }
     } else {
-      console.log('[sm] initing bought tickets', boughtTickets.length)
+      console.log('[sm] initing bought tickets2', boughtTickets.length)
 
       for (let i = 0; i < stateM.roundTickets.length; i++) {
         boughtTickets.push([]);

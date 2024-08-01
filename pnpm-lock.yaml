@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   o1js@1.4.0:
-    hash: hm33d7fk4odolbl36rnws4gmmy
+    hash: 4kniegfh6wxt6kgkrvn2yrltyu
     path: patches/o1js@1.4.0.patch
 
 dependencies:
@@ -42,7 +42,7 @@ dependencies:
     version: 8.4.4
   o1js:
     specifier: ^1.4.0
-    version: 1.4.0(patch_hash=hm33d7fk4odolbl36rnws4gmmy)
+    version: 1.4.0(patch_hash=4kniegfh6wxt6kgkrvn2yrltyu)
   reflect-metadata:
     specifier: ^0.2.0
     version: 0.2.2
@@ -4262,7 +4262,7 @@ packages:
       axios: 1.7.2
       esbuild: 0.21.5
       minimist: 1.2.8
-      o1js: 1.4.0(patch_hash=hm33d7fk4odolbl36rnws4gmmy)
+      o1js: 1.4.0(patch_hash=4kniegfh6wxt6kgkrvn2yrltyu)
       zkapp-cli: 0.21.5
     transitivePeerDependencies:
       - debug
@@ -4656,7 +4656,7 @@ packages:
       path-key: 3.1.1
     dev: true
 
-  /o1js@1.4.0(patch_hash=hm33d7fk4odolbl36rnws4gmmy):
+  /o1js@1.4.0(patch_hash=4kniegfh6wxt6kgkrvn2yrltyu):
     resolution: {integrity: sha512-n4W1tukEF1ztfsKOoa29PIc9zY6SBMhQI6lXQL+pZ86/0XO3VqE9Gc8GOlxv+zV9+BJWM2c1N25bob72Kt/+EQ==}
     engines: {node: '>=18.14.0'}
     hasBin: true
@@ -6105,7 +6105,7 @@ packages:
       find-npm-prefix: 1.0.2
       fs-extra: 11.2.0
       mina-signer: 3.0.7
-      o1js: 1.4.0(patch_hash=hm33d7fk4odolbl36rnws4gmmy)
+      o1js: 1.4.0(patch_hash=4kniegfh6wxt6kgkrvn2yrltyu)
       opener: 1.5.2
       ora: 8.0.1
       semver: 7.6.2
