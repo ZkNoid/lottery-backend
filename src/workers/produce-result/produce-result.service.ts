@@ -30,7 +30,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
 
     this.logger.debug('Round', roundId, 'Result', result.toBigInt());
 
-    return roundId > lastReduceInRound && result.toBigInt() == 0n;
+    return roundId < lastReduceInRound && result.toBigInt() == 0n;
   }
 
   @Cron(CronExpression.EVERY_30_SECONDS)
