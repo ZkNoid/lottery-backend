@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { SyncEventsService } from './sync-events.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HttpModule } from '@nestjs/axios';
+import { StateModule } from 'src/state-service/state.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { HttpModule } from '@nestjs/axios';
         schema: MinaEventDataSchema,
       },
     ]),
+    StateModule,
   ],
   providers: [SyncEventsService],
 })

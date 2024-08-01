@@ -1,22 +1,22 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
-import { StateSinglton } from 'src/state-manager';
 import { Mina, PrivateKey } from 'o1js';
+import { StateService } from 'src/state-service/state.service';
 
 @Injectable()
 export class ProveReduceService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ProveReduceService.name);
 
-  constructor() {}
+  constructor(private stateManager: StateService) {}
   async onApplicationBootstrap() {
     // await this.handleCron();
   }
 
   async checkConditions(networkId: string) {
-    const currentRoundId = StateSinglton.roundIds[networkId];
+    const currentRoundId = this.stateManager.roundIds[networkId];
 
-    const lastReduceInRound = StateSinglton.lottery[networkId].lastReduceInRound
+    const lastReduceInRound = this.stateManager.lottery[networkId].lastReduceInRound
       .get()
       .toBigInt();
 
@@ -31,7 +31,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
     let ticketBoughtAfterReduce = false;
 
     for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
-      if (StateSinglton.boughtTickets[networkId][i].length > 0) {
+      if (this.stateManager.boughtTickets[networkId][i].length > 0) {
         this.logger.debug(`Found ticket in round ${i}`);
         ticketBoughtAfterReduce = true;
         break;
@@ -46,8 +46,8 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async handleCron() {
-    if (StateSinglton.inReduceProving) return;
-    StateSinglton.inReduceProving = true;
+    if (this.stateManager.inReduceProving) return;
+    this.stateManager.inReduceProving = true;
 
     try {
       this.logger.debug('REDUCE PROVING');
@@ -56,7 +56,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
           this.logger.debug('Time to reduce');
           const sender = PrivateKey.fromBase58(process.env.PK);
 
-          const stateM = StateSinglton.state[network.networkID];
+          const stateM = this.stateManager.state[network.networkID];
 
           // Reduce tickets
           let reduceProof = await stateM.reduceTickets();
@@ -72,7 +72,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
           let tx2_1 = await Mina.transaction(
             { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
             async () => {
-              await StateSinglton.lottery[network.networkID].reduceTickets(
+              await this.stateManager.lottery[network.networkID].reduceTickets(
                 reduceProof,
               );
             },
@@ -90,6 +90,6 @@ export class ProveReduceService implements OnApplicationBootstrap {
     } catch (e) {
       console.error('Error in reduce proving', e.stack);
     }
-    StateSinglton.inReduceProving = false;
+    this.stateManager.inReduceProving = false;
   }
 }

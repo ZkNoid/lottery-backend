@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ProduceResultService } from './produce-result.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HttpModule } from '@nestjs/axios';
+import { StateModule } from 'src/state-service/state.module';
 
 
 @Module({
@@ -15,6 +16,7 @@ import { HttpModule } from '@nestjs/axios';
         schema: MinaEventDataSchema,
       },
     ]),
+    StateModule
   ],
   providers: [ProduceResultService],
 })

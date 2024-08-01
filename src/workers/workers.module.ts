@@ -11,6 +11,7 @@ import { DistributionProvingModule } from './distribution-proving/distribution-p
 import { ProveReduceModule } from './reduce-proving/reduce-proving.module';
 import { RoundInfoUpdaterModule } from './round-infos-updater/round-infos-updater.module';
 import { EmptyTicketBuyingModule } from './empty-ticket-buying/empty-ticket-buying.module';
+import { StateService } from 'src/state-service/state.service';
 
 @Module({
   imports: [

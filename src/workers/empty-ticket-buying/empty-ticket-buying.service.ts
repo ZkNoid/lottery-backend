@@ -1,23 +1,23 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
-import { StateSinglton } from 'src/state-manager';
 import { Field, Mina, PrivateKey, PublicKey } from 'o1js';
 import { Ticket } from 'l1-lottery-contracts';
+import { StateService } from 'src/state-service/state.service';
 
 @Injectable()
 export class EmptyTicketBuyinService implements OnApplicationBootstrap {
   private readonly logger = new Logger(EmptyTicketBuyinService.name);
 
-  constructor() {}
+  constructor(private stateManager: StateService) {}
   async onApplicationBootstrap() {
     // await this.handleCron();
   }
 
   async checkConditions(networkId: string) {
-    const currentRoundId = StateSinglton.roundIds[networkId];
+    const currentRoundId = this.stateManager.roundIds[networkId];
 
-    const lastReduceInRound = StateSinglton.lottery[networkId].lastReduceInRound
+    const lastReduceInRound = this.stateManager.lottery[networkId].lastReduceInRound
       .get()
       .toBigInt();
 
@@ -27,13 +27,13 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
       'ttb',
       lastReduceInRound,
     );
-    const stateM = StateSinglton.state[networkId];
+    const stateM = this.stateManager.state[networkId];
 
     // Checking that at least one ticket bought after the last reduce round
     let ticketBoughtAfterReduce = false;
 
     for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
-      if (StateSinglton.boughtTickets[networkId][i].length > 0) {
+      if (this.stateManager.boughtTickets[networkId][i].length > 0) {
         this.logger.debug(`Found ticket in round ${i}`);
 
         ticketBoughtAfterReduce = true;
@@ -42,7 +42,7 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
     }
 
     for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
-      if (StateSinglton.boughtTickets[networkId][i].length > 0) {
+      if (this.stateManager.boughtTickets[networkId][i].length > 0) {
         this.logger.debug(`Found ticket in round ${i}`);
 
         ticketBoughtAfterReduce = true;
@@ -59,8 +59,8 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async handleCron() {
-    if (StateSinglton.inReduceProving) return;
-    StateSinglton.inReduceProving = true;
+    if (this.stateManager.inReduceProving) return;
+    this.stateManager.inReduceProving = true;
 
     try {
       this.logger.debug('Empty ticket buying');
@@ -70,7 +70,7 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
           const sender = PrivateKey.fromBase58(process.env.PK);
           const ticket = Ticket.from(
             [1, 1, 1, 1, 1, 1],
-            StateSinglton.lottery[network.networkID].address,
+            this.stateManager.lottery[network.networkID].address,
             0,
           );
 
@@ -78,9 +78,9 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
           let tx2_1 = await Mina.transaction(
             { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
             async () => {
-              await StateSinglton.lottery[network.networkID].buyTicket(
+              await this.stateManager.lottery[network.networkID].buyTicket(
                 ticket,
-                Field.from(StateSinglton.roundIds[network.networkID]),
+                Field.from(this.stateManager.roundIds[network.networkID]),
               );
             },
           );
@@ -98,6 +98,6 @@ export class EmptyTicketBuyinService implements OnApplicationBootstrap {
     } catch (e) {
       this.logger.error('Error', e.stack);
     }
-    StateSinglton.inReduceProving = false;
+    this.stateManager.inReduceProving = false;
   }
 }

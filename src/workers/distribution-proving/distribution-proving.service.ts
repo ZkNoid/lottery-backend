@@ -1,25 +1,11 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
-import { StateSinglton } from 'src/state-manager';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import {
-  Field,
-  Mina,
-  PrivateKey,
-  PublicKey,
-  UInt32,
-  fetchLastBlock,
-} from 'o1js';
-import { HttpService } from '@nestjs/axios';
-import { BLOCK_PER_ROUND, NumberPacked, Ticket } from 'l1-lottery-contracts';
+import { Field } from 'o1js';
 import { RoundsData } from '../schema/rounds.schema';
-
-function randomIntFromInterval(min, max) {
-  // min and max included
-  return Math.floor(Math.random() * (max - min + 1) + min);
-}
+import { StateService } from 'src/state-service/state.service';
 
 @Injectable()
 export class DistributionProvingService implements OnApplicationBootstrap {
@@ -28,12 +14,13 @@ export class DistributionProvingService implements OnApplicationBootstrap {
   constructor(
     @InjectModel(RoundsData.name)
     private rounds: Model<RoundsData>,
+    private stateManager: StateService,
   ) {}
   async onApplicationBootstrap() {
     // await this.handleCron();
   }
   async checkConditionsForRound(networkId: string, roundId: number) {
-    const result = StateSinglton.state[networkId].roundResultMap.get(
+    const result = this.stateManager.state[networkId].roundResultMap.get(
       Field.from(roundId),
     );
 
@@ -46,7 +33,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
   @Cron(CronExpression.EVERY_10_MINUTES)
   async handleCron() {
     for (let network of ALL_NETWORKS) {
-      const currentRoundId = StateSinglton.roundIds[network.networkID];
+      const currentRoundId = this.stateManager.roundIds[network.networkID];
 
       this.logger.debug('Current round id', currentRoundId);
 
@@ -56,13 +43,14 @@ export class DistributionProvingService implements OnApplicationBootstrap {
         if (await this.checkConditionsForRound(network.networkID, roundId)) {
           this.logger.debug('Generation of DP', roundId);
 
-          let dp = await StateSinglton.state[network.networkID].getDP(roundId);
+          let dp =
+            await this.stateManager.state[network.networkID].getDP(roundId);
 
           this.logger.debug('DP generated');
 
-          const events = StateSinglton.state[network.networkID]!.roundTickets[
-            roundId
-          ].map((x) => ({
+          const events = this.stateManager.state[
+            network.networkID
+          ]!.roundTickets[roundId].map((x) => ({
             amount: Number(x.amount.toBigInt()),
             numbers: x.numbers.map((x) => Number(x.toBigint())),
             owner: x.owner.toBase58(),

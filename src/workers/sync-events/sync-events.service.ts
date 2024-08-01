@@ -1,24 +1,29 @@
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import {
+  Injectable,
+  OnApplicationBootstrap,
+  OnModuleInit,
+} from '@nestjs/common';
 import { Cron, CronExpression, Interval } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
-import { StateSinglton } from 'src/state-manager';
 import { InjectModel } from '@nestjs/mongoose';
 import { MinaEventData } from '../schema/events.schema';
 import { Model } from 'mongoose';
 import { HttpService } from '@nestjs/axios';
 import { BLOCK_PER_ROUND } from 'l1-lottery-contracts';
+import { StateService } from 'src/state-service/state.service';
 
 const BLOCK_UPDATE_DEPTH = 6;
 
 @Injectable()
-export class SyncEventsService implements OnApplicationBootstrap {
+export class SyncEventsService implements OnModuleInit {
   constructor(
     private readonly httpService: HttpService,
     @InjectModel(MinaEventData.name)
     private minaEventData: Model<MinaEventData>,
+    private stateManager: StateService,
   ) {}
-  async onApplicationBootstrap() {
-    await StateSinglton.initialize();
+  async onModuleInit() {
+    await this.stateManager.initialize();
     await this.handleCron();
     console.log('Initizlied');
   }
@@ -27,7 +32,7 @@ export class SyncEventsService implements OnApplicationBootstrap {
 
   @Interval('events_sync', 30_000)
   async handleCron() {
-    if (StateSinglton.inReduceProving) {
+    if (this.stateManager.inReduceProving) {
       console.log('It will kill reduce. Do not do it');
       return;
     }
@@ -76,7 +81,7 @@ export class SyncEventsService implements OnApplicationBootstrap {
           ? lastEvent.blockHeight - BLOCK_UPDATE_DEPTH
           : 0;
 
-        const events = await StateSinglton.fetchEvents(
+        const events = await this.stateManager.fetchEvents(
           network.networkID,
           lastEvent ? updateEventsFrom : 0,
         );
@@ -187,36 +192,39 @@ export class SyncEventsService implements OnApplicationBootstrap {
         }
 
         // Update state if not initially updated or if there are new events
-        if (!StateSinglton.stateInitialized[network.networkID]) {
+        if (!this.stateManager.stateInitialized[network.networkID]) {
           const allEvents = await this.minaEventData.find({});
-          await StateSinglton.initState(network.networkID, allEvents);
+          await this.stateManager.initState(network.networkID, allEvents);
         } else {
-          await StateSinglton.undoLastEvents(
+          await this.stateManager.undoLastEvents(
             network.networkID,
             eventsToBeDeleted,
-            StateSinglton.state[network.networkID],
+            this.stateManager.state[network.networkID],
           );
 
-          await StateSinglton.initState(
+          await this.stateManager.initState(
             network.networkID,
             newEventsToAdd,
-            StateSinglton.state[network.networkID],
+            this.stateManager.state[network.networkID],
           );
 
-          StateSinglton.updateProcessedTicketData(
-            StateSinglton.state[network.networkID],
+          this.stateManager.updateProcessedTicketData(
+            this.stateManager.state[network.networkID],
           );
         }
 
         const currentRoundId = Math.floor(
           (slotSinceGenesis -
-            Number(StateSinglton.lottery[network.networkID].startBlock.get())) /
+            Number(
+              this.stateManager.lottery[network.networkID].startBlock.get(),
+            )) /
             BLOCK_PER_ROUND,
         );
 
-        StateSinglton.blockHeight[network.networkID] = currBlockHeight;
-        StateSinglton.slotSinceGenesis[network.networkID] = slotSinceGenesis;
-        StateSinglton.roundIds[network.networkID] = currentRoundId;
+        this.stateManager.blockHeight[network.networkID] = currBlockHeight;
+        this.stateManager.slotSinceGenesis[network.networkID] =
+          slotSinceGenesis;
+        this.stateManager.roundIds[network.networkID] = currentRoundId;
       }
     } catch (e) {
       console.log('Events sync error', e.stack);

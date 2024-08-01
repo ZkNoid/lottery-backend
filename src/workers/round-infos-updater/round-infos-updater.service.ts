@@ -1,7 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
-import { StateSinglton } from 'src/state-manager';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Field } from 'o1js';
@@ -13,6 +12,7 @@ import {
   TICKET_PRICE,
 } from 'l1-lottery-contracts';
 import { RoundsData } from '../schema/rounds.schema';
+import { StateService } from 'src/state-service/state.service';
 
 const SCORE_COEFFICIENTS: bigint[] = [
   0n,
@@ -31,6 +31,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
   constructor(
     @InjectModel(RoundsData.name)
     private rounds: Model<RoundsData>,
+    private stateManager: StateService,
   ) {}
   async onApplicationBootstrap() {}
 
@@ -43,21 +44,21 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
 
     try {
       for (let network of ALL_NETWORKS) {
-        if (!StateSinglton.slotSinceGenesis[network.networkID]) continue;
+        if (!this.stateManager.slotSinceGenesis[network.networkID]) continue;
 
-        const stateM = StateSinglton.state[network.networkID]!;
+        const stateM = this.stateManager.state[network.networkID]!;
 
         const slotSinceGenesis =
-          StateSinglton.slotSinceGenesis[network.networkID];
+          this.stateManager.slotSinceGenesis[network.networkID];
         const startBlock =
-          StateSinglton.lottery[network.networkID].startBlock.get();
+          this.stateManager.lottery[network.networkID].startBlock.get();
 
-        const currentRoundId = StateSinglton.roundIds[network.networkID];
+        const currentRoundId = this.stateManager.roundIds[network.networkID];
         this.logger.debug('Current round id', currentRoundId);
 
         for (let roundId = 0; roundId <= currentRoundId; roundId++) {
           const boughtTickets =
-            StateSinglton.boughtTickets[network.networkID][roundId];
+            this.stateManager.boughtTickets[network.networkID][roundId];
 
           const winningCombination = NumberPacked.unpackToBigints(
             stateM.roundResultMap.get(Field.from(roundId)),

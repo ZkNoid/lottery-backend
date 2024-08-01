@@ -4,6 +4,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { RoundsData, RoundsDataSchema } from '../workers/schema/rounds.schema';
 import { ClaimApiService } from './claim-api.service';
 import { ClaimApiController } from './claim-api.controller';
+import { StateModule } from 'src/state-service/state.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ClaimApiController } from './claim-api.controller';
         schema: RoundsDataSchema,
       },
     ]),
+    StateModule
   ],
   providers: [ClaimApiService],
   controllers: [ClaimApiController]

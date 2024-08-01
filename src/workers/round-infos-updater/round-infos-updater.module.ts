@@ -4,6 +4,7 @@ import { RoundInfoUpdaterService } from './round-infos-updater.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HttpModule } from '@nestjs/axios';
 import { RoundsData, RoundsDataSchema } from '../schema/rounds.schema';
+import { StateModule } from 'src/state-service/state.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RoundsData, RoundsDataSchema } from '../schema/rounds.schema';
         maxRedirects: 5,
       }),
     }),
+    StateModule
   ],
   providers: [RoundInfoUpdaterService],
 })

@@ -1,9 +1,9 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
-import { StateSinglton } from 'src/state-manager';
 import { Field, Mina, PrivateKey, UInt32, fetchLastBlock } from 'o1js';
 import { NumberPacked } from 'l1-lottery-contracts';
+import { StateService } from 'src/state-service/state.service';
 
 function randomIntFromInterval(min, max) {
   // min and max included
@@ -14,17 +14,20 @@ function randomIntFromInterval(min, max) {
 export class ProduceResultService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ProduceResultService.name);
 
-  constructor() {}
+  constructor(private stateManager: StateService) {}
+
   async onApplicationBootstrap() {
     // await this.handleCron();
   }
 
   async checkRoundConditions(networkId: string, roundId: number) {
-    const lastReduceInRound = StateSinglton.lottery[networkId].lastReduceInRound
+    const lastReduceInRound = this.stateManager.lottery[
+      networkId
+    ].lastReduceInRound
       .get()
       .toBigInt();
 
-    const result = StateSinglton.state[networkId].roundResultMap.get(
+    const result = this.stateManager.state[networkId].roundResultMap.get(
       Field.from(roundId),
     );
 
@@ -35,18 +38,18 @@ export class ProduceResultService implements OnApplicationBootstrap {
 
   @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
-    if (StateSinglton.inReduceProving) return;
-    StateSinglton.inReduceProving = true;
+    if (this.stateManager.inReduceProving) return;
+    this.stateManager.inReduceProving = true;
 
     for (let network of ALL_NETWORKS) {
       try {
         this.logger.debug(
           'StateSinglton state',
-          StateSinglton.initialized,
-          StateSinglton.stateInitialized,
+          this.stateManager.initialized,
+          this.stateManager.stateInitialized,
         );
 
-        const currentRoundId = StateSinglton.roundIds[network.networkID];
+        const currentRoundId = this.stateManager.roundIds[network.networkID];
         this.logger.debug('Current round id', currentRoundId);
 
         for (let roundId = 0; roundId < currentRoundId; roundId++) {
@@ -54,7 +57,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
             this.logger.debug('Producing result', roundId);
 
             let { resultWitness, bankValue, bankWitness } =
-              StateSinglton.state[network.networkID].updateResult(roundId);
+              this.stateManager.state[network.networkID].updateResult(roundId);
 
             // console.log(`Digest: `, await MockLottery.digest());
             const sender = PrivateKey.fromBase58(process.env.PK);
@@ -67,7 +70,9 @@ export class ProduceResultService implements OnApplicationBootstrap {
             let tx = await Mina.transaction(
               { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
               async () => {
-                await StateSinglton.lottery[network.networkID].produceResult(
+                await this.stateManager.lottery[
+                  network.networkID
+                ].produceResult(
                   resultWitness,
                   NumberPacked.pack(
                     randomCombilation.map((x) => UInt32.from(x)),
@@ -92,6 +97,6 @@ export class ProduceResultService implements OnApplicationBootstrap {
       }
     }
 
-    StateSinglton.inReduceProving = false;
+    this.stateManager.inReduceProving = false;
   }
 }

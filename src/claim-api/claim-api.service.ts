@@ -1,7 +1,6 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from 'src/constants/networks';
-import { StateSinglton } from 'src/state-manager';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -16,12 +15,14 @@ import { HttpService } from '@nestjs/axios';
 import { BLOCK_PER_ROUND, NumberPacked, Ticket } from 'l1-lottery-contracts';
 import { RoundsData } from '../workers/schema/rounds.schema';
 import { error } from 'console';
+import { StateService } from 'src/state-service/state.service';
 
 @Injectable()
 export class ClaimApiService implements OnApplicationBootstrap {
   constructor(
     @InjectModel(RoundsData.name)
     private rounds: Model<RoundsData>,
+    private stateManager: StateService,
   ) {}
   async onApplicationBootstrap() {
     // await this.handleCron();
@@ -34,7 +35,7 @@ export class ClaimApiService implements OnApplicationBootstrap {
     senderAccount: string,
     amount: number,
   ) {
-    const stateM = StateSinglton.state[networkID];
+    const stateM = this.stateManager.state[networkID];
     const ticket = Ticket.from(
       ticketNums,
       PublicKey.fromBase58(senderAccount),

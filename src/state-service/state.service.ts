@@ -6,9 +6,8 @@ import {
   UInt32,
   fetchAccount,
   Field,
-  Struct,
 } from 'o1js';
-import { ALL_NETWORKS, NETWORKS, NetworkIds } from './constants/networks';
+import { ALL_NETWORKS, NETWORKS, NetworkIds } from '../constants/networks';
 import {
   COMMISION,
   DistibutionProgram,
@@ -19,29 +18,30 @@ import {
   TicketReduceProgram,
   getNullifierId,
 } from 'l1-lottery-contracts';
-import { LOTTERY_ADDRESS } from './constants/addresses';
-import {
-  BuyTicketEvent,
-  GetRewardEvent,
-  ProduceResultEvent,
-} from 'l1-lottery-contracts/build/src/PLottery';
-import { MinaEventDocument } from './workers/schema/events.schema';
+import { LOTTERY_ADDRESS } from '../constants/addresses';
+import { MinaEventDocument } from '../workers/schema/events.schema';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 
-export class StateSinglton {
-  static blockHeight: Record<string, number> = {};
-  static slotSinceGenesis: Record<string, number> = {};
-  static roundIds: Record<string, number> = {};
-  static initialized: boolean;
-  static stateInitialized: Record<string, boolean> = {};
+@Injectable()
+export class StateService implements OnModuleInit {
+  blockHeight: Record<string, number> = {};
+  slotSinceGenesis: Record<string, number> = {};
+  roundIds: Record<string, number> = {};
+  initialized: boolean;
+  stateInitialized: Record<string, boolean> = {};
 
-  static inReduceProving = false;
+  inReduceProving = false;
 
-  static distributionProof: DistributionProof;
-  static lottery: Record<string, PLottery> = {};
-  static state: Record<string, PStateManager> = {};
-  static boughtTickets: Record<string, Ticket[][]> = {};
+  distributionProof: DistributionProof;
+  lottery: Record<string, PLottery> = {};
+  state: Record<string, PStateManager> = {};
+  boughtTickets: Record<string, Ticket[][]> = {};
 
-  static async initialize(): Promise<void> {
+  async onModuleInit() {
+    await this.initialize();
+  }
+
+  async initialize(): Promise<void> {
     if (this.initialized) return;
 
     const network = NETWORKS[NetworkIds.MINA_DEVNET];
@@ -104,7 +104,7 @@ export class StateSinglton {
     this.initialized = true;
   }
 
-  static async fetchEvents(networkID: string, startBlock: number = 0) {
+  async fetchEvents(networkID: string, startBlock: number = 0) {
     const lottery = this.lottery[networkID]!;
 
     const start = UInt32.from(startBlock);
@@ -174,7 +174,7 @@ export class StateSinglton {
     });
   }
 
-  static async initState(
+  async initState(
     networkID: string,
     events: MinaEventDocument[],
     stateM?: PStateManager,
@@ -309,7 +309,7 @@ export class StateSinglton {
   }
 
   // !processedTicketData should be update according to contract state after that call
-  static async undoLastEvents(
+  async undoLastEvents(
     networkID: string,
     events: MinaEventDocument[],
     stateM: PStateManager,
@@ -403,7 +403,7 @@ export class StateSinglton {
     this.boughtTickets[networkID] = boughtTickets;
   }
 
-  static updateProcessedTicketData(stateM: PStateManager) {
+  updateProcessedTicketData(stateM: PStateManager) {
     const ticketIdField = stateM.contract.lastProcessedTicketId.get();
     const round = +stateM.contract.lastReduceInRound.get();
     const ticketId = ticketIdField.equals(Field(-1)).toBoolean()
