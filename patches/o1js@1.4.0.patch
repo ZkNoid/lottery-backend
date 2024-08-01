@@ -1,0 +1,70 @@
+diff --git a/dist/node/index.cjs b/dist/node/index.cjs
+index 79725d270d91bc8d8821684159c495e69637c871..f1739c805357d8792320cd54b7562a5471ef48e6 100644
+--- a/dist/node/index.cjs
++++ b/dist/node/index.cjs
+@@ -22349,10 +22349,10 @@ async function fetchActions2(accountInfo, graphqlEndpoint = networkConfig.archiv
+     let currentActions;
+     actionData.forEach(({ accountUpdateId, data }) => {
+       if (accountUpdateId === currentAccountUpdateId) {
+-        currentActions.push(data);
++        currentActions.push(data.reverse());
+       } else {
+         currentAccountUpdateId = accountUpdateId;
+-        currentActions = [data];
++        currentActions = [data.reverse()];
+         actionsByAccountUpdate.push(currentActions);
+       }
+     });
+diff --git a/dist/node/lib/mina/fetch.js b/dist/node/lib/mina/fetch.js
+index 4238d619b802584608f93a1164a5459e03d698c1..013cc01a3fb11657b83e74b08f9a9e73bac9895c 100644
+--- a/dist/node/lib/mina/fetch.js
++++ b/dist/node/lib/mina/fetch.js
+@@ -418,11 +418,11 @@ async function fetchActions(accountInfo, graphqlEndpoint = networkConfig.archive
+         let currentActions;
+         actionData.forEach(({ accountUpdateId, data }) => {
+             if (accountUpdateId === currentAccountUpdateId) {
+-                currentActions.push(data);
++                currentActions.push(data.reverse());
+             }
+             else {
+                 currentAccountUpdateId = accountUpdateId;
+-                currentActions = [data];
++                currentActions = [data.reverse()];
+                 actionsByAccountUpdate.push(currentActions);
+             }
+         });
+diff --git a/dist/web/lib/mina/fetch.js b/dist/web/lib/mina/fetch.js
+index 4238d619b802584608f93a1164a5459e03d698c1..013cc01a3fb11657b83e74b08f9a9e73bac9895c 100644
+--- a/dist/web/lib/mina/fetch.js
++++ b/dist/web/lib/mina/fetch.js
+@@ -418,11 +418,11 @@ async function fetchActions(accountInfo, graphqlEndpoint = networkConfig.archive
+         let currentActions;
+         actionData.forEach(({ accountUpdateId, data }) => {
+             if (accountUpdateId === currentAccountUpdateId) {
+-                currentActions.push(data);
++                currentActions.push(data.reverse());
+             }
+             else {
+                 currentAccountUpdateId = accountUpdateId;
+-                currentActions = [data];
++                currentActions = [data.reverse()];
+                 actionsByAccountUpdate.push(currentActions);
+             }
+         });
+diff --git a/src/lib/mina/fetch.ts b/src/lib/mina/fetch.ts
+index c9058e36c9b18d52acad08e98f8d8ae537540c44..60b6ce1d1dcc40aae2f6e62986b77441ac9c00df 100644
+--- a/src/lib/mina/fetch.ts
++++ b/src/lib/mina/fetch.ts
+@@ -742,10 +742,10 @@ async function fetchActions(
+     let currentActions: string[][];
+     actionData.forEach(({ accountUpdateId, data }) => {
+       if (accountUpdateId === currentAccountUpdateId) {
+-        currentActions.push(data);
++        currentActions.push(data.reverse());
+       } else {
+         currentAccountUpdateId = accountUpdateId;
+-        currentActions = [data];
++        currentActions = [data.reverse()];
+         actionsByAccountUpdate.push(currentActions);
+       }
+     });
