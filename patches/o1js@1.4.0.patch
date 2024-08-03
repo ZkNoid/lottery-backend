@@ -1,35 +1,37 @@
 diff --git a/dist/node/index.cjs b/dist/node/index.cjs
-index 79725d270d91bc8d8821684159c495e69637c871..3ce806c73b750f52bf2f737916ac179daefd23d6 100644
+index 79725d270d91bc8d8821684159c495e69637c871..839501f8f81e628017d6fb8fd298eb1ad387a0c5 100644
 --- a/dist/node/index.cjs
 +++ b/dist/node/index.cjs
-@@ -22344,6 +22344,10 @@ async function fetchActions2(accountInfo, graphqlEndpoint = networkConfig.archiv
+@@ -22344,6 +22344,11 @@ async function fetchActions2(accountInfo, graphqlEndpoint = networkConfig.archiv
      let actionState = actionBlock.actionState.actionStateOne;
      if (actionData.length === 0)
        throw Error(`No action data was found for the account ${publicKey} with the latest action state ${actionState}`);
 +
-+    // Reverse order so that multiple actions in the same block get replayed in reverse
-+    actionData = actionData.reverse();
++    actionData = actionData.sort((a1, a2) => {
++      return Number(a1.accountUpdateId) < Number(a2.accountUpdateId) ? -1 : 1;
++    });
 +
      let actionsByAccountUpdate = [];
      let currentAccountUpdateId = "none";
      let currentActions;
 diff --git a/dist/node/lib/mina/fetch.js b/dist/node/lib/mina/fetch.js
-index 4238d619b802584608f93a1164a5459e03d698c1..9257672a285eaa8fa31fc8141534d038d12c28ea 100644
+index 4238d619b802584608f93a1164a5459e03d698c1..58d81336fd1e1b41da5d681726d23b4c5cf40b30 100644
 --- a/dist/node/lib/mina/fetch.js
 +++ b/dist/node/lib/mina/fetch.js
-@@ -412,6 +412,10 @@ async function fetchActions(accountInfo, graphqlEndpoint = networkConfig.archive
+@@ -412,6 +412,11 @@ async function fetchActions(accountInfo, graphqlEndpoint = networkConfig.archive
          let actionState = actionBlock.actionState.actionStateOne;
          if (actionData.length === 0)
              throw Error(`No action data was found for the account ${publicKey} with the latest action state ${actionState}`);
 +
-+        // Reverse order so that multiple actions in the same block get replayed in reverse
-+        actionData = actionData.reverse();
-+
++        actionData = actionData.sort((a1, a2) => {
++            return Number(a1.accountUpdateId) < Number(a2.accountUpdateId) ? -1 : 1;
++        });
++        
          // split actions by account update
          let actionsByAccountUpdate = [];
          let currentAccountUpdateId = 'none';
 diff --git a/dist/web/lib/mina/fetch.js b/dist/web/lib/mina/fetch.js
-index 4238d619b802584608f93a1164a5459e03d698c1..9257672a285eaa8fa31fc8141534d038d12c28ea 100644
+index 4238d619b802584608f93a1164a5459e03d698c1..fdfc4d40f5ed58684e26de29c411d249addd84fe 100644
 --- a/dist/web/lib/mina/fetch.js
 +++ b/dist/web/lib/mina/fetch.js
 @@ -412,6 +412,10 @@ async function fetchActions(accountInfo, graphqlEndpoint = networkConfig.archive
@@ -37,23 +39,23 @@ index 4238d619b802584608f93a1164a5459e03d698c1..9257672a285eaa8fa31fc8141534d038
          if (actionData.length === 0)
              throw Error(`No action data was found for the account ${publicKey} with the latest action state ${actionState}`);
 +
-+        // Reverse order so that multiple actions in the same block get replayed in reverse
-+        actionData = actionData.reverse();
-+
++        actionData = actionData.sort((a1, a2) => {
++            return Number(a1.accountUpdateId) < Number(a2.accountUpdateId) ? -1 : 1;
++        });
          // split actions by account update
          let actionsByAccountUpdate = [];
          let currentAccountUpdateId = 'none';
 diff --git a/src/lib/mina/fetch.ts b/src/lib/mina/fetch.ts
-index c9058e36c9b18d52acad08e98f8d8ae537540c44..0750eed9c476c36217de5127f1ae08b4a3903a3a 100644
+index c9058e36c9b18d52acad08e98f8d8ae537540c44..6485279042188db51432d528c8a173a761b9ff40 100644
 --- a/src/lib/mina/fetch.ts
 +++ b/src/lib/mina/fetch.ts
 @@ -736,6 +736,9 @@ async function fetchActions(
          `No action data was found for the account ${publicKey} with the latest action state ${actionState}`
        );
  
-+    // Reverse order so that multiple actions in the same block get replayed in reverse
-+    actionData = actionData.reverse();
-+
++    actionData = actionData.sort((a1, a2) => {
++      return Number(a1.accountUpdateId) < Number(a2.accountUpdateId) ? -1 : 1;
++    });
      // split actions by account update
      let actionsByAccountUpdate: string[][][] = [];
      let currentAccountUpdateId = 'none';

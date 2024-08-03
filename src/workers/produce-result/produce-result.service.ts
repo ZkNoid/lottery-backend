@@ -31,7 +31,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
       Field.from(roundId),
     );
 
-    this.logger.debug('Round', roundId, 'Result', result.toBigInt());
+    this.logger.debug(`Round ${roundId} result: ${result.toBigInt()} last reduce ${lastReduceInRound}`);
 
     return roundId < lastReduceInRound && result.toBigInt() == 0n;
   }

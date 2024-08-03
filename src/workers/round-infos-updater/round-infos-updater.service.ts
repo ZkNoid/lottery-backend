@@ -48,11 +48,6 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
 
         const stateM = this.stateManager.state[network.networkID]!;
 
-        const slotSinceGenesis =
-          this.stateManager.slotSinceGenesis[network.networkID];
-        const startBlock =
-          this.stateManager.lottery[network.networkID].startBlock.get();
-
         const currentRoundId = this.stateManager.roundIds[network.networkID];
         this.logger.debug('Current round id', currentRoundId);
 
