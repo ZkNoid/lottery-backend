@@ -192,25 +192,25 @@ export class SyncEventsService implements OnModuleInit {
         }
 
         // Update state if not initially updated or if there are new events
-        if (!this.stateManager.stateInitialized[network.networkID]) {
+        if (!this.stateManager.stateInitialized[network.networkID] || newEventsToAdd) {
           const allEvents = await this.minaEventData.find({});
           await this.stateManager.initState(network.networkID, allEvents);
         } else {
-          await this.stateManager.undoLastEvents(
-            network.networkID,
-            eventsToBeDeleted,
-            this.stateManager.state[network.networkID],
-          );
+          // await this.stateManager.undoLastEvents(
+          //   network.networkID,
+          //   eventsToBeDeleted,
+          //   this.stateManager.state[network.networkID],
+          // );
 
-          await this.stateManager.initState(
-            network.networkID,
-            newEventsToAdd,
-            this.stateManager.state[network.networkID],
-          );
+          // await this.stateManager.initState(
+          //   network.networkID,
+          //   newEventsToAdd,
+          //   this.stateManager.state[network.networkID],
+          // );
 
-          this.stateManager.updateProcessedTicketData(
-            this.stateManager.state[network.networkID],
-          );
+          // this.stateManager.updateProcessedTicketData(
+          //   this.stateManager.state[network.networkID],
+          // );
         }
 
         const currentRoundId = Math.floor(

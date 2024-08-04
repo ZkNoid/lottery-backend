@@ -38,8 +38,11 @@ export class ProduceResultService implements OnApplicationBootstrap {
 
   @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
+    console.log('Initial in reduce proving', this.stateManager.inReduceProving);
     if (this.stateManager.inReduceProving) return;
+    console.log('Then in reduce proving', this.stateManager.inReduceProving);
     this.stateManager.inReduceProving = true;
+    console.log('After in reduce proving', this.stateManager.inReduceProving);
 
     for (let network of ALL_NETWORKS) {
       try {

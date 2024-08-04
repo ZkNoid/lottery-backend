@@ -179,15 +179,15 @@ export class StateService implements OnModuleInit {
     events: MinaEventDocument[],
     stateM?: PStateManager,
   ) {
-    const updateOnly: boolean = stateM != undefined;
+    const updateOnly: boolean = false;
     const startBlock = this.lottery[networkID].startBlock.get();
-    if (!stateM) {
+    // if (!stateM) {
       stateM = new PStateManager(
         this.lottery[networkID],
         UInt32.from(startBlock).toFields()[0],
         false,
       );
-    }
+    // }
 
     const syncBlockSlot =
       events.length > 0 ? events.at(-1).globalSlot : +startBlock;
@@ -208,7 +208,7 @@ export class StateService implements OnModuleInit {
         boughtTickets.push([]);
       }
     } else {
-      console.log('[sm] initing bought tickets2', boughtTickets.length);
+      console.log('[sm] initing bought tickets2', boughtTickets.length, stateM.roundTickets.length, events.length);
 
       for (let i = 0; i < stateM.roundTickets.length; i++) {
         boughtTickets.push([]);
