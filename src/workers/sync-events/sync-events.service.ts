@@ -36,7 +36,9 @@ export class SyncEventsService implements OnModuleInit {
       console.log('It will kill reduce. Do not do it');
       return;
     }
-    if (this.running) return;
+    if (this.running) {
+      console.log('[se] already running');
+    }
     this.running = true;
 
     try {
@@ -192,7 +194,10 @@ export class SyncEventsService implements OnModuleInit {
         }
 
         // Update state if not initially updated or if there are new events
-        if (!this.stateManager.stateInitialized[network.networkID] || newEventsToAdd) {
+        if (
+          !this.stateManager.stateInitialized[network.networkID] ||
+          newEventsToAdd
+        ) {
           const allEvents = await this.minaEventData.find({});
           await this.stateManager.initState(network.networkID, allEvents);
         } else {
@@ -201,13 +206,11 @@ export class SyncEventsService implements OnModuleInit {
           //   eventsToBeDeleted,
           //   this.stateManager.state[network.networkID],
           // );
-
           // await this.stateManager.initState(
           //   network.networkID,
           //   newEventsToAdd,
           //   this.stateManager.state[network.networkID],
           // );
-
           // this.stateManager.updateProcessedTicketData(
           //   this.stateManager.state[network.networkID],
           // );
