@@ -28,18 +28,12 @@ export class SyncEventsService implements OnModuleInit {
     console.log('Initizlied');
   }
 
-  running = false;
-
   @Interval('events_sync', 30_000)
   async handleCron() {
     if (this.stateManager.inReduceProving) {
       console.log('It will kill reduce. Do not do it');
       return;
     }
-    if (this.running) {
-      console.log('[se] already running');
-    }
-    this.running = true;
 
     try {
       console.log('Events sync');
@@ -232,6 +226,6 @@ export class SyncEventsService implements OnModuleInit {
     } catch (e) {
       console.log('Events sync error', e.stack);
     }
-    this.running = false;
+
   }
 }

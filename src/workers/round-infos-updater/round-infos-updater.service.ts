@@ -35,12 +35,9 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
   ) {}
   async onApplicationBootstrap() {}
 
-  running = false;
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async handleCron() {
-    if (this.running) return;
-    this.running = true;
 
     try {
       for (let network of ALL_NETWORKS) {
@@ -123,6 +120,5 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
     } catch (e) {
       this.logger.error('Round info update error', e.stack);
     }
-    this.running = false;
   }
 }
