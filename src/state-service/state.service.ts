@@ -1,12 +1,5 @@
 import { DistributionProof } from 'l1-lottery-contracts/build/src/DistributionProof';
-import {
-  Mina,
-  Cache,
-  PublicKey,
-  UInt32,
-  fetchAccount,
-  Field,
-} from 'o1js';
+import { Mina, Cache, PublicKey, UInt32, fetchAccount, Field } from 'o1js';
 import { ALL_NETWORKS, NETWORKS, NetworkIds } from '../constants/networks';
 import {
   COMMISION,
@@ -182,11 +175,11 @@ export class StateService implements OnModuleInit {
     const updateOnly: boolean = false;
     const startBlock = this.lottery[networkID].startBlock.get();
     // if (!stateM) {
-      stateM = new PStateManager(
-        this.lottery[networkID],
-        UInt32.from(startBlock).toFields()[0],
-        false,
-      );
+    stateM = new PStateManager(
+      this.lottery[networkID],
+      UInt32.from(startBlock).toFields()[0],
+      false,
+    );
     // }
 
     const syncBlockSlot =
@@ -208,7 +201,12 @@ export class StateService implements OnModuleInit {
         boughtTickets.push([]);
       }
     } else {
-      console.log('[sm] initing bought tickets2', boughtTickets.length, stateM.roundTickets.length, events.length);
+      console.log(
+        '[sm] initing bought tickets2',
+        boughtTickets.length,
+        stateM.roundTickets.length,
+        events.length,
+      );
 
       for (let i = 0; i < stateM.roundTickets.length; i++) {
         boughtTickets.push([]);
@@ -305,6 +303,7 @@ export class StateService implements OnModuleInit {
     }
     this.state[networkID] = stateM;
     this.stateInitialized[networkID] = true;
+    console.log('Setting bought tickets', boughtTickets, networkID);
     this.boughtTickets[networkID] = boughtTickets;
   }
 

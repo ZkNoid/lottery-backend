@@ -35,10 +35,8 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
   ) {}
   async onApplicationBootstrap() {}
 
-
   @Cron(CronExpression.EVERY_10_SECONDS)
   async handleCron() {
-
     try {
       for (let network of ALL_NETWORKS) {
         if (!this.stateManager.slotSinceGenesis[network.networkID]) continue;
@@ -49,8 +47,14 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
         this.logger.debug('Current round id', currentRoundId);
 
         for (let roundId = 0; roundId <= currentRoundId; roundId++) {
+          this.logger.debug(
+            'Fetching bought tickets',
+            network.networkID.length,
+            roundId,
+          );
           const boughtTickets =
             this.stateManager.boughtTickets[network.networkID][roundId];
+          this.logger.debug('Bought tickets', boughtTickets);
 
           const winningCombination = NumberPacked.unpackToBigints(
             stateM.roundResultMap.get(Field.from(roundId)),
