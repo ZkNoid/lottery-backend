@@ -211,7 +211,9 @@ export class SyncEventsService implements OnModuleInit {
         }
         console.log(
           `Curr slot ${slotSinceGenesis}. \
-          Start block: ${this.stateManager.lottery[network.networkID].startBlock.get()}`,
+          Start block: ${Number(
+            this.stateManager.lottery[network.networkID].startBlock.get(),
+          )}`,
         );
         const currentRoundId = Math.floor(
           (slotSinceGenesis -
