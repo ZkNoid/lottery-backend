@@ -209,7 +209,10 @@ export class SyncEventsService implements OnModuleInit {
           //   this.stateManager.state[network.networkID],
           // );
         }
-
+        console.log(
+          `Curr slot ${slotSinceGenesis}. \
+          Start block: ${this.stateManager.lottery[network.networkID].startBlock.get()}`,
+        );
         const currentRoundId = Math.floor(
           (slotSinceGenesis -
             Number(
@@ -226,6 +229,5 @@ export class SyncEventsService implements OnModuleInit {
     } catch (e) {
       console.log('Events sync error', e.stack);
     }
-
   }
 }
