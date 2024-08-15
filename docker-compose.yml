@@ -23,6 +23,6 @@ services:
 
     healthcheck:
       test: wget -S -O- http://api_server:3040/claim-api/health || exit 1
-      interval: 30s
-      timeout: 30s
+      interval: 5m
+      timeout: 5m
       retries: 3
