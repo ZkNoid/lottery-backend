@@ -1,5 +1,13 @@
 version: "3"
 services:
+  autoheal:
+    restart: always
+    image: willfarrell/autoheal
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   api_server:
     env_file:
       .env
@@ -11,7 +19,7 @@ services:
     command: sh -c "pnpm start"
     ports:
       - "5100:3040"
-    restart: always
+    restart: unless-stopped
 
     healthcheck:
       test: wget -S -O- http://api_server:3040/claim-api/health || exit 1
