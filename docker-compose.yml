@@ -12,3 +12,9 @@ services:
     ports:
       - "5100:3040"
     restart: unless-stopped
+
+    healthcheck:
+      test: curl -sS http://api_server:3040/health || exit 1
+      interval: 10s
+      timeout: 30s
+      retries: 3

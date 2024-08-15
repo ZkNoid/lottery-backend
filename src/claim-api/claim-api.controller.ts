@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Get } from '@nestjs/common';
 import { ClaimRequestDTO } from './claim-api.dto';
 import { ClaimApiService } from './claim-api.service';
 
@@ -21,6 +21,12 @@ export class ClaimApiController {
       );
     } catch (e) {
       console.log('Claim error', e.stack);
+    }
+  }
+  @Get('health')
+  async health(): Promise<{ status: 'OK' }> {
+    return {
+      status: 'OK'
     }
   }
 }
