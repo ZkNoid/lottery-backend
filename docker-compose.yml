@@ -1,14 +1,40 @@
-version: "3"
 services:
-  api_server:
+  
+  state_manager:
+    build: ./state-manager
+    restart: always
+    hostname: task
     env_file:
-      .env
-    build: .
+      - .env
+    networks:
+      - backend
+      
+  events_sync:
+    build: ./events-sync
+    restart: always
+    hostname: task
+    env_file:
+      - .env
+    networks:
+      - backend
 
-    environment:
-      TZ: Europe/Moscow
+  # redis:
+  #   image: redis:6.2-alpine
+  #   container_name: redis
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: [ "CMD", "redis-cli", "ping" ]
+  #   ports:
+  #     - '6379:6379'
+  #   command: redis-server /redis.conf --requirepass ${REDIS_PASSWORD}
+  #   volumes:
+  #     - ./data/redis:/data
+  #     - ./redis.conf:/redis.conf
+  #   networks:
+  #     - db-net
+  #     - queue-net
 
-    command: sh -c "pnpm start"
-    ports:
-      - "5100:3040"
-    restart: unless-stopped
+networks:
+  backend:
+  db-net:
+  queue-net:

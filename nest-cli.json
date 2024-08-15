@@ -1,8 +1,32 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
+  "sourceRoot": "apps/zknoid-lottery-backend/src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/zknoid-lottery-backend/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/zknoid-lottery-backend",
+  "projects": {
+    "zknoid-lottery-backend": {
+      "type": "application",
+      "root": "apps/zknoid-lottery-backend",
+      "entryFile": "main",
+      "sourceRoot": "apps/zknoid-lottery-backend/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/zknoid-lottery-backend/tsconfig.app.json"
+      }
+    },
+    "sync-events": {
+      "type": "application",
+      "root": "apps/sync-events",
+      "entryFile": "main",
+      "sourceRoot": "apps/sync-events/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/sync-events/tsconfig.app.json"
+      }
+    }
   }
 }
