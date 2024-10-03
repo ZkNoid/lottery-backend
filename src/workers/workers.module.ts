@@ -11,7 +11,10 @@ import { DistributionProvingModule } from './distribution-proving/distribution-p
 import { ProveReduceModule } from './reduce-proving/reduce-proving.module';
 import { RoundInfoUpdaterModule } from './round-infos-updater/round-infos-updater.module';
 import { EmptyTicketBuyingModule } from './empty-ticket-buying/empty-ticket-buying.module';
+import { ApproveGiftCodesModule } from './approve-gift-codes/approve-gift-codes.module';
+
 import { StateService } from 'src/state-service/state.service';
+import { GiftTicketBuyerModule } from './gift-ticket-buyer/gift-ticket-buyer.module';
 
 @Module({
   imports: [
@@ -23,7 +26,9 @@ import { StateService } from 'src/state-service/state.service';
         DistributionProvingModule,
         RoundInfoUpdaterModule,
         ProveReduceModule,
-        EmptyTicketBuyingModule
+        EmptyTicketBuyingModule,
+        ApproveGiftCodesModule,
+        GiftTicketBuyerModule
       ],
       useFactory: async () => ({
         uri: process.env.MONGODB_URI,
