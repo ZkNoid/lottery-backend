@@ -8,6 +8,38 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
+  state_manager:
+    container_name: 'state-manager'
+    env_file:
+      - .env
+    build:
+      context: ./state-manager
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - rabbitmq
+    networks:
+      - backend
+
+  data_updater:
+    container_name: 'data-updater'
+    env_file:
+      - .env
+    build:
+      context: ./data_updater
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - rabbitmq
+    networks:
+      - backend
+
   api_server:
     env_file:
       .env
@@ -26,3 +58,23 @@ services:
       interval: 5m
       timeout: 5m
       retries: 3
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  pg_data:
+    driver: local
+  rabbit_data:
+    driver: local

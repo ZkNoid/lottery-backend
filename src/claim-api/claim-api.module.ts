@@ -15,9 +15,10 @@ import { StateModule } from 'src/state-service/state.module';
         schema: RoundsDataSchema,
       },
     ]),
-    StateModule
+    StateModule,
+    ScheduleModule.forRoot(),
   ],
   providers: [ClaimApiService],
-  controllers: [ClaimApiController]
+  controllers: [ClaimApiController],
 })
 export class ClaimApiModule {}
