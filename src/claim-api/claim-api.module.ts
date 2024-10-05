@@ -8,7 +8,6 @@ import { StateModule } from 'src/state-service/state.module';
 
 @Module({
   imports: [
-    ScheduleModule.forRoot(),
     MongooseModule.forFeature([
       {
         name: RoundsData.name,

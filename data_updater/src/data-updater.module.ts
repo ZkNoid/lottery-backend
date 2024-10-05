@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MinaEventData, MinaEventDataSchema } from './schemas/events.schema';
 import { DataUpdaterService } from './services/data-updater.service';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { DataUpdaterService } from './services/data-updater.service';
         },
       },
     ]),
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       load: [configuration],
     }),
@@ -30,7 +32,7 @@ import { DataUpdaterService } from './services/data-updater.service';
         timeout: 5000,
         maxRedirects: 5,
       }),
-    })
+    }),
   ],
   providers: [DataUpdaterService],
   controllers: [],

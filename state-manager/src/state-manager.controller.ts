@@ -1,7 +1,7 @@
 import { Controller, OnModuleInit } from '@nestjs/common';
 
 import { StateService } from './services/state-manager.service';
-import { MessagePattern } from '@nestjs/microservices';
+import { Ctx, MessagePattern, RmqContext } from '@nestjs/microservices';
 import { NETWORKS } from './constants/networks';
 import { InjectModel } from '@nestjs/mongoose';
 import { MinaEventData } from './schemas/events.schema';
@@ -30,8 +30,8 @@ export class StateManagerController {
     return await this.stateManager.fetchEvents(startBlock);
   }
 
-  @MessagePattern('update')
-  async update() {
+  @MessagePattern({ cmd: 'update' })
+  async update(@Ctx() context: RmqContext) {
     console.log('Updating');
 
     if (this.stateManager.inReduceProving) {
@@ -184,10 +184,9 @@ export class StateManagerController {
           },
         );
       }
-
       // Update state if not initially updated or if there are new events
       if (
-        !this.stateManager.stateInitialized[network.networkID] ||
+        !this.stateManager.stateInitialized ||
         newEventsToAdd
       ) {
         const allEvents = await this.minaEventData.find({});

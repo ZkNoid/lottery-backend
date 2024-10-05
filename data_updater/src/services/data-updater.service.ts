@@ -32,11 +32,16 @@ export class DataUpdaterService implements OnModuleInit {
   ) {}
   onModuleInit() {}
 
+  async onApplicationBootstrap() {
+    await this.rabbitClient.connect();
+    }
+
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
     console.log('UPDATING')
-    this.rabbitClient.send({ cmd: 'update' }, {})
-    .pipe(timeout(60_000));
+    const result = await this.rabbitClient.send({ cmd: 'update' }, {});
+    await result.subscribe();
+
   }
 
 }
