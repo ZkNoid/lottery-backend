@@ -209,20 +209,20 @@ export class StateManagerController {
       console.log(
         `Curr slot ${slotSinceGenesis}. \
           Start block: ${Number(
-            this.stateManager.lottery[network.networkID].startBlock.get(),
+            this.stateManager.lottery.startBlock.get(),
           )}`,
       );
       const currentRoundId = Math.floor(
         (slotSinceGenesis -
           Number(
-            this.stateManager.lottery[network.networkID].startBlock.get(),
+            this.stateManager.lottery.startBlock.get(),
           )) /
           BLOCK_PER_ROUND,
       );
 
-      this.stateManager.blockHeight[network.networkID] = currBlockHeight;
-      this.stateManager.slotSinceGenesis[network.networkID] = slotSinceGenesis;
-      this.stateManager.roundIds[network.networkID] = currentRoundId;
+      this.stateManager.blockHeight = currBlockHeight;
+      this.stateManager.slotSinceGenesis = slotSinceGenesis;
+      this.stateManager.roundIds = currentRoundId;
     } catch (e) {
       console.log('Events sync error', e.stack);
     }
