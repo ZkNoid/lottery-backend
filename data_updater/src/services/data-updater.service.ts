@@ -36,7 +36,7 @@ export class DataUpdaterService implements OnModuleInit {
     await this.rabbitClient.connect();
     }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async handleCron() {
     console.log('UPDATING')
     const result = await this.rabbitClient.send({ cmd: 'update' }, {});

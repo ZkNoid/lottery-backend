@@ -26,6 +26,7 @@ services:
     networks:
       - backend
       - redis
+    restart: unless-stopped
 
   data_updater:
     container_name: 'data-updater'
@@ -41,6 +42,26 @@ services:
       - rabbitmq
     networks:
       - backend
+    restart: unless-stopped
+
+
+  round_infos_updater:
+    container_name: 'round-infos-updater'
+    env_file:
+      - .env
+    build:
+      context: ./round-infos-updater
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - rabbitmq
+    networks:
+      - backend
+      - redis
+    restart: unless-stopped
+
 
   api_server:
     env_file:
@@ -63,17 +84,20 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
+    hostname: "rabbit"
     volumes:
-      - rabbit_data:/var/lib/rabbitmq
+      - ./rabbit_data:/var/lib/rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
     networks:
       - backend
+    restart: unless-stopped
+
 
   redis:
     image: redis:6.2-alpine
-    restart: always
+    restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:

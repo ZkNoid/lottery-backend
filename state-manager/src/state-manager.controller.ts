@@ -1,14 +1,15 @@
 import { Controller, OnModuleInit } from '@nestjs/common';
 import { StateService } from './services/state-manager.service';
-import { Ctx, MessagePattern, RmqContext } from '@nestjs/microservices';
+import { Ctx, MessagePattern, Payload, RmqContext } from '@nestjs/microservices';
 import { NETWORKS } from './constants/networks';
 import { InjectModel } from '@nestjs/mongoose';
 import { MinaEventData } from './schemas/events.schema';
 import { HttpService } from '@nestjs/axios';
 import { Model } from 'mongoose';
-import { BLOCK_PER_ROUND } from 'l1-lottery-contracts';
+import { BLOCK_PER_ROUND, getNullifierId, NumberPacked, Ticket } from 'l1-lottery-contracts';
 import { ConfigService } from '@nestjs/config';
 import { MurLock, MurLockService } from 'murlock';
+import { Field } from 'o1js';
 
 const BLOCK_UPDATE_DEPTH = 6;
 
@@ -31,12 +32,66 @@ export class StateManagerController {
     return await this.stateManager.fetchEvents(startBlock);
   }
 
+  @MessagePattern({cmd: 'get-common-info'})
+  async getCommonInfo(@Ctx() context: RmqContext): Promise<{
+    currentRoundId: number;
+    startBlock: number;
+  }> {
+    return {
+      currentRoundId: this.stateManager.roundIds,
+      startBlock: Number(this.stateManager.lottery.startBlock.get().toBigint()),
+    };
+  }
+
+  @MessagePattern({ cmd: 'get-round-info' })
+  getRoundInfo(@Payload() roundId: number, @Ctx() context: RmqContext): {
+    currentRoundId: number,
+    boughtTickets: {
+      amount: number,
+      numbers: number[],
+      owner: string
+    }[],
+    claimStatuses: boolean[],
+    winningCombination: number[]
+  } {
+    console.log('Checking roundid', roundId)
+    const map = this.stateManager.state.roundResultMap[roundId];
+
+    const winningCombination = NumberPacked.unpackToBigints(
+      this.stateManager.state.roundResultMap.get(Field.from(roundId)),
+    )
+      .map((v) => Number(v))
+      .slice(0, 6);
+
+      const claimStatuses = this.stateManager.boughtTickets[roundId].map((x, i) => (
+        this.stateManager.state.ticketNullifierMap
+          .get(getNullifierId(Field.from(roundId), Field.from(i)))
+          .equals(Field.from(1))
+          .toBoolean()
+      ));
+
+    return {
+      currentRoundId: roundId,
+      boughtTickets: this.stateManager.boughtTickets[roundId].map(x => ({
+        amount: Number(x.amount.toBigInt()),
+        numbers: x.numbers.map(x => Number(x.toBigint())),
+        owner: x.owner.toBase58(),
+      })),
+      claimStatuses,
+      winningCombination,
+    };
+  }
+
   @MessagePattern({ cmd: 'update' })
   async updateHandler(@Ctx() context: RmqContext): Promise<void> {
     try {
-      await this.murLockService.runWithLock('lockKey', 10 * 60 * 1000, async () => {
-       await this.update();
-      });
+      await this.murLockService.runWithLock(
+        'lockKey',
+        60 * 1000,
+        async () => {
+          await this.update();
+        },
+      );
     } catch (error) {
       console.log('Error', error);
     }

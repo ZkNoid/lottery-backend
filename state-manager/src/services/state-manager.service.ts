@@ -4,6 +4,8 @@ import { Mina, Cache, PublicKey, UInt32, fetchAccount, Field } from 'o1js';
 import {
   COMMISION,
   DistibutionProgram,
+  MerkleMap20,
+  NumberPacked,
   PLottery,
   PRESICION,
   PStateManager,
@@ -38,10 +40,6 @@ export class StateService implements OnModuleInit {
 
   constructor(private configService: ConfigService) {}
 
-  @MessagePattern({ cmd: 'state-manager' })
-  accumulate(@Payload() data: number[], @Ctx() context: RmqContext): number {
-    return (data || []).reduce((a, b) => a + b);
-  }
 
   async initialize(): Promise<void> {
     if (this.initialized) return;

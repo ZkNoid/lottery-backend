@@ -15,8 +15,8 @@ import { RoundsData } from '../schema/rounds.schema';
 import { StateService } from 'src/state-service/state.service';
 
 const SCORE_COEFFICIENTS: bigint[] = [
-  0n,
-  90n,
+  0,
+  90,
   324n,
   2187n,
   26244n,
