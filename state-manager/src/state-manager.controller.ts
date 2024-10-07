@@ -1,5 +1,4 @@
 import { Controller, OnModuleInit } from '@nestjs/common';
-
 import { StateService } from './services/state-manager.service';
 import { Ctx, MessagePattern, RmqContext } from '@nestjs/microservices';
 import { NETWORKS } from './constants/networks';
@@ -9,6 +8,7 @@ import { HttpService } from '@nestjs/axios';
 import { Model } from 'mongoose';
 import { BLOCK_PER_ROUND } from 'l1-lottery-contracts';
 import { ConfigService } from '@nestjs/config';
+import { MurLock, MurLockService } from 'murlock';
 
 const BLOCK_UPDATE_DEPTH = 6;
 
@@ -20,6 +20,7 @@ export class StateManagerController {
     private readonly httpService: HttpService,
     @InjectModel(MinaEventData.name)
     private minaEventData: Model<MinaEventData>,
+    private murLockService: MurLockService,
   ) {}
 
   @MessagePattern('fetch_events')
@@ -31,13 +32,18 @@ export class StateManagerController {
   }
 
   @MessagePattern({ cmd: 'update' })
-  async update(@Ctx() context: RmqContext) {
-    console.log('Updating');
-
-    if (this.stateManager.inReduceProving) {
-      console.log('It will kill reduce. Do not do it');
-      return;
+  async updateHandler(@Ctx() context: RmqContext): Promise<void> {
+    try {
+      await this.murLockService.runWithLock('lockKey', 10 * 60 * 1000, async () => {
+       await this.update();
+      });
+    } catch (error) {
+      console.log('Error', error);
     }
+  }
+
+  async update(): Promise<void> {
+    console.log('Updating');
 
     const network = NETWORKS[this.configService.get('networkId')];
 
@@ -185,10 +191,7 @@ export class StateManagerController {
         );
       }
       // Update state if not initially updated or if there are new events
-      if (
-        !this.stateManager.stateInitialized ||
-        newEventsToAdd
-      ) {
+      if (!this.stateManager.stateInitialized || newEventsToAdd) {
         const allEvents = await this.minaEventData.find({});
         await this.stateManager.initState(allEvents);
       } else {
@@ -208,15 +211,11 @@ export class StateManagerController {
       }
       console.log(
         `Curr slot ${slotSinceGenesis}. \
-          Start block: ${Number(
-            this.stateManager.lottery.startBlock.get(),
-          )}`,
+          Start block: ${Number(this.stateManager.lottery.startBlock.get())}`,
       );
       const currentRoundId = Math.floor(
         (slotSinceGenesis -
-          Number(
-            this.stateManager.lottery.startBlock.get(),
-          )) /
+          Number(this.stateManager.lottery.startBlock.get())) /
           BLOCK_PER_ROUND,
       );
 
@@ -226,5 +225,6 @@ export class StateManagerController {
     } catch (e) {
       console.log('Events sync error', e.stack);
     }
+    console.log('Updating end');
   }
 }

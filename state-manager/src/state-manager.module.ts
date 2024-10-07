@@ -7,6 +7,7 @@ import configuration from './config/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MinaEventData, MinaEventDataSchema } from './schemas/events.schema';
+import { MurLockModule } from 'murlock';
 
 @Module({
   imports: [
@@ -44,6 +45,20 @@ import { MinaEventData, MinaEventDataSchema } from './schemas/events.schema';
         timeout: 5000,
         maxRedirects: 5,
       }),
+    }),
+    MurLockModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        redisOptions: {
+          url: 'redis://redis:6379',
+          password: process.env.REDIS_PASSWORD,
+        },
+        wait: 1000,
+        maxAttempts: 3,
+        logLevel: 'log',
+        ignoreUnlockFail: false,
+      }),
+      inject: [ConfigService],
     }),
   ],
   providers: [StateService],

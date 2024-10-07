@@ -22,8 +22,10 @@ services:
       - RABBITMQ_URL=amqp://rabbitmq:5672
     depends_on:
       - rabbitmq
+      - redis
     networks:
       - backend
+      - redis
 
   data_updater:
     container_name: 'data-updater'
@@ -69,9 +71,29 @@ services:
     networks:
       - backend
 
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+      - ./redis.conf:/redis.conf
+
+    command: redis-server /redis.conf --requirepass ${REDIS_PASSWORD}
+
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+
+    networks:
+      - redis
+
 networks:
   backend:
     driver: bridge
+  redis:
+    driver: bridge
+
 
 volumes:
   pg_data:
