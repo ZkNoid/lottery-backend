@@ -1,16 +1,23 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { StateManagerController } from './state-manager.controller';
-import { StateService } from './services/state-manager.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import configuration from './config/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MinaEventData, MinaEventDataSchema } from './schemas/events.schema';
 import { MurLockModule } from 'murlock';
+import { RoundsData, RoundsDataSchema } from './schemas/rounds.schema';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ResultProducerService } from './services/result-producer.service';
 
 @Module({
   imports: [
+    MongooseModule.forFeature([
+      {
+        name: RoundsData.name,
+        schema: RoundsDataSchema,
+      },
+    ]),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -60,18 +67,9 @@ import { MurLockModule } from 'murlock';
       }),
       inject: [ConfigService],
     }),
-    MurLockModule.forRoot({
-      redisOptions: {
-        url: 'redis://redis:6379',
-        password: process.env.REDIS_PASSWORD,
-      },
-      wait: 1000,
-      maxAttempts: 3,
-      logLevel: 'log',
-      ignoreUnlockFail: false,
-    }),
+    ScheduleModule.forRoot(),
   ],
-  providers: [StateService],
-  controllers: [StateManagerController],
+  providers: [ResultProducerService],
+  controllers: [],
 })
-export class StateManagerModule {}
+export class ResultProducerModule {}

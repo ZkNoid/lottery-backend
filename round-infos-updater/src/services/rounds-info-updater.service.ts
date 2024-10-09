@@ -43,13 +43,22 @@ export class RoundsInfoUpdaterService implements OnModuleInit {
     private rounds: Model<RoundsData>,
   ) {}
 
-  async onApplicationBootstrap() {
+  async onModuleInit() {
     await this.rabbitClient.connect();
   }
 
-  async onModuleInit() {}
+  async onApplicationBootstrap() {
+    await this.updateHandler();
+  }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
+  async updateHandler(): Promise<void> {
+    try {
+      await this.update();
+    } catch (e) {
+      console.log('Update error', e);
+    }
+  }
   async update(): Promise<void> {
     const result = await lastValueFrom(
       this.rabbitClient
@@ -66,11 +75,19 @@ export class RoundsInfoUpdaterService implements OnModuleInit {
     this.logger.debug('Current round id', currentRoundId);
 
     for (let roundId = 0; roundId <= currentRoundId; roundId++) {
+      console.log('Fetching round', roundId);
       const roundInfo = await lastValueFrom(
         this.rabbitClient
           .send({ cmd: 'get-round-info' }, roundId)
           .pipe(timeout(5000)),
       );
+      console.log('Fetching round end', roundId);
+
+      if (!roundInfo) {
+        console.log('State manager is not ready');
+        return
+      }
+
       try {
         const boughtTickets = roundInfo.boughtTickets;
 

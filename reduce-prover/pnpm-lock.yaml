@@ -37,12 +37,18 @@ importers:
       '@nestjs/platform-express':
         specifier: 8.0.0
         version: 8.0.0(@nestjs/common@8.0.0(reflect-metadata@0.1.13)(rxjs@7.3.0))(@nestjs/core@8.0.0)
+      '@nestjs/schedule':
+        specifier: ^4.1.1
+        version: 4.1.1(@nestjs/common@8.0.0(reflect-metadata@0.1.13)(rxjs@7.3.0))(@nestjs/core@8.0.0(@nestjs/common@8.0.0(reflect-metadata@0.1.13)(rxjs@7.3.0))(@nestjs/microservices@8.0.0)(@nestjs/platform-express@8.0.0)(reflect-metadata@0.1.13)(rxjs@7.3.0))
       amqp-connection-manager:
         specifier: ^4.1.14
         version: 4.1.14(amqplib@0.10.4)
       amqplib:
         specifier: ^0.10.4
         version: 0.10.4
+      kafkajs:
+        specifier: ^2.2.4
+        version: 2.2.4
       l1-lottery-contracts:
         specifier: 0.7.15
         version: 0.7.15(o1js@1.4.0(patch_hash=nuk4ttpnuxffyalthdzoarndpq))
@@ -381,6 +387,12 @@ packages:
       '@nestjs/common': ^8.0.0
       '@nestjs/core': ^8.0.0
 
+  '@nestjs/schedule@4.1.1':
+    resolution: {integrity: sha512-VxAnCiU4HP0wWw8IdWAVfsGC/FGjyToNjjUtXDEQL6oj+w/N5QDd2VT9k6d7Jbr8PlZuBZNdWtDKSkH5bZ+RXQ==}
+    peerDependencies:
+      '@nestjs/common': ^8.0.0 || ^9.0.0 || ^10.0.0
+      '@nestjs/core': ^8.0.0 || ^9.0.0 || ^10.0.0
+
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -457,6 +469,9 @@ packages:
 
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
+
+  '@types/luxon@3.4.2':
+    resolution: {integrity: sha512-TifLZlFudklWlMBfhubvgqTXRzLDI5pCbGa4P8a3wPyUQSW+1xQ5eDsreP9DWHX3tjq1ke96uYG/nwundroWcA==}
 
   '@types/mime@1.3.5':
     resolution: {integrity: sha512-/pyBZWSLD2n0dcHE3hq8s8ZvcETHtEuF+3E7XVt0Ig2nvsVQXdghHVcEkIWjy9A0wKfTn97a/PSDYohKIlnP/w==}
@@ -885,6 +900,9 @@ packages:
   cors@2.8.5:
     resolution: {integrity: sha512-KIHbLJqu73RGr/hnbrO9uBeixNGuvSQjul/jdFvS/KFSIH1hWVd1ng7zOHx+YrEfInLG7q4n6GHQ9cDtxv/P6g==}
     engines: {node: '>= 0.10'}
+
+  cron@3.1.7:
+    resolution: {integrity: sha512-tlBg7ARsAMQLzgwqVxy8AZl/qlTc5nibqYwtNGoCrd+cV+ugI+tvZC1oT/8dFH8W455YrywGykx/KMmAqOr7Jw==}
 
   cross-spawn@7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
@@ -1735,6 +1753,10 @@ packages:
   lru-cache@6.0.0:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
+
+  luxon@3.4.4:
+    resolution: {integrity: sha512-zobTr7akeGHnv7eBOXcRgMeCP6+uyYsczwmeRCauvpvaAltgNyTbLH/+VaEAPUeWBT+1GuNmz4wC/6jtQzbbVA==}
+    engines: {node: '>=12'}
 
   make-dir@1.3.0:
     resolution: {integrity: sha512-2w31R7SJtieJJnQtGc7RVL2StM2vGYVfqUOvUDxH6bC6aJTxPxTF0GnIgCyu7tjockiUWAYQRbxa7vKn34s5sQ==}
@@ -2664,6 +2686,10 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
+  uuid@10.0.0:
+    resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
+    hasBin: true
+
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
@@ -2991,6 +3017,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@nestjs/schedule@4.1.1(@nestjs/common@8.0.0(reflect-metadata@0.1.13)(rxjs@7.3.0))(@nestjs/core@8.0.0(@nestjs/common@8.0.0(reflect-metadata@0.1.13)(rxjs@7.3.0))(@nestjs/microservices@8.0.0)(@nestjs/platform-express@8.0.0)(reflect-metadata@0.1.13)(rxjs@7.3.0))':
+    dependencies:
+      '@nestjs/common': 8.0.0(reflect-metadata@0.1.13)(rxjs@7.3.0)
+      '@nestjs/core': 8.0.0(@nestjs/common@8.0.0(reflect-metadata@0.1.13)(rxjs@7.3.0))(@nestjs/microservices@8.0.0)(@nestjs/platform-express@8.0.0)(reflect-metadata@0.1.13)(rxjs@7.3.0)
+      cron: 3.1.7
+      uuid: 10.0.0
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -3075,6 +3108,8 @@ snapshots:
   '@types/json-schema@7.0.15': {}
 
   '@types/json5@0.0.29': {}
+
+  '@types/luxon@3.4.2': {}
 
   '@types/mime@1.3.5': {}
 
@@ -3554,6 +3589,11 @@ snapshots:
     dependencies:
       object-assign: 4.1.1
       vary: 1.1.2
+
+  cron@3.1.7:
+    dependencies:
+      '@types/luxon': 3.4.2
+      luxon: 3.4.4
 
   cross-spawn@7.0.3:
     dependencies:
@@ -4397,8 +4437,7 @@ snapshots:
       promise: 7.3.1
     optional: true
 
-  kafkajs@2.2.4:
-    optional: true
+  kafkajs@2.2.4: {}
 
   kareem@2.6.3: {}
 
@@ -4489,6 +4528,8 @@ snapshots:
   lru-cache@6.0.0:
     dependencies:
       yallist: 4.0.0
+
+  luxon@3.4.4: {}
 
   make-dir@1.3.0:
     dependencies:
@@ -5494,6 +5535,8 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   utils-merge@1.0.1: {}
+
+  uuid@10.0.0: {}
 
   uuid@8.3.2: {}
 

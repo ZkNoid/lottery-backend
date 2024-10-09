@@ -30,10 +30,12 @@ export class DataUpdaterService implements OnModuleInit {
   constructor(
     @Inject('STATE_MANAGER_SERVICE') private rabbitClient: ClientProxy,
   ) {}
-  onModuleInit() {}
+  async onModuleInit() {
+    await this.rabbitClient.connect();
+  }
 
   async onApplicationBootstrap() {
-    await this.rabbitClient.connect();
+    await this.handleCron();
     }
 
   @Cron(CronExpression.EVERY_5_MINUTES)

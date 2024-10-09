@@ -28,6 +28,7 @@ export class StateService implements OnModuleInit {
   stateInitialized?: boolean;
 
   inReduceProving = false;
+  synced = false;
 
   distributionProof: DistributionProof;
   lottery?: PLottery;

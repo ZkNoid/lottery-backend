@@ -1,17 +1,33 @@
 import { Controller, OnModuleInit } from '@nestjs/common';
 import { StateService } from './services/state-manager.service';
-import { Ctx, MessagePattern, Payload, RmqContext } from '@nestjs/microservices';
+import {
+  Ctx,
+  MessagePattern,
+  Payload,
+  RmqContext,
+} from '@nestjs/microservices';
 import { NETWORKS } from './constants/networks';
 import { InjectModel } from '@nestjs/mongoose';
 import { MinaEventData } from './schemas/events.schema';
 import { HttpService } from '@nestjs/axios';
 import { Model } from 'mongoose';
-import { BLOCK_PER_ROUND, getNullifierId, NumberPacked, Ticket } from 'l1-lottery-contracts';
+import {
+  BLOCK_PER_ROUND,
+  getNullifierId,
+  MerkleMap20Witness,
+  NumberPacked,
+  Ticket,
+} from 'l1-lottery-contracts';
 import { ConfigService } from '@nestjs/config';
 import { MurLock, MurLockService } from 'murlock';
-import { Field } from 'o1js';
+import { Field, JsonProof, Mina, PrivateKey, UInt32 } from 'o1js';
 
 const BLOCK_UPDATE_DEPTH = 6;
+
+function randomIntFromInterval(min, max) {
+  // min and max included
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
 
 @Controller()
 export class StateManagerController {
@@ -32,29 +48,118 @@ export class StateManagerController {
     return await this.stateManager.fetchEvents(startBlock);
   }
 
-  @MessagePattern({cmd: 'get-common-info'})
-  async getCommonInfo(@Ctx() context: RmqContext): Promise<{
+  @MessagePattern({ cmd: 'get-common-info' })
+  async getCommonInfo(
+    @Ctx() context: RmqContext,
+  ): Promise<{
     currentRoundId: number;
     startBlock: number;
+    lastReduceInRound: number;
   }> {
+    const lastReduceInRound = this.stateManager.lottery.lastReduceInRound
+      .get()
+      .toBigInt();
+
     return {
       currentRoundId: this.stateManager.roundIds,
       startBlock: Number(this.stateManager.lottery.startBlock.get().toBigint()),
+      lastReduceInRound: Number(lastReduceInRound),
+    };
+  }
+
+  @MessagePattern({ cmd: 'generate-reduce-proof' })
+  async generateReduceProof(
+    @Ctx() context: RmqContext,
+  ): Promise<{
+    reduceProof: JsonProof;
+  }> {
+    const reduceProof = await this.stateManager.state.reduceTickets();
+
+    return {
+      reduceProof: reduceProof.toJSON(),
+    };
+  }
+
+  @MessagePattern({ cmd: 'update-result' })
+  async updateResult(
+    @Payload() roundId: number,
+    @Ctx() context: RmqContext,
+  ): Promise<{
+    resultWitness: object;
+    bankValue: number;
+    bankWitness: object;
+  }> {
+    console.log('Updating result', roundId);
+    const {
+      resultWitness,
+      bankValue,
+      bankWitness,
+    } = this.stateManager.state.updateResult(roundId);
+    console.log('Updated result');
+    console.log('Updated result data', {
+      resultWitness: MerkleMap20Witness.toJSON(resultWitness),
+      bankValue: Number(bankValue.toBigInt()),
+      bankWitness: MerkleMap20Witness.toJSON(bankWitness),
+    });
+
+    // console.log(`Digest: `, await MockLottery.digest());
+    // const sender = PrivateKey.fromBase58(process.env.PK);
+    // console.log('Tx init');
+
+    // const randomCombilation = Array.from({ length: 6 }, () =>
+    //   randomIntFromInterval(1, 9),
+    // );
+    // console.log('Setting combination', randomCombilation);
+
+    // let tx = await Mina.transaction(
+    //   { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
+    //   async () => {
+    //     await this.stateManager.lottery.produceResult(
+    //       resultWitness as MerkleMap20Witness,
+    //       NumberPacked.pack(randomCombilation.map((x) => UInt32.from(x))),
+    //       bankValue,
+    //       bankWitness as MerkleMap20Witness,
+    //     );
+    //   },
+    // );
+    // console.log('Proving tx');
+    // await tx.prove();
+    // console.log('Proved tx');
+    // let txResult = await tx.sign([sender]).send();
+
+    // console.log(`Tx successful. Hash: `, txResult.hash);
+    // console.log('Waiting for tx');
+    // await txResult.wait();
+
+    return {
+      resultWitness: MerkleMap20Witness.toJSON(resultWitness),
+      bankValue: Number(bankValue.toBigInt()),
+      bankWitness: MerkleMap20Witness.toJSON(bankWitness),
     };
   }
 
   @MessagePattern({ cmd: 'get-round-info' })
-  getRoundInfo(@Payload() roundId: number, @Ctx() context: RmqContext): {
-    currentRoundId: number,
-    boughtTickets: {
-      amount: number,
-      numbers: number[],
-      owner: string
-    }[],
-    claimStatuses: boolean[],
-    winningCombination: number[]
+  getRoundInfo(
+    @Payload() roundId: number,
+    @Ctx() context: RmqContext,
+  ): {
+    currentRoundId: number;
+    boughtTickets:
+      | {
+          amount: number;
+          numbers: number[];
+          owner: string;
+        }[]
+      | null;
+    claimStatuses: boolean[];
+    winningCombination: number[];
   } {
-    console.log('Checking roundid', roundId)
+    if (!this.stateManager.synced) {
+      console.log('Not synced');
+      return null;
+    }
+
+    console.log('Checking roundid', roundId);
     const map = this.stateManager.state.roundResultMap[roundId];
 
     const winningCombination = NumberPacked.unpackToBigints(
@@ -63,18 +168,18 @@ export class StateManagerController {
       .map((v) => Number(v))
       .slice(0, 6);
 
-      const claimStatuses = this.stateManager.boughtTickets[roundId].map((x, i) => (
-        this.stateManager.state.ticketNullifierMap
-          .get(getNullifierId(Field.from(roundId), Field.from(i)))
-          .equals(Field.from(1))
-          .toBoolean()
-      ));
+    const claimStatuses = (this.stateManager.boughtTickets[roundId] || []).map((x, i) => 
+      this.stateManager.state.ticketNullifierMap
+        .get(getNullifierId(Field.from(roundId), Field.from(i)))
+        .equals(Field.from(1))
+        .toBoolean(),
+    );
 
     return {
       currentRoundId: roundId,
-      boughtTickets: this.stateManager.boughtTickets[roundId].map(x => ({
+      boughtTickets: (this.stateManager.boughtTickets[roundId] || []).map((x) => ({
         amount: Number(x.amount.toBigInt()),
-        numbers: x.numbers.map(x => Number(x.toBigint())),
+        numbers: x.numbers.map((x) => Number(x.toBigint())),
         owner: x.owner.toBase58(),
       })),
       claimStatuses,
@@ -85,13 +190,9 @@ export class StateManagerController {
   @MessagePattern({ cmd: 'update' })
   async updateHandler(@Ctx() context: RmqContext): Promise<void> {
     try {
-      await this.murLockService.runWithLock(
-        'lockKey',
-        60 * 1000,
-        async () => {
-          await this.update();
-        },
-      );
+      await this.murLockService.runWithLock('lockKey', 60 * 1000, async () => {
+        await this.update();
+      });
     } catch (error) {
       console.log('Error', error);
     }
@@ -137,6 +238,8 @@ export class StateManagerController {
       // const dbEvents = await this.minaEventData.find({});
       const lastEvent = await this.minaEventData.findOne({}).sort({ _id: -1 });
 
+      console.log('Last event', lastEvent);
+
       const updateEventsFrom = lastEvent
         ? lastEvent.blockHeight - BLOCK_UPDATE_DEPTH
         : 0;
@@ -166,39 +269,6 @@ export class StateManagerController {
       );
 
       console.log('New events', events);
-
-      /*
-        // Events that was previously recorded from archive node. If they're dropped, they was orphaned
-        const eventsToVerifyUncles = fetchedEvents.filter((x) =>
-          lastEvent ? x.blockHeight == lastEvent.blockHeight : false,
-        );
-        // New events that are not uncles
-        const newFetchedEvents = fetchedEvents.filter((x) =>
-          lastEvent ? x.blockHeight > lastEvent.blockHeight : true,
-        );
-
-        // If saved events are not presented in archive node response, removing them from db
-        if (lastEvent && eventsToVerifyUncles.length == 0) {
-          await this.minaEventData.deleteMany({
-            blockHeight: lastEvent.blockHeight,
-          });
-        }
-
-        for (const newFetchedEvent of newFetchedEvents) {
-          await this.minaEventData.updateOne(
-            {
-              'event.transactionInfo.transactionHash':
-                newFetchedEvent.event.transactionInfo.transactionHash,
-            },
-            {
-              $set: newFetchedEvent,
-            },
-            {
-              upsert: true,
-            },
-          );
-        }
-        */
 
       let eventsToBeDeleted = await this.minaEventData.find({
         blockHeight: { $gte: updateEventsFrom },
@@ -277,6 +347,7 @@ export class StateManagerController {
       this.stateManager.blockHeight = currBlockHeight;
       this.stateManager.slotSinceGenesis = slotSinceGenesis;
       this.stateManager.roundIds = currentRoundId;
+      this.stateManager.synced = true;
     } catch (e) {
       console.log('Events sync error', e.stack);
     }
