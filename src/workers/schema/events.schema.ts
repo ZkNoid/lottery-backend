@@ -13,7 +13,7 @@ class MinaEventTransactionInfo {
 }
 
 class MinaEvent {
-  @Prop({type: Object})
+  @Prop({ type: Object })
   data: Mixed;
   @Prop()
   transactionInfo: MinaEventTransactionInfo;
@@ -36,6 +36,8 @@ export class BaseEventDocument extends Document {
   globalSlot: number;
   @Prop()
   chainStatus: string;
+  @Prop()
+  round: number;
 }
 
 @Schema({ timestamps: true, collection: 'mina_events' })

@@ -1,19 +1,19 @@
-import { DistributionProof } from 'l1-lottery-contracts/build/src/DistributionProof';
 import { Mina, Cache, PublicKey, UInt32, fetchAccount, Field } from 'o1js';
 import { ALL_NETWORKS, NETWORKS, NetworkIds } from '../constants/networks';
 import {
-  COMMISION,
-  DistibutionProgram,
+  DistributionProgram,
+  DistributionProof,
   PLottery,
-  PRESICION,
   PStateManager,
   Ticket,
   TicketReduceProgram,
-  getNullifierId,
 } from 'l1-lottery-contracts';
-import { LOTTERY_ADDRESS } from '../constants/addresses';
+import { FACTORY_ADDRESS } from '../constants/addresses';
 import { MinaEventDocument } from '../workers/schema/events.schema';
 import { Injectable, OnModuleInit } from '@nestjs/common';
+
+import { FactoryManager } from 'l1-lottery-contracts/build/src/StateManager/FactoryStateManager';
+import { PlotteryFactory } from 'l1-lottery-contracts/build/src/Factory';
 
 @Injectable()
 export class StateService implements OnModuleInit {
@@ -25,9 +25,11 @@ export class StateService implements OnModuleInit {
 
   inReduceProving = false;
 
-  distributionProof: DistributionProof;
-  lottery: Record<string, PLottery> = {};
-  state: Record<string, PStateManager> = {};
+  // distributionProof: DistributionProof;
+  // lottery: Record<string, PLottery> = {};
+  factory: Record<string, PlotteryFactory> = {};
+  state: Record<string, FactoryManager> = {};
+  // state: Record<string, PStateManager> = {};
   boughtTickets: Record<string, Ticket[][]> = {};
 
   async onModuleInit() {
@@ -51,31 +53,18 @@ export class StateService implements OnModuleInit {
     console.log('Network set');
 
     for (let network of ALL_NETWORKS) {
-      const lottery = new PLottery(
-        PublicKey.fromBase58(LOTTERY_ADDRESS[network.networkID]),
+      const factory = new PlotteryFactory(
+        PublicKey.fromBase58(FACTORY_ADDRESS[network.networkID]),
       );
-      await fetchAccount({
-        publicKey: lottery.address,
-      });
-      console.log('Lottery', lottery.startBlock.get());
 
-      this.lottery[network.networkID] = lottery;
-
-      this.state[network.networkID] = new PStateManager(
-        lottery,
-        UInt32.from(lottery.startBlock.get()).toFields()[0],
-        false,
-      );
-      this.state[network.networkID].processedTicketData.ticketId = Number(
-        lottery.lastProcessedTicketId.get().toBigInt(),
-      );
-      this.state[network.networkID].processedTicketData.round = Number(
-        lottery.lastReduceInRound.get().toBigInt(),
-      );
+      this.factory[network.networkID] = factory;
+      this.state[network.networkID] = new FactoryManager(false, false);
     }
 
+    await this.fetchRounds();
+
     console.log('Compilation');
-    await DistibutionProgram.compile({
+    await DistributionProgram.compile({
       cache: Cache.FileSystem('./cache'),
     });
     console.log('Compilation ended');
@@ -97,8 +86,22 @@ export class StateService implements OnModuleInit {
     this.initialized = true;
   }
 
-  async fetchEvents(networkID: string, startBlock: number = 0) {
-    const lottery = this.lottery[networkID]!;
+  async fetchRounds() {
+    for (let network of ALL_NETWORKS) {
+      const state = this.state[network.networkID];
+      const events = await this.factory[network.networkID].fetchEvents();
+
+      events.forEach((event) => {
+        console.log(event.event.data);
+        const data = event.event.data as any;
+
+        state.addDeploy(data.round, data.randomManager, data.plottery);
+      });
+    }
+  }
+
+  async fetchEvents(networkID: string, round: number, startBlock: number = 0) {
+    const lottery = this.state[networkID].plotteryManagers[round].contract;
 
     const start = UInt32.from(startBlock);
     const events = (
@@ -169,23 +172,21 @@ export class StateService implements OnModuleInit {
 
   async initState(
     networkID: string,
+    round: number,
     events: MinaEventDocument[],
     stateM?: PStateManager,
   ) {
     const updateOnly: boolean = false;
-    const startBlock = this.lottery[networkID].startBlock.get();
+    const lottery = this.state[networkID].plotteryManagers[round].contract;
+    const startBlock = lottery.startSlot.get();
     // if (!stateM) {
-    stateM = new PStateManager(
-      this.lottery[networkID],
-      UInt32.from(startBlock).toFields()[0],
-      false,
-    );
+    stateM = this.state[networkID].plotteryManagers[round];
     // }
 
     const syncBlockSlot =
       events.length > 0 ? events.at(-1).globalSlot : +startBlock;
 
-    if (events.length != 0) stateM.syncWithCurBlock(syncBlockSlot);
+    // if (events.length != 0) stateM.syncWithCurBlock(syncBlockSlot);
 
     const boughtTickets = updateOnly
       ? this.boughtTickets[networkID]
@@ -214,14 +215,14 @@ export class StateService implements OnModuleInit {
     }
 
     for (let event of events) {
-      if (
-        (event.event.data as undefined as any)?.ticket?.owner ==
-        'B62qiTKpEPjGTSHZrtM8uXiKgn8So916pLmNJKDhKeyBQL9TDb3nvBG'
-      ) {
-        (event.event.data as unknown as any).ticket.owner =
-          'B62qrSG3pg83XvjtcEhywDz8CYhAZodhevPfjYSeXgsfeutWSbk29eM';
-      }
-      const data = this.lottery[networkID].events[event.type].fromJSON(
+      // if (
+      //   (event.event.data as undefined as any)?.ticket?.owner ==
+      //   'B62qiTKpEPjGTSHZrtM8uXiKgn8So916pLmNJKDhKeyBQL9TDb3nvBG'
+      // ) {
+      //   (event.event.data as unknown as any).ticket.owner =
+      //     'B62qrSG3pg83XvjtcEhywDz8CYhAZodhevPfjYSeXgsfeutWSbk29eM';
+      // }
+      const data = lottery.events[event.type].fromJSON(
         event.event.data as undefined as any,
       );
 
@@ -239,74 +240,69 @@ export class StateService implements OnModuleInit {
       if (event.type == 'produce-result') {
         console.log('Produced result', event.event.data, 'round' + data.round);
 
-        stateM.roundResultMap.set(data.round, data.result);
+        // stateM.roundResultMap.set(data.round, data.result);
 
-        const curBankValue = stateM.bankMap.get(data.round);
-        const newBankValue = curBankValue
-          .mul(PRESICION - COMMISION)
-          .div(PRESICION);
-        stateM.bankMap.set(data.round, newBankValue);
+        // const curBankValue = stateM.bankMap.get(data.round);
+        // const newBankValue = curBankValue
+        //   .mul(PRESICION - COMMISION)
+        //   .div(PRESICION);
+        // stateM.bankMap.set(data.round, newBankValue);
       }
       if (event.type == 'get-reward') {
         console.log('Got reward', event.event.data, 'round' + data.round);
 
         let ticketId = 0;
-        let roundTicketWitness;
+        let ticketWitness;
 
-        for (; ticketId < stateM.lastTicketInRound[+data.round]; ticketId++) {
+        for (; ticketId < stateM.lastTicketInRound; ticketId++) {
           if (
-            stateM.roundTicketMap[+data.round]
+            stateM.ticketMap[+data.round]
               .get(Field(ticketId))
               .equals(data.ticket.hash())
               .toBoolean()
           ) {
-            roundTicketWitness = stateM.roundTicketMap[+data.round].getWitness(
-              Field.from(ticketId),
-            );
+            ticketWitness = stateM.ticketMap.getWitness(Field.from(ticketId));
             break;
           }
         }
 
-        stateM.ticketNullifierMap.set(
-          getNullifierId(Field.from(data.round), Field.from(ticketId)),
-          Field(1),
-        );
+        stateM.ticketNullifierMap.set(Field(ticketId), Field(1));
       }
 
       if (event.type == 'reduce') {
         console.log('Reduce: ', event.event.data, 'round' + data.round);
-        let fromActionState = data.startActionState;
-        let endActionState = data.endActionState;
+        // let fromActionState = data.startActionState;
+        // let endActionState = data.endActionState;
 
-        let actions = await this.lottery[networkID].reducer.fetchActions({
-          fromActionState,
-          endActionState,
+        let actions = await lottery.reducer.fetchActions({
+          // fromActionState,
+          // endActionState,
         });
 
         actions.flat(1).map((action) => {
           console.log(
             'Adding ticket in reduce',
             action.ticket.numbers.map((x) => x.toString()),
-            +action.round,
+            round,
           );
 
-          stateM.addTicket(action.ticket, +action.round, true);
+          stateM.addTicket(action.ticket, true);
 
-          if (stateM.processedTicketData.round == +action.round) {
-            stateM.processedTicketData.ticketId++;
-          } else {
-            stateM.processedTicketData.ticketId = 0;
-            stateM.processedTicketData.round = +action.round;
-          }
+          // if (stateM.processedTicketData.round == +action.round) {
+          //   stateM.processedTicketData.ticketId++;
+          // } else {
+          //   stateM.processedTicketData.ticketId = 0;
+          //   stateM.processedTicketData.round = +action.round;
+          // }
         });
       }
     }
-    this.state[networkID] = stateM;
+    this.state[networkID].plotteryManagers[round] = stateM;
     this.stateInitialized[networkID] = true;
     console.log('Setting bought tickets', boughtTickets, networkID);
     this.boughtTickets[networkID] = boughtTickets;
   }
-
+  /*
   // !processedTicketData should be update according to contract state after that call
   async undoLastEvents(
     networkID: string,
@@ -414,4 +410,5 @@ export class StateService implements OnModuleInit {
       round,
     };
   }
+    */
 }

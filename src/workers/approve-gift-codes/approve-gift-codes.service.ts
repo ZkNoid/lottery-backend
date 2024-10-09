@@ -5,12 +5,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Field } from 'o1js';
 import { HttpService } from '@nestjs/axios';
-import {
-  BLOCK_PER_ROUND,
-  getNullifierId,
-  NumberPacked,
-  TICKET_PRICE,
-} from 'l1-lottery-contracts';
 import { StateService } from 'src/state-service/state.service';
 import { GiftCodesRequestedData } from '../schema/gift-codes-requested.schema';
 import { checkZkappTransaction } from 'o1js';
