@@ -17,7 +17,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "prepare_token": "node build-mina-fungible-token.mjs && cd ./node_modules/.pnpm/zkonmina@https+++codeload.github.com+ZKON-Network+zkapp+tar.gz+28749c97de82dd3a426497621ff416_77jz7h6ro5dnm672mpbn7h7sda/node_modules/mina-fungible-token && npm run build"
+
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.2",
