@@ -73,7 +73,9 @@ export class StateManagerController {
   ): Promise<{
     reduceProof: JsonProof;
   }> {
+    console.log('Generating reduce proof');
     const reduceProof = await this.stateManager.state.reduceTickets();
+    console.log('Generated reduce proof');
 
     return {
       reduceProof: reduceProof.toJSON(),
