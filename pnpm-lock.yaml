@@ -38,7 +38,7 @@ importers:
         specifier: ^1.7.2
         version: 1.7.2
       l1-lottery-contracts:
-        specifier: ^0.7.14
+        specifier: 0.7.15
         version: 0.7.15(o1js@1.4.0(patch_hash=nuk4ttpnuxffyalthdzoarndpq))
       mongoose:
         specifier: ^8.4.4

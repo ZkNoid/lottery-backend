@@ -95,7 +95,7 @@ export class RoundsInfoUpdaterService implements OnModuleInit {
         const reduceProofJson = await lastValueFrom(
           this.rabbitClient
             .send({ cmd: 'generate-reduce-proof' }, {})
-            .pipe(timeout(5000)),
+            .pipe(timeout(20_000)),
         );
 
         // Reduce tickets
