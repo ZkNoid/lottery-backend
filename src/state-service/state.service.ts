@@ -12,8 +12,8 @@ import { FACTORY_ADDRESS } from '../constants/addresses';
 import { MinaEventDocument } from '../workers/schema/events.schema';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 
-import { FactoryManager } from 'l1-lottery-contracts/build/src/StateManager/FactoryStateManager';
-import { PlotteryFactory } from 'l1-lottery-contracts/build/src/Factory';
+import { FactoryManager } from 'l1-lottery-contracts';
+import { PlotteryFactory } from 'l1-lottery-contracts';
 
 @Injectable()
 export class StateService implements OnModuleInit {
@@ -65,7 +65,7 @@ export class StateService implements OnModuleInit {
 
     console.log('Compilation');
     await DistributionProgram.compile({
-      cache: Cache.FileSystem('./cache'),
+      // cache: Cache.FileSystem('./cache'),
     });
     console.log('Compilation ended');
 

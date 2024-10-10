@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prepare_token": "node build-mina-fungible-token.mjs && cd ./node_modules/.pnpm/zkonmina@https+++codeload.github.com+ZKON-Network+zkapp+tar.gz+28749c97de82dd3a426497621ff416_77jz7h6ro5dnm672mpbn7h7sda/node_modules/mina-fungible-token && npm run build"
+    "prepare_token": "node build-mina-fungible-token.mjs && cd ./node_modules/mina-fungible-token && npm run build"
 
   },
   "dependencies": {
@@ -30,9 +30,9 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/schedule": "^4.0.2",
     "axios": "^1.7.2",
-    "l1-lottery-contracts": "^0.7.19",
+    "l1-lottery-contracts": "^0.7.24",
     "mongoose": "^8.4.4",
-    "o1js": "^1.4.0",
+    "o1js": "1.6.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1"
   },
