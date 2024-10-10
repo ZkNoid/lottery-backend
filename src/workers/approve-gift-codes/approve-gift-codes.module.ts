@@ -5,13 +5,13 @@ import { HttpModule } from '@nestjs/axios';
 import {
   GiftCodesRequestedData,
   GiftCodesRequestedDataSchema,
-} from '../schema/gift-codes-requested.schema';
+} from '../schema/gift-codes-requested.schema.js';
 import {
   GiftCodesData,
   GiftCodesDataSchema,
-} from '../schema/gift-codes.schema';
+} from '../schema/gift-codes.schema.js';
 
-import { ApproveGiftCodesService } from './approve-gift-codes.service';
+import { ApproveGiftCodesService } from './approve-gift-codes.service.js';
 
 @Module({
   imports: [

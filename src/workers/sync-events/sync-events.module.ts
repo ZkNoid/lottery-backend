@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { MinaEventData, MinaEventDataSchema } from '../schema/events.schema';
+import { MinaEventData, MinaEventDataSchema } from '../schema/events.schema.js';
 import { MongooseModule } from '@nestjs/mongoose';
-import { SyncEventsService } from './sync-events.service';
+import { SyncEventsService } from './sync-events.service.js';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HttpModule } from '@nestjs/axios';
-import { StateModule } from 'src/state-service/state.module';
+import { StateModule } from '../../state-service/state.module.js';
 
 @Module({
   imports: [

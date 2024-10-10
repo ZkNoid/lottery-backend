@@ -1,10 +1,10 @@
 // import { Module } from '@nestjs/common';
 // import { MongooseModule } from '@nestjs/mongoose';
 // import { ScheduleModule } from '@nestjs/schedule';
-// import { RoundsData, RoundsDataSchema } from '../workers/schema/rounds.schema';
-// import { ClaimApiService } from './claim-api.service';
+// import { RoundsData, RoundsDataSchema } from '../workers/schema/rounds.schema.js';
+// import { ClaimApiService } from './claim-api.service.js';
 // import { ClaimApiController } from './claim-api.controller';
-// import { StateModule } from 'src/state-service/state.module';
+// import { StateModule } from 'src/state-service/state.module.js';
 
 // @Module({
 //   imports: [

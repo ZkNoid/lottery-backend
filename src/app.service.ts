@@ -1,6 +1,6 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { ALL_NETWORKS } from './constants/networks';
+import { ALL_NETWORKS } from './constants/networks.js';
 
 @Injectable()
 export class AppService implements OnApplicationBootstrap {

@@ -1,10 +1,10 @@
 // import { Module } from '@nestjs/common';
-// import { MinaEventData, MinaEventDataSchema } from '../schema/events.schema';
+// import { MinaEventData, MinaEventDataSchema } from '../schema/events.schema.js';
 // import { MongooseModule } from '@nestjs/mongoose';
-// import { EmptyTicketBuyinService } from './empty-ticket-buying.service';
+// import { EmptyTicketBuyinService } from './empty-ticket-buying.service.js';
 // import { ScheduleModule } from '@nestjs/schedule';
 // import { HttpModule } from '@nestjs/axios';
-// import { StateModule } from 'src/state-service/state.module';
+// import { StateModule } from 'src/state-service/state.module.js';
 
 // @Module({
 //   imports: [

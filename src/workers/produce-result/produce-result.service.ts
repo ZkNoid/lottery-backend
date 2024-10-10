@@ -1,9 +1,9 @@
 // import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 // import { Cron, CronExpression } from '@nestjs/schedule';
-// import { ALL_NETWORKS } from 'src/constants/networks';
+// import { ALL_NETWORKS } from 'src/constants/networks.js';
 // import { Field, Mina, PrivateKey, UInt32, fetchLastBlock } from 'o1js';
 // import { NumberPacked } from 'l1-lottery-contracts';
-// import { StateService } from 'src/state-service/state.service';
+// import { StateService } from 'src/state-service/state.service.js';
 
 // function randomIntFromInterval(min, max) {
 //   // min and max included

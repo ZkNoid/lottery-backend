@@ -1,5 +1,5 @@
 import { Mina, Cache, PublicKey, UInt32, fetchAccount, Field } from 'o1js';
-import { ALL_NETWORKS, NETWORKS, NetworkIds } from '../constants/networks';
+import { ALL_NETWORKS, NETWORKS, NetworkIds } from '../constants/networks.js';
 import {
   DistributionProgram,
   DistributionProof,
@@ -8,8 +8,8 @@ import {
   Ticket,
   TicketReduceProgram,
 } from 'l1-lottery-contracts';
-import { FACTORY_ADDRESS } from '../constants/addresses';
-import { MinaEventDocument } from '../workers/schema/events.schema';
+import { FACTORY_ADDRESS } from '../constants/addresses.js';
+import { MinaEventDocument } from '../workers/schema/events.schema.js';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 
 import { FactoryManager } from 'l1-lottery-contracts';

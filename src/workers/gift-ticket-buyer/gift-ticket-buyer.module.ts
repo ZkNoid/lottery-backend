@@ -5,20 +5,20 @@
 // import {
 //   GiftCodesRequestedData,
 //   GiftCodesRequestedDataSchema,
-// } from '../schema/gift-codes-requested.schema';
+// } from '../schema/gift-codes-requested.schema.js';
 
 // import {
 //   PromoQueueData,
 //   PromoQueueDataSchema,
-// } from '../schema/promo-queue.schema';
+// } from '../schema/promo-queue.schema.js';
 
 // import {
 //   GiftCodesData,
 //   GiftCodesDataSchema,
-// } from '../schema/gift-codes.schema';
+// } from '../schema/gift-codes.schema.js';
 
-// import { ApproveGiftCodesService } from './gift-ticket-buyer.service';
-// import { StateService } from 'src/state-service/state.service';
+// import { ApproveGiftCodesService } from './gift-ticket-buyer.service.js';
+// import { StateService } from 'src/state-service/state.service.js';
 
 // @Module({
 //   imports: [

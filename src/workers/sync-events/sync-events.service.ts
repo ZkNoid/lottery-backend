@@ -4,13 +4,13 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { Cron, CronExpression, Interval } from '@nestjs/schedule';
-import { ALL_NETWORKS } from 'src/constants/networks';
+import { ALL_NETWORKS } from '../../constants/networks.js';
 import { InjectModel } from '@nestjs/mongoose';
-import { MinaEventData } from '../schema/events.schema';
+import { MinaEventData } from '../schema/events.schema.js';
 import { Model } from 'mongoose';
 import { HttpService } from '@nestjs/axios';
 import { BLOCK_PER_ROUND } from 'l1-lottery-contracts';
-import { StateService } from 'src/state-service/state.service';
+import { StateService } from '../../state-service/state.service.js';
 
 const BLOCK_UPDATE_DEPTH = 6;
 

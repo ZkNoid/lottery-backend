@@ -1,9 +1,9 @@
 // import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 // import { Cron, CronExpression } from '@nestjs/schedule';
-// import { ALL_NETWORKS } from 'src/constants/networks';
+// import { ALL_NETWORKS } from 'src/constants/networks.js';
 // import { Field, Mina, PrivateKey, PublicKey } from 'o1js';
 // import { Ticket } from 'l1-lottery-contracts';
-// import { StateService } from 'src/state-service/state.service';
+// import { StateService } from 'src/state-service/state.service.js';
 
 // @Injectable()
 // export class EmptyTicketBuyinService implements OnApplicationBootstrap {

@@ -1,14 +1,14 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ALL_NETWORKS } from 'src/constants/networks';
+import { ALL_NETWORKS } from '../../constants/networks.js';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Field } from 'o1js';
 import { HttpService } from '@nestjs/axios';
-import { StateService } from 'src/state-service/state.service';
-import { GiftCodesRequestedData } from '../schema/gift-codes-requested.schema';
+import { StateService } from '../../state-service/state.service.js';
+import { GiftCodesRequestedData } from '../schema/gift-codes-requested.schema.js';
 import { checkZkappTransaction } from 'o1js';
-import { GiftCodesData } from '../schema/gift-codes.schema';
+import { GiftCodesData } from '../schema/gift-codes.schema.js';
 
 @Injectable()
 export class ApproveGiftCodesService implements OnApplicationBootstrap {

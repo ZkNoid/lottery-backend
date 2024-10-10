@@ -2,13 +2,13 @@
 // import { Cron, CronExpression } from '@nestjs/schedule';
 // import { InjectModel } from '@nestjs/mongoose';
 // import { Model } from 'mongoose';
-// import { GiftCodesRequestedData } from '../schema/gift-codes-requested.schema';
-// import { GiftCodesData } from '../schema/gift-codes.schema';
-// import { PromoQueueData } from '../schema/promo-queue.schema';
+// import { GiftCodesRequestedData } from '../schema/gift-codes-requested.schema.js';
+// import { GiftCodesData } from '../schema/gift-codes.schema.js';
+// import { PromoQueueData } from '../schema/promo-queue.schema.js';
 // import { Ticket } from 'l1-lottery-contracts';
 // import { Field, Mina, PrivateKey, PublicKey } from 'o1js';
-// import { StateService } from 'src/state-service/state.service';
-// import { NetworkIds } from 'src/constants/networks';
+// import { StateService } from 'src/state-service/state.service.js';
+// import { NetworkIds } from 'src/constants/networks.js';
 
 // @Injectable()
 // export class ApproveGiftCodesService implements OnApplicationBootstrap {

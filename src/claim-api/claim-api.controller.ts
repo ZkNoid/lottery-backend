@@ -1,6 +1,6 @@
 // import { Body, Controller, Post, Get } from '@nestjs/common';
 // import { ClaimRequestDTO } from './claim-api.dto';
-// import { ClaimApiService } from './claim-api.service';
+// import { ClaimApiService } from './claim-api.service.js';
 
 // @Controller('claim-api')
 // export class ClaimApiController {
