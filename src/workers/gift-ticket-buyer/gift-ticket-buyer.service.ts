@@ -7,8 +7,8 @@ import { GiftCodesData } from '../schema/gift-codes.schema.js';
 import { PromoQueueData } from '../schema/promo-queue.schema.js';
 import { Ticket } from 'l1-lottery-contracts';
 import { Field, Mina, PrivateKey, PublicKey } from 'o1js';
-import { StateService } from 'src/state-service/state.service.js';
-import { NetworkIds } from 'src/constants/networks.js';
+import { StateService } from '../../state-service/state.service.js';
+import { NetworkIds } from '../../constants/networks.js';
 
 @Injectable()
 export class ApproveGiftCodesService implements OnApplicationBootstrap {

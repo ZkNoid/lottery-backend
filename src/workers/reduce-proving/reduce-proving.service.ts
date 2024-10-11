@@ -1,108 +1,112 @@
-// import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-// import { Cron, CronExpression } from '@nestjs/schedule';
-// import { ALL_NETWORKS } from 'src/constants/networks.js';
-// import { Mina, PrivateKey } from 'o1js';
-// import { StateService } from 'src/state-service/state.service.js';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { ALL_NETWORKS } from '../../constants/networks.js';
+import { fetchAccount, Mina, PrivateKey } from 'o1js';
+import { StateService } from '../../state-service/state.service.js';
 
-// @Injectable()
-// export class ProveReduceService implements OnApplicationBootstrap {
-//   private readonly logger = new Logger(ProveReduceService.name);
+@Injectable()
+export class ProveReduceService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(ProveReduceService.name);
 
-//   constructor(private stateManager: StateService) {}
-//   async onApplicationBootstrap() {
-//     // await this.handleCron();
-//   }
+  constructor(private stateManager: StateService) {}
+  async onApplicationBootstrap() {
+    // await this.handleCron();
+  }
 
-//   async checkConditions(networkId: string, round: number) {
-//     const contract =
-//       this.stateManager.state[networkId].plotteryManagers[round].contract;
+  async checkConditions(networkId: string, round: number) {
+    const contract =
+      this.stateManager.state[networkId].plotteryManagers[round].contract;
 
-//     const currentRound = await this.stateManager.getCurrentRound(networkId);
+    await fetchAccount({ publicKey: contract.address });
 
-//     const isReduced = contract.reduced.get();
+    const currentRound = await this.stateManager.getCurrentRound(networkId);
 
-//     // const currentRoundId = this.stateManager.roundIds[networkId];
+    const isReduced = contract.reduced.get();
 
-//     // const lastReduceInRound = this.stateManager.lottery[
-//     //   networkId
-//     // ].lastReduceInRound
-//     //   .get()
-//     //   .toBigInt();
+    // const currentRoundId = this.stateManager.roundIds[networkId];
 
-//     // this.logger.debug(
-//     //   'Current round id',
-//     //   currentRoundId,
-//     //   'ttr',
-//     //   lastReduceInRound,
-//     // );
+    // const lastReduceInRound = this.stateManager.lottery[
+    //   networkId
+    // ].lastReduceInRound
+    //   .get()
+    //   .toBigInt();
 
-//     // // Checking that at least one ticket bought after the last reduce round
-//     // let ticketBoughtAfterReduce = false;
+    // this.logger.debug(
+    //   'Current round id',
+    //   currentRoundId,
+    //   'ttr',
+    //   lastReduceInRound,
+    // );
 
-//     // for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
-//     //   if (this.stateManager.boughtTickets[networkId][i].length > 0) {
-//     //     this.logger.debug(`Found ticket in round ${i}`);
-//     //     ticketBoughtAfterReduce = true;
-//     //     break;
-//     //   }
-//     // }
+    // // Checking that at least one ticket bought after the last reduce round
+    // let ticketBoughtAfterReduce = false;
 
-//     // if (lastReduceInRound < currentRoundId && !ticketBoughtAfterReduce) {
-//     //   this.logger.debug('No tickets bought in the round');
-//     // }
-//     return round < currentRound && !isReduced.toBoolean();
-//   }
+    // for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
+    //   if (this.stateManager.boughtTickets[networkId][i].length > 0) {
+    //     this.logger.debug(`Found ticket in round ${i}`);
+    //     ticketBoughtAfterReduce = true;
+    //     break;
+    //   }
+    // }
 
-//   @Cron(CronExpression.EVERY_5_MINUTES)
-//   async handleCron() {
-//     if (this.stateManager.inReduceProving) return;
-//     this.stateManager.inReduceProving = true;
+    // if (lastReduceInRound < currentRoundId && !ticketBoughtAfterReduce) {
+    //   this.logger.debug('No tickets bought in the round');
+    // }
+    console.log(`Round is reduced: ${isReduced.toBoolean()}`);
+    return round < currentRound && !isReduced.toBoolean();
+  }
 
-//     try {
-//       this.logger.debug('REDUCE PROVING');
-//       for (let network of ALL_NETWORKS) {
-//         const currentRound = this.stateManager.getCurrentRound(
-//           network.networkID,
-//         );
+  @Cron(CronExpression.EVERY_MINUTE)
+  async handleCron() {
+    if (this.stateManager.inReduceProving) return;
+    this.stateManager.inReduceProving = true;
 
-//         if (await this.checkConditions(network.networkID)) {
-//           this.logger.debug('Time to reduce');
-//           const sender = PrivateKey.fromBase58(process.env.PK);
+    try {
+      this.logger.debug('REDUCE PROVING');
+      for (let network of ALL_NETWORKS) {
+        const currentRound = await this.stateManager.getCurrentRound(
+          network.networkID,
+        );
 
-//           const stateM = this.stateManager.state[network.networkID];
+        for (let roundId = 0; roundId < currentRound; roundId++) {
+          if (await this.checkConditions(network.networkID, roundId)) {
+            this.logger.debug(`Time to reduce ${roundId}`);
+            const sender = PrivateKey.fromBase58(process.env.PK);
 
-//           // Reduce tickets
-//           let reduceProof = await stateM.reduceTickets();
+            const plotteryState =
+              this.stateManager.state[network.networkID].plotteryManagers[
+                roundId
+              ];
 
-//           this.logger.debug(
-//             'Reduce proof',
-//             'initial state',
-//             reduceProof.publicOutput.initialState.toString(),
-//             'Final state',
-//             reduceProof.publicOutput.finalState.toString(),
-//           );
+            // Reduce tickets
+            let reduceProof = await plotteryState.reduceTickets();
 
-//           let tx2_1 = await Mina.transaction(
-//             { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
-//             async () => {
-//               await this.stateManager.lottery[network.networkID].reduceTickets(
-//                 reduceProof,
-//               );
-//             },
-//           );
-//           this.logger.debug('Proving reduce tx');
-//           await tx2_1.prove();
-//           this.logger.debug('Proved reduce tx');
-//           let txResult = await tx2_1.sign([sender]).send();
+            this.logger.debug(
+              'Reduce proof',
+              'Final state',
+              reduceProof.publicOutput.finalState.toString(),
+            );
 
-//           this.logger.debug(`Reduce tx successful. Hash: `, txResult.hash);
-//           this.logger.debug('Waiting for reduce tx');
-//           await txResult.wait();
-//         }
-//       }
-//     } catch (e) {
-//       console.error('Error in reduce proving', e.stack);
-//     }
-//     this.stateManager.inReduceProving = false;
-//   }
-// }
+            let tx2_1 = await Mina.transaction(
+              { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
+              async () => {
+                await plotteryState.contract.reduceTickets(reduceProof);
+              },
+            );
+            this.logger.debug('Proving reduce tx');
+            await tx2_1.prove();
+            this.logger.debug('Proved reduce tx');
+            let txResult = await tx2_1.sign([sender]).send();
+
+            this.logger.debug(`Reduce tx successful. Hash: `, txResult.hash);
+            this.logger.debug('Waiting for reduce tx');
+            await txResult.wait();
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error in reduce proving', e.stack);
+    }
+    this.stateManager.inReduceProving = false;
+  }
+}

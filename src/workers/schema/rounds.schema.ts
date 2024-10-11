@@ -29,15 +29,19 @@ class BaseRoundsDocument extends Document {
   @Prop()
   bank: bigint;
   @Prop()
-  tickets: RoundTickets[]
+  tickets: RoundTickets[];
   @Prop()
-  winningCombination: number[] | null
+  winningCombination: number[] | null;
   @Prop()
   dp: Proof;
   @Prop()
   events: Mixed[];
   @Prop()
-  total: number
+  total: number;
+  @Prop()
+  plotteryAddress: string;
+  @Prop()
+  randomManagerAddress: string;
 }
 
 @Schema({ timestamps: true, collection: 'rounds' })

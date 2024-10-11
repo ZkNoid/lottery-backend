@@ -18,7 +18,7 @@ import {
 } from '../schema/gift-codes.schema.js';
 
 import { ApproveGiftCodesService } from './gift-ticket-buyer.service.js';
-import { StateService } from 'src/state-service/state.service.js';
+import { StateService } from '../../state-service/state.service.js';
 
 @Module({
   imports: [

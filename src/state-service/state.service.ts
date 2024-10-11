@@ -229,31 +229,33 @@ export class StateService implements OnModuleInit {
 
     // if (events.length != 0) stateM.syncWithCurBlock(syncBlockSlot);
 
-    const boughtTickets = updateOnly
+    const boughtTickets = this.boughtTickets[networkID]
       ? this.boughtTickets[networkID]
       : ([] as Ticket[][]);
 
-    if (updateOnly) {
-      console.log(
-        '[sm] initing bought tickets',
-        boughtTickets.length,
-        boughtTickets.length,
-      );
-      for (let i = boughtTickets.length; i < round + 1; i++) {
-        boughtTickets.push([]);
-      }
-    } else {
-      console.log(
-        '[sm] initing bought tickets2',
-        boughtTickets.length,
-        stateM.roundTickets.length,
-        events.length,
-      );
-
-      for (let i = 0; i < round + 1; i++) {
-        boughtTickets.push([]);
-      }
+    // if (updateOnly) {
+    console.log(
+      '[sm] initing bought tickets',
+      boughtTickets.length,
+      boughtTickets.length,
+    );
+    for (let i = boughtTickets.length; i < round + 1; i++) {
+      boughtTickets.push([]);
     }
+
+    boughtTickets[round] = [];
+    // } else {
+    //   console.log(
+    //     '[sm] initing bought tickets2',
+    //     boughtTickets.length,
+    //     stateM.roundTickets.length,
+    //     events.length,
+    //   );
+
+    //   for (let i = 0; i < round + 1; i++) {
+    //     boughtTickets.push([]);
+    //   }
+    // }
 
     for (let event of events) {
       // if (
@@ -345,7 +347,9 @@ export class StateService implements OnModuleInit {
     await fetchAccount({ publicKey: factory.address });
     const initSlot = factory.startSlot.get();
     const currentSlot = await getCurrentSlot(networkId);
-    const currentRound = (currentSlot - +initSlot) / BLOCK_PER_ROUND;
+    const currentRound = Math.floor(
+      (currentSlot - +initSlot) / BLOCK_PER_ROUND,
+    );
 
     return currentRound;
   }

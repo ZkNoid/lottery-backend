@@ -49,9 +49,15 @@ export class RevealValueService implements OnApplicationBootstrap {
       const rm =
         this.stateManager.state[networkId].randomManagers[round].contract;
 
-      const randomValue = rm.curRandomValue.get();
+      await fetchAccount({ publicKey: rm.address });
 
-      if (+randomValue == 0) {
+      // const randomValue = rm.curRandomValue.get();
+      const randomValue = '2';
+
+      console.log(`elem`);
+      console.log(elem);
+
+      if (+randomValue == 0 || rm.commit.get().toBigInt() == 0) {
         continue;
       } else {
         return {
@@ -94,15 +100,30 @@ export class RevealValueService implements OnApplicationBootstrap {
             this.stateManager.state[network.networkID].randomManagers[round]
               .contract;
 
+          console.log(
+            `Using: ${contract.address.toBase58()} for round: ${round}`,
+          );
+
+          console.log(`Value: ${commitValue} salt: ${commitSalt}`);
+
+          const commitValueValue = new CommitValue({
+            value: Field(commitValue),
+            salt: Field(commitSalt),
+          });
+
+          console.log(
+            `Commit value hash: ${commitValueValue.hash().toString()}`,
+          );
+          console.log(`Onchain state: ${contract.commit.get().toString()}`);
+
+          console.log(
+            `${commitValueValue.hash().toString()} =? ${contract.commit.get().toString()}`,
+          );
+
           let tx = await Mina.transaction(
-            { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
+            { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
             async () => {
-              contract.reveal(
-                new CommitValue({
-                  value: Field(commitValue),
-                  salt: Field(commitSalt),
-                }),
-              );
+              contract.reveal(commitValueValue);
             },
           );
           this.logger.debug('Proving tx');
@@ -110,7 +131,7 @@ export class RevealValueService implements OnApplicationBootstrap {
           this.logger.debug('Proved tx');
           let txResult = await tx.sign([sender]).send();
 
-          this.commitData.updateOne(
+          await this.commitData.updateOne(
             {
               _id: doc._id,
             },

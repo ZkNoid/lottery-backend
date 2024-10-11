@@ -51,7 +51,8 @@ export class CommitValueService implements OnApplicationBootstrap {
     const lastCommit = await this.commitData.findOne({}).sort({ round: -1 });
     const lastCommitedRound = lastCommit ? lastCommit.round : -1;
 
-    const shouldStart = currentRound > lastCommitedRound + 1;
+    // ! =
+    const shouldStart = currentRound >= lastCommitedRound + 1;
     const round = lastCommitedRound + 1;
 
     return {
@@ -89,6 +90,7 @@ export class CommitValueService implements OnApplicationBootstrap {
           const contract =
             this.stateManager.state[network.networkID].randomManagers[round]
               .contract;
+
           console.log(contract.address.toBase58());
           console.log('verfication key');
           console.log(contract.account.verificationKey);
@@ -98,35 +100,20 @@ export class CommitValueService implements OnApplicationBootstrap {
             (await RandomManager.compile()).verificationKey.hash.toString(),
           );
 
-          let tx = await Mina.transaction(
-            { sender: sender.toPublicKey(), fee: Number('0.01') * 1e9 },
-            async () => {
-              await contract.commitValue(
-                new CommitValue({
-                  value: randomValue,
-                  salt: randomSalt,
-                }),
-              );
-            },
-          );
-          this.logger.debug('Proving tx');
-          await tx.prove();
-          this.logger.debug('Proved tx');
-          const signed = tx.sign([sender]);
-
-          console.log(signed.transaction);
-
-          let txResult = await signed.send();
-
+          console.log('Writing to database');
           const newDock = new this.commitData({
             round: round,
-            value: randomValue.toString(),
-            salt: randomSalt.toString(),
+            commitValue: randomValue.toString(),
+            commitSalt: randomSalt.toString(),
             revealed: false,
           });
 
-          this.commitData.updateOne(
-            {},
+          console.log('newDock: ');
+          console.log(newDock);
+          await this.commitData.updateOne(
+            {
+              round,
+            },
             {
               $set: newDock,
             },
@@ -135,9 +122,37 @@ export class CommitValueService implements OnApplicationBootstrap {
             },
           );
 
-          this.logger.debug(`Tx successful. Hash: `, txResult.hash);
-          this.logger.debug('Waiting for tx');
-          await txResult.wait();
+          await fetchAccount({
+            publicKey:
+              'B62qnmsn4Bm4MzPujKeN1faxedz4p1cCAwA9mKAWzDjfb4c1ysVvWeK',
+          });
+
+          try {
+            let tx = await Mina.transaction(
+              { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
+              async () => {
+                await contract.commitValue(
+                  new CommitValue({
+                    value: randomValue,
+                    salt: randomSalt,
+                  }),
+                );
+              },
+            );
+            this.logger.debug('Proving tx');
+            await tx.prove();
+            this.logger.debug('Proved tx');
+            const txResult = await tx.sign([sender]).send();
+
+            this.logger.debug(`Tx successful. Hash: `, txResult.hash);
+            this.logger.debug('Waiting for tx');
+            await txResult.wait();
+          } catch (e) {
+            console.log('Got error while sending commit transaction: ', e);
+            await this.commitData.deleteOne({
+              round,
+            });
+          }
         }
       } catch (e) {
         this.logger.error('Error', e.stack);
