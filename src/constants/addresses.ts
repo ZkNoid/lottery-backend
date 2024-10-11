@@ -12,6 +12,6 @@ export const FACTORY_ADDRESS: {
   readonly [networkId: string]: string | 'not-deployed';
 } = {
   [NetworkIds.MINA_DEVNET]:
-    'B62qqiqHgagxgqs9rGnAd6YpTNro4kXxe2jpknCEFxQSpy9tyGn8iaR',
+    'B62qjxJJDmDyHtjM6NBzG4jUKnCWdsoFuYHneakf5s5jAbSAB4Gq9ND',
   [NetworkIds.ZEKO_TESTNET]: 'not-deployed',
 };

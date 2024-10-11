@@ -1,6 +1,7 @@
 import { Mina, Cache, PublicKey, UInt32, fetchAccount, Field } from 'o1js';
 import { ALL_NETWORKS, NETWORKS, NetworkIds } from '../constants/networks.js';
 import {
+  BLOCK_PER_ROUND,
   DistributionProgram,
   DistributionProof,
   PLottery,
@@ -14,12 +15,15 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 
 import { FactoryManager } from 'l1-lottery-contracts';
 import { PlotteryFactory } from 'l1-lottery-contracts';
+import { ZkonRequestCoordinator, ZkonZkProgram } from 'zkon-zkapp';
+import { RandomManager } from 'node_modules/l1-lottery-contracts/build/src/Random/RandomManager.js';
+import { getCurrentSlot } from '../lib.js';
 
 @Injectable()
 export class StateService implements OnModuleInit {
   blockHeight: Record<string, number> = {};
   slotSinceGenesis: Record<string, number> = {};
-  roundIds: Record<string, number> = {};
+  // roundIds: Record<string, number> = {};
   initialized: boolean;
   stateInitialized: Record<string, boolean> = {};
 
@@ -71,15 +75,39 @@ export class StateService implements OnModuleInit {
 
     console.log('Compilation');
     await TicketReduceProgram.compile({
-      cache: Cache.FileSystem('./cache'),
+      // cache: Cache.FileSystem('./cache'),
     });
 
     console.log('Compilation ended');
 
     console.log('Compilation');
     await PLottery.compile({
-      cache: Cache.FileSystem('./cache'),
+      // cache: Cache.FileSystem('./cache'),
     });
+
+    console.log('ZkonZkProgramm compile');
+    let zk1 = await ZkonZkProgram.compile({
+      // cache: Cache.FileSystem('./cache'),
+    });
+
+    console.log(`Zkon programm proof: ${zk1.verificationKey.hash.toString()}`);
+
+    console.log('ZkonRequestCoordinator compile');
+    let zk2 = await ZkonRequestCoordinator.compile({
+      // cache: Cache.FileSystem('./cache'),
+    });
+
+    console.log(
+      `ZkonRequestCoordinator : ${zk2.verificationKey.hash.toString()}`,
+    );
+
+    console.log('RandomManager compile');
+    const randomManagerCompileInfo = await RandomManager.compile({
+      // cache: Cache.FileSystem('./cache'),
+    });
+
+    console.log(`rm verification key`);
+    console.log(randomManagerCompileInfo.verificationKey.hash.toString());
 
     console.log('Compilation ended');
 
@@ -87,6 +115,7 @@ export class StateService implements OnModuleInit {
   }
 
   async fetchRounds() {
+    console.log('fetchRounds');
     for (let network of ALL_NETWORKS) {
       const state = this.state[network.networkID];
       const events = await this.factory[network.networkID].fetchEvents();
@@ -95,13 +124,23 @@ export class StateService implements OnModuleInit {
         console.log(event.event.data);
         const data = event.event.data as any;
 
+        console.log(
+          `Adding: ${data.round} ${data.randomManager} ${data.plottery}`,
+        );
+
         state.addDeploy(data.round, data.randomManager, data.plottery);
       });
     }
   }
 
   async fetchEvents(networkID: string, round: number, startBlock: number = 0) {
+    console.log(`fetching events for round: ${round}`);
     const lottery = this.state[networkID].plotteryManagers[round].contract;
+
+    if (!lottery) {
+      console.log(`No deployed plottery for round ${round}. Deploy it first`);
+      return;
+    }
 
     const start = UInt32.from(startBlock);
     const events = (
@@ -178,6 +217,8 @@ export class StateService implements OnModuleInit {
   ) {
     const updateOnly: boolean = false;
     const lottery = this.state[networkID].plotteryManagers[round].contract;
+    // console.log(`Fetch account: ${lottery.address.toBase58()}`);
+    await fetchAccount({ publicKey: lottery.address });
     const startBlock = lottery.startSlot.get();
     // if (!stateM) {
     stateM = this.state[networkID].plotteryManagers[round];
@@ -198,7 +239,7 @@ export class StateService implements OnModuleInit {
         boughtTickets.length,
         boughtTickets.length,
       );
-      for (let i = boughtTickets.length; i < stateM.roundTickets.length; i++) {
+      for (let i = boughtTickets.length; i < round + 1; i++) {
         boughtTickets.push([]);
       }
     } else {
@@ -209,7 +250,7 @@ export class StateService implements OnModuleInit {
         events.length,
       );
 
-      for (let i = 0; i < stateM.roundTickets.length; i++) {
+      for (let i = 0; i < round + 1; i++) {
         boughtTickets.push([]);
       }
     }
@@ -227,18 +268,13 @@ export class StateService implements OnModuleInit {
       );
 
       if (event.type == 'buy-ticket') {
-        console.log(
-          'Adding ticket to state',
-          event.event.data,
-          'round',
-          data.round,
-        );
-        boughtTickets[data.round].push(data.ticket);
+        console.log('Adding ticket to state', event.event.data, 'round', round);
+        boughtTickets[round].push(data.ticket);
         // this.state[networkID].addTicket(data.ticket, +data.round, false);
         console.log('Adding ticket');
       }
       if (event.type == 'produce-result') {
-        console.log('Produced result', event.event.data, 'round' + data.round);
+        console.log('Produced result', event.event.data, 'round' + round);
 
         // stateM.roundResultMap.set(data.round, data.result);
 
@@ -249,7 +285,7 @@ export class StateService implements OnModuleInit {
         // stateM.bankMap.set(data.round, newBankValue);
       }
       if (event.type == 'get-reward') {
-        console.log('Got reward', event.event.data, 'round' + data.round);
+        console.log('Got reward', event.event.data, 'round' + round);
 
         let ticketId = 0;
         let ticketWitness;
@@ -270,7 +306,7 @@ export class StateService implements OnModuleInit {
       }
 
       if (event.type == 'reduce') {
-        console.log('Reduce: ', event.event.data, 'round' + data.round);
+        console.log('Reduce: ', event.event.data, 'round' + round);
         // let fromActionState = data.startActionState;
         // let endActionState = data.endActionState;
 
@@ -301,6 +337,17 @@ export class StateService implements OnModuleInit {
     this.stateInitialized[networkID] = true;
     console.log('Setting bought tickets', boughtTickets, networkID);
     this.boughtTickets[networkID] = boughtTickets;
+  }
+
+  async getCurrentRound(networkId: string): Promise<number> {
+    const factory = this.factory[networkId];
+
+    await fetchAccount({ publicKey: factory.address });
+    const initSlot = factory.startSlot.get();
+    const currentSlot = await getCurrentSlot(networkId);
+    const currentRound = (currentSlot - +initSlot) / BLOCK_PER_ROUND;
+
+    return currentRound;
   }
   /*
   // !processedTicketData should be update according to contract state after that call

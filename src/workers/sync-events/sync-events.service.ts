@@ -11,6 +11,7 @@ import { Model } from 'mongoose';
 import { HttpService } from '@nestjs/axios';
 import { BLOCK_PER_ROUND } from 'l1-lottery-contracts';
 import { StateService } from '../../state-service/state.service.js';
+import { fetchAccount } from 'o1js';
 
 const BLOCK_UPDATE_DEPTH = 6;
 
@@ -68,11 +69,27 @@ export class SyncEventsService implements OnModuleInit {
         const currBlockHeight =
           data.data.data.bestChain[0].protocolState.consensusState.blockHeight;
 
-        const startSlot =
-          this.stateManager.factory[network.networkID].startSlot.get();
+        const contract = this.stateManager.factory[network.networkID];
+        await fetchAccount({ publicKey: contract.address });
+        const startSlot = contract.startSlot.get();
 
-        const curRound = startSlot.sub(slotSinceGenesis).div(BLOCK_PER_ROUND);
-        const roundsToCheck = [+curRound - 1, +curRound];
+        console.log(
+          `startSlot: ${startSlot}; slotSinceGenesis: ${slotSinceGenesis}`,
+        );
+
+        const curRound = Math.floor(
+          (slotSinceGenesis - +startSlot) / BLOCK_PER_ROUND,
+        );
+
+        const isInitalized =
+          this.stateManager.stateInitialized[network.networkID];
+        const roundsToCheck = isInitalized
+          ? curRound > 0
+            ? [curRound - 1, curRound]
+            : [curRound]
+          : [...Array(curRound + 1)].map((_, i) => i);
+
+        console.log(`Rounds to check: ${roundsToCheck}`);
 
         // const dbEvents = await this.minaEventData.find({});
 
@@ -111,6 +128,7 @@ export class SyncEventsService implements OnModuleInit {
                 parentBlockHash: x.parentBlockHash,
                 globalSlot: x.globalSlot,
                 chainStatus: x.chainStatus,
+                round,
               }),
           );
 
@@ -181,11 +199,15 @@ export class SyncEventsService implements OnModuleInit {
           const newEventsToAdd = fetchedEvents.slice(deleteStartIndex);
 
           // Removing old event and adding new events to mongodb
+          console.log(`Removing elements: ${eventsIdForDelete}`);
           await this.minaEventData.deleteMany({
             _id: { $in: eventsIdForDelete },
           });
 
+          console.log('newEventsToAdd');
+          console.log(newEventsToAdd);
           for (const eventToAdd of newEventsToAdd) {
+            console.log(eventToAdd);
             await this.minaEventData.updateOne(
               {
                 'event.transactionInfo.transactionHash':
@@ -199,6 +221,7 @@ export class SyncEventsService implements OnModuleInit {
               },
             );
           }
+          console.log(`Events added`);
 
           // Update state if not initially updated or if there are new events
           if (
@@ -208,6 +231,9 @@ export class SyncEventsService implements OnModuleInit {
             const allEvents = await this.minaEventData.find({
               round: { $eq: round },
             });
+
+            console.log(`All events: ${allEvents}`);
+
             await this.stateManager.initState(
               network.networkID,
               round,

@@ -13,35 +13,44 @@
 //     // await this.handleCron();
 //   }
 
-//   async checkConditions(networkId: string) {
-//     const currentRoundId = this.stateManager.roundIds[networkId];
+//   async checkConditions(networkId: string, round: number) {
+//     const contract =
+//       this.stateManager.state[networkId].plotteryManagers[round].contract;
 
-//     const lastReduceInRound = this.stateManager.lottery[networkId].lastReduceInRound
-//       .get()
-//       .toBigInt();
+//     const currentRound = await this.stateManager.getCurrentRound(networkId);
 
-//     this.logger.debug(
-//       'Current round id',
-//       currentRoundId,
-//       'ttr',
-//       lastReduceInRound,
-//     );
+//     const isReduced = contract.reduced.get();
 
-//     // Checking that at least one ticket bought after the last reduce round
-//     let ticketBoughtAfterReduce = false;
+//     // const currentRoundId = this.stateManager.roundIds[networkId];
 
-//     for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
-//       if (this.stateManager.boughtTickets[networkId][i].length > 0) {
-//         this.logger.debug(`Found ticket in round ${i}`);
-//         ticketBoughtAfterReduce = true;
-//         break;
-//       }
-//     }
+//     // const lastReduceInRound = this.stateManager.lottery[
+//     //   networkId
+//     // ].lastReduceInRound
+//     //   .get()
+//     //   .toBigInt();
 
-//     if (lastReduceInRound < currentRoundId && !ticketBoughtAfterReduce) {
-//       this.logger.debug('No tickets bought in the round');
-//     }
-//     return lastReduceInRound < currentRoundId && ticketBoughtAfterReduce;
+//     // this.logger.debug(
+//     //   'Current round id',
+//     //   currentRoundId,
+//     //   'ttr',
+//     //   lastReduceInRound,
+//     // );
+
+//     // // Checking that at least one ticket bought after the last reduce round
+//     // let ticketBoughtAfterReduce = false;
+
+//     // for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
+//     //   if (this.stateManager.boughtTickets[networkId][i].length > 0) {
+//     //     this.logger.debug(`Found ticket in round ${i}`);
+//     //     ticketBoughtAfterReduce = true;
+//     //     break;
+//     //   }
+//     // }
+
+//     // if (lastReduceInRound < currentRoundId && !ticketBoughtAfterReduce) {
+//     //   this.logger.debug('No tickets bought in the round');
+//     // }
+//     return round < currentRound && !isReduced.toBoolean();
 //   }
 
 //   @Cron(CronExpression.EVERY_5_MINUTES)
@@ -52,6 +61,10 @@
 //     try {
 //       this.logger.debug('REDUCE PROVING');
 //       for (let network of ALL_NETWORKS) {
+//         const currentRound = this.stateManager.getCurrentRound(
+//           network.networkID,
+//         );
+
 //         if (await this.checkConditions(network.networkID)) {
 //           this.logger.debug('Time to reduce');
 //           const sender = PrivateKey.fromBase58(process.env.PK);

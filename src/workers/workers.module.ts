@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ZknoidConfigModule } from '../config/config.module.js';
 import { ConfigService } from '@nestjs/config';
 import { SyncEventsModule } from './sync-events/sync-events.module.js';
+import { CommitValueModule } from './commit-value/commit-value.module.js';
 // import { ProduceResultEvent } from 'l1-lottery-contracts/build/src/PLottery';
 // import { ProduceResultModule } from './produce-result/produce-result.module.js';
 // import { DistributionProvingModule } from './distribution-proving/distribution-proving.module.js';
@@ -21,7 +22,8 @@ import { SyncEventsModule } from './sync-events/sync-events.module.js';
     MongooseModule.forRootAsync({
       imports: [
         ZknoidConfigModule,
-        SyncEventsModule,
+        // SyncEventsModule,
+        CommitValueModule,
         // ProduceResultModule,
         // DistributionProvingModule,
         // RoundInfoUpdaterModule,
