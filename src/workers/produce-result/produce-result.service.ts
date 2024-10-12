@@ -46,7 +46,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
     return isReduced && haveRandomValue && noProduce;
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron('*/2 * * * *')
   async handleCron() {
     console.log('Initial in reduce proving', this.stateManager.inReduceProving);
     if (this.stateManager.inReduceProving) return;
@@ -76,22 +76,24 @@ export class ProduceResultService implements OnApplicationBootstrap {
             const sender = PrivateKey.fromBase58(process.env.PK);
             this.logger.debug('Tx init');
 
-            let tx = await Mina.transaction(
-              { sender: sender.toPublicKey(), fee: Number('0.3') * 1e9 },
-              async () => {
-                await this.stateManager.state[
-                  network.networkID
-                ].plotteryManagers[roundId].contract.produceResult();
-              },
-            );
-            this.logger.debug('Proving tx');
-            await tx.prove();
-            this.logger.debug('Proved tx');
-            let txResult = await tx.sign([sender]).send();
+            await this.stateManager.transactionMutex.runExclusive(async () => {
+              let tx = await Mina.transaction(
+                { sender: sender.toPublicKey(), fee: Number('0.3') * 1e9 },
+                async () => {
+                  await this.stateManager.state[
+                    network.networkID
+                  ].plotteryManagers[roundId].contract.produceResult();
+                },
+              );
+              this.logger.debug('Proving tx');
+              await tx.prove();
+              this.logger.debug('Proved tx');
+              let txResult = await tx.sign([sender]).send();
 
-            this.logger.debug(`Tx successful. Hash: `, txResult.hash);
-            this.logger.debug('Waiting for tx');
-            await txResult.wait();
+              this.logger.debug(`Tx successful. Hash: `, txResult.hash);
+              this.logger.debug('Waiting for tx');
+              await txResult.wait();
+            });
           }
         }
       } catch (e) {

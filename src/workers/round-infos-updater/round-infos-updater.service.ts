@@ -34,7 +34,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
   ) {}
   async onApplicationBootstrap() {}
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
     try {
       for (let network of ALL_NETWORKS) {
@@ -49,6 +49,14 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
 
         for (let roundId = 0; roundId <= currentRoundId; roundId++) {
           const roundStateManager = stateM.plotteryManagers[roundId];
+
+          if (!roundStateManager) {
+            this.logger.warn(
+              `No contract for round ${roundId}. Consider deploying it.`,
+            );
+            break;
+          }
+
           const plotteryContract = roundStateManager.contract;
           this.logger.debug(
             'Fetching bought tickets',
@@ -56,12 +64,6 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
             roundId,
           );
 
-          console.log(this.stateManager.boughtTickets);
-          console.log(this.stateManager.boughtTickets[network.networkID]);
-          console.log(roundId);
-          console.log(
-            this.stateManager.boughtTickets[network.networkID][roundId],
-          );
           const boughtTickets =
             this.stateManager.boughtTickets[network.networkID][roundId];
           this.logger.debug('Bought tickets', boughtTickets);
@@ -100,29 +102,6 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
             stateM.randomManagers[roundId].contract.address.toBase58();
 
           console.log(`Adding round info for round ${roundId}`);
-          console.log({
-            roundId,
-            bank: boughtTickets
-              .map((x) => x.amount.toBigInt())
-              .reduce((x, y) => x + y, 0n),
-            tickets: boughtTickets.map((x, i) => ({
-              amount: x.amount.toBigInt(),
-              numbers: x.numbers.map((x) => Number(x.toBigint())),
-              owner: x.owner.toBase58(),
-              funds: totalShares
-                ? (roundBank * ticketsShares[i]) / ((totalShares * 103n) / 100n)
-                : 0n,
-              claimed: roundStateManager.ticketNullifierMap
-                .get(Field.from(i))
-                .equals(Field.from(1))
-                .toBoolean(),
-            })),
-            winningCombination: winningCombination.every((x) => !x)
-              ? null
-              : winningCombination,
-            plotteryAddress,
-            randomManagerAddress,
-          });
 
           await this.rounds
             .updateOne(

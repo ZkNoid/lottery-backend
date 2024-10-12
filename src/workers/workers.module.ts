@@ -24,10 +24,10 @@ import { GiftTicketBuyerModule } from './gift-ticket-buyer/gift-ticket-buyer.mod
       imports: [
         ZknoidConfigModule,
         SyncEventsModule,
-        // CommitValueModule,
-        // RevealValueModule,
+        CommitValueModule,
+        RevealValueModule,
         ProduceResultModule,
-        // DistributionProvingModule,
+        DistributionProvingModule,
         RoundInfoUpdaterModule,
         // ProveReduceModule,
         // EmptyTicketBuyingModule,

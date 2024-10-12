@@ -29,13 +29,14 @@
     "@nestjs/mongoose": "^10.0.6",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/schedule": "^4.0.2",
+    "async-mutex": "^0.5.0",
     "axios": "^1.7.2",
-    "zkon-zkapp": "git://github.com/ZKON-Network/zkapp.git#fa772df63e10f29155ef1ea60fe6fae23485c80f",
     "l1-lottery-contracts": "^0.7.35",
     "mongoose": "^8.4.4",
     "o1js": "^1.8.0",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "zkon-zkapp": "git://github.com/ZKON-Network/zkapp.git#fa772df63e10f29155ef1ea60fe6fae23485c80f"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

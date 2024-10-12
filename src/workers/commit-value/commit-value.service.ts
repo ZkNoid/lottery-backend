@@ -61,7 +61,7 @@ export class CommitValueService implements OnApplicationBootstrap {
     };
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron('*/2 * * * *')
   async handleCron() {
     console.log('Commit value module started');
 
@@ -127,6 +127,8 @@ export class CommitValueService implements OnApplicationBootstrap {
               'B62qnmsn4Bm4MzPujKeN1faxedz4p1cCAwA9mKAWzDjfb4c1ysVvWeK',
           });
 
+          const release = await this.stateManager.transactionMutex.acquire();
+
           try {
             let tx = await Mina.transaction(
               { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
@@ -152,6 +154,8 @@ export class CommitValueService implements OnApplicationBootstrap {
             await this.commitData.deleteOne({
               round,
             });
+          } finally {
+            release(); // release mutex
           }
         }
       } catch (e) {

@@ -13,13 +13,11 @@ export class ProveReduceService implements OnApplicationBootstrap {
     // await this.handleCron();
   }
 
-  async checkConditions(networkId: string, round: number) {
+  async checkConditions(networkId: string, round: number, currentRound) {
     const contract =
       this.stateManager.state[networkId].plotteryManagers[round].contract;
 
     await fetchAccount({ publicKey: contract.address });
-
-    const currentRound = await this.stateManager.getCurrentRound(networkId);
 
     const isReduced = contract.reduced.get();
 
@@ -69,7 +67,9 @@ export class ProveReduceService implements OnApplicationBootstrap {
         );
 
         for (let roundId = 0; roundId < currentRound; roundId++) {
-          if (await this.checkConditions(network.networkID, roundId)) {
+          if (
+            await this.checkConditions(network.networkID, roundId, currentRound)
+          ) {
             this.logger.debug(`Time to reduce ${roundId}`);
             const sender = PrivateKey.fromBase58(process.env.PK);
 
@@ -87,20 +87,22 @@ export class ProveReduceService implements OnApplicationBootstrap {
               reduceProof.publicOutput.finalState.toString(),
             );
 
-            let tx2_1 = await Mina.transaction(
-              { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
-              async () => {
-                await plotteryState.contract.reduceTickets(reduceProof);
-              },
-            );
-            this.logger.debug('Proving reduce tx');
-            await tx2_1.prove();
-            this.logger.debug('Proved reduce tx');
-            let txResult = await tx2_1.sign([sender]).send();
+            await this.stateManager.transactionMutex.runExclusive(async () => {
+              let tx2_1 = await Mina.transaction(
+                { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
+                async () => {
+                  await plotteryState.contract.reduceTickets(reduceProof);
+                },
+              );
+              this.logger.debug('Proving reduce tx');
+              await tx2_1.prove();
+              this.logger.debug('Proved reduce tx');
+              let txResult = await tx2_1.sign([sender]).send();
 
-            this.logger.debug(`Reduce tx successful. Hash: `, txResult.hash);
-            this.logger.debug('Waiting for reduce tx');
-            await txResult.wait();
+              this.logger.debug(`Reduce tx successful. Hash: `, txResult.hash);
+              this.logger.debug('Waiting for reduce tx');
+              await txResult.wait();
+            });
           }
         }
       }

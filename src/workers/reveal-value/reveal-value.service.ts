@@ -51,6 +51,7 @@ export class RevealValueService implements OnApplicationBootstrap {
 
       await fetchAccount({ publicKey: rm.address });
 
+      // Commented for better time with ZKON
       // const randomValue = rm.curRandomValue.get();
       const randomValue = '2';
 
@@ -76,7 +77,7 @@ export class RevealValueService implements OnApplicationBootstrap {
     };
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron('*/2 * * * *')
   async handleCron() {
     console.log('Reveal value module started');
 
@@ -120,32 +121,34 @@ export class RevealValueService implements OnApplicationBootstrap {
             `${commitValueValue.hash().toString()} =? ${contract.commit.get().toString()}`,
           );
 
-          let tx = await Mina.transaction(
-            { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
-            async () => {
-              contract.reveal(commitValueValue);
-            },
-          );
-          this.logger.debug('Proving tx');
-          await tx.prove();
-          this.logger.debug('Proved tx');
-          let txResult = await tx.sign([sender]).send();
+          await this.stateManager.transactionMutex.runExclusive(async () => {
+            let tx = await Mina.transaction(
+              { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
+              async () => {
+                await contract.reveal(commitValueValue);
+              },
+            );
+            this.logger.debug('Proving tx');
+            await tx.prove();
+            this.logger.debug('Proved tx');
+            let txResult = await tx.sign([sender]).send();
 
-          await this.commitData.updateOne(
-            {
-              _id: doc._id,
-            },
-            {
-              $set: { revealed: true },
-            },
-            {
-              upsert: true,
-            },
-          );
+            await this.commitData.updateOne(
+              {
+                _id: doc._id,
+              },
+              {
+                $set: { revealed: true },
+              },
+              {
+                upsert: true,
+              },
+            );
 
-          this.logger.debug(`Tx successful. Hash: `, txResult.hash);
-          this.logger.debug('Waiting for tx');
-          await txResult.wait();
+            this.logger.debug(`Tx successful. Hash: `, txResult.hash);
+            this.logger.debug('Waiting for tx');
+            await txResult.wait();
+          });
         }
       } catch (e) {
         this.logger.error('Error', e.stack);

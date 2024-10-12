@@ -18,6 +18,7 @@ import { PlotteryFactory } from 'l1-lottery-contracts';
 import { ZkonRequestCoordinator, ZkonZkProgram } from 'zkon-zkapp';
 import { RandomManager } from 'node_modules/l1-lottery-contracts/build/src/Random/RandomManager.js';
 import { getCurrentSlot } from '../lib.js';
+import { Mutex } from 'async-mutex';
 
 @Injectable()
 export class StateService implements OnModuleInit {
@@ -35,6 +36,7 @@ export class StateService implements OnModuleInit {
   state: Record<string, FactoryManager> = {};
   // state: Record<string, PStateManager> = {};
   boughtTickets: Record<string, Ticket[][]> = {};
+  transactionMutex: Mutex = new Mutex();
 
   async onModuleInit() {
     await this.initialize();
