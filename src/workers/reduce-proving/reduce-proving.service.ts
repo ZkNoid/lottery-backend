@@ -8,7 +8,7 @@ import { StateService } from '../../state-service/state.service.js';
 export class ProveReduceService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ProveReduceService.name);
   private isRunning = false;
-  private lastReducedRound = 0;
+  private lastReducedRound = 52;
 
   constructor(private stateManager: StateService) {}
   async onApplicationBootstrap() {

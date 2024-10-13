@@ -21,7 +21,7 @@ function randomIntFromInterval(min, max) {
 export class ProduceResultService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ProduceResultService.name);
   private isRunning = false;
-  private lastProduceInRound = 0;
+  private lastProduceInRound = 52;
 
   constructor(private stateManager: StateService) {}
 

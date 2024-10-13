@@ -26,7 +26,8 @@ const SCORE_COEFFICIENTS: bigint[] = [
 @Injectable()
 export class RoundInfoUpdaterService implements OnApplicationBootstrap {
   private readonly logger = new Logger(RoundInfoUpdaterService.name);
-  private lastCompleteRound = 0;
+  private isRunning = false;
+  private lastCompleteRound = 52;
 
   constructor(
     @InjectModel(RoundsData.name)
@@ -54,6 +55,12 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron(onBootstrap = true) {
+    if (this.isRunning) {
+      this.logger.debug('Already running');
+      return;
+    }
+    this.isRunning = true;
+
     try {
       for (let network of ALL_NETWORKS) {
         if (!this.stateManager.slotSinceGenesis[network.networkID]) continue;
@@ -200,5 +207,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
     } catch (e) {
       this.logger.error('Round info update error', e.stack);
     }
+
+    this.isRunning = false;
   }
 }

@@ -30,7 +30,7 @@ function randomIntFromInterval(min, max) {
 export class CommitValueService implements OnApplicationBootstrap {
   private readonly logger = new Logger(CommitValueService.name);
   private isRunning = false;
-  private lastCommitInRound = 0;
+  private lastCommitInRound = 52;
 
   constructor(
     private stateManager: StateService,

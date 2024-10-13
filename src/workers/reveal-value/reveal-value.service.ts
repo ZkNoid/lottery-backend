@@ -30,7 +30,7 @@ function randomIntFromInterval(min, max) {
 export class RevealValueService implements OnApplicationBootstrap {
   private readonly logger = new Logger(RevealValueService.name);
   private isRunning = false;
-  private lastRevealInRound = 0;
+  private lastRevealInRound = 52;
 
   constructor(
     private stateManager: StateService,
