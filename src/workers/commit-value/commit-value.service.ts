@@ -29,6 +29,7 @@ function randomIntFromInterval(min, max) {
 @Injectable()
 export class CommitValueService implements OnApplicationBootstrap {
   private readonly logger = new Logger(CommitValueService.name);
+  private isRunning = false;
 
   constructor(
     private stateManager: StateService,
@@ -51,8 +52,7 @@ export class CommitValueService implements OnApplicationBootstrap {
     const lastCommit = await this.commitData.findOne({}).sort({ round: -1 });
     const lastCommitedRound = lastCommit ? lastCommit.round : -1;
 
-    // ! =
-    const shouldStart = currentRound >= lastCommitedRound + 1;
+    const shouldStart = currentRound > lastCommitedRound + 1;
     const round = lastCommitedRound + 1;
 
     return {
@@ -61,9 +61,15 @@ export class CommitValueService implements OnApplicationBootstrap {
     };
   }
 
-  @Cron('*/2 * * * *')
+  @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
-    console.log('Commit value module started');
+    if (this.isRunning) {
+      this.logger.log('Already running');
+      return;
+    }
+
+    this.isRunning = true;
+    this.logger.log('Commit value module started');
 
     for (let network of ALL_NETWORKS) {
       try {
@@ -71,96 +77,89 @@ export class CommitValueService implements OnApplicationBootstrap {
           network.networkID,
         );
         if (shouldStart) {
-          this.logger.debug('Commiting value for round: ', round);
+          this.stateManager.transactionMutex.runExclusive(async () => {
+            this.logger.debug('Commiting value for round: ', round);
 
-          // console.log(`Digest: `, await MockLottery.digest());
-          const sender = PrivateKey.fromBase58(process.env.PK);
+            // console.log(`Digest: `, await MockLottery.digest());
+            const sender = PrivateKey.fromBase58(process.env.PK);
 
-          const randomValue = Field.random();
-          const randomSalt = Field.random();
+            const randomValue = Field.random();
+            const randomSalt = Field.random();
 
-          this.logger.log(
-            'Commiting value ',
-            randomValue.toString(),
-            ' salt: ',
-            randomSalt.toString(),
-          );
+            this.logger.log(
+              'Commiting value ',
+              randomValue.toString(),
+              ' salt: ',
+              randomSalt.toString(),
+            );
 
-          console.log('Address');
-          const contract =
-            this.stateManager.state[network.networkID].randomManagers[round]
-              .contract;
+            const contract =
+              this.stateManager.state[network.networkID].randomManagers[round]
+                .contract;
 
-          console.log(contract.address.toBase58());
-          console.log('verfication key');
-          console.log(contract.account.verificationKey);
+            const newDock = new this.commitData({
+              round: round,
+              commitValue: randomValue.toString(),
+              commitSalt: randomSalt.toString(),
+              revealed: false,
+            });
 
-          console.log('Compile result');
-          console.log(
-            (await RandomManager.compile()).verificationKey.hash.toString(),
-          );
+            this.logger.log('Writing new commit to database', newDock);
 
-          console.log('Writing to database');
-          const newDock = new this.commitData({
-            round: round,
-            commitValue: randomValue.toString(),
-            commitSalt: randomSalt.toString(),
-            revealed: false,
-          });
-
-          console.log('newDock: ');
-          console.log(newDock);
-          await this.commitData.updateOne(
-            {
-              round,
-            },
-            {
-              $set: newDock,
-            },
-            {
-              upsert: true,
-            },
-          );
-
-          await fetchAccount({
-            publicKey:
-              'B62qnmsn4Bm4MzPujKeN1faxedz4p1cCAwA9mKAWzDjfb4c1ysVvWeK',
-          });
-
-          const release = await this.stateManager.transactionMutex.acquire();
-
-          try {
-            let tx = await Mina.transaction(
-              { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
-              async () => {
-                await contract.commitValue(
-                  new CommitValue({
-                    value: randomValue,
-                    salt: randomSalt,
-                  }),
-                );
+            await this.commitData.updateOne(
+              {
+                round,
+              },
+              {
+                $set: newDock,
+              },
+              {
+                upsert: true,
               },
             );
-            this.logger.debug('Proving tx');
-            await tx.prove();
-            this.logger.debug('Proved tx');
-            const txResult = await tx.sign([sender]).send();
 
-            this.logger.debug(`Tx successful. Hash: `, txResult.hash);
-            this.logger.debug('Waiting for tx');
-            await txResult.wait();
-          } catch (e) {
-            console.log('Got error while sending commit transaction: ', e);
-            await this.commitData.deleteOne({
-              round,
+            await fetchAccount({
+              publicKey:
+                'B62qnmsn4Bm4MzPujKeN1faxedz4p1cCAwA9mKAWzDjfb4c1ysVvWeK',
             });
-          } finally {
-            release(); // release mutex
-          }
+
+            try {
+              let tx = await Mina.transaction(
+                { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
+                async () => {
+                  await contract.commitValue(
+                    new CommitValue({
+                      value: randomValue,
+                      salt: randomSalt,
+                    }),
+                  );
+                },
+              );
+              this.logger.debug('Proving tx');
+              await tx.prove();
+              this.logger.debug('Proved tx');
+              const txResult = await tx.sign([sender]).send();
+
+              this.logger.debug(`Tx successful. Hash: `, txResult.hash);
+              this.logger.debug('Waiting for tx');
+              await txResult.wait();
+              this.logger.debug('Got tx');
+            } catch (e) {
+              this.logger.debug(
+                'Got error while sending commit transaction: ',
+                e,
+              );
+              await this.commitData.deleteOne({
+                round,
+              });
+            }
+          });
         }
       } catch (e) {
         this.logger.error('Error', e.stack);
       }
     }
+
+    this.isRunning = false;
   }
 }

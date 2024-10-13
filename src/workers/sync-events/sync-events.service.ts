@@ -77,6 +77,12 @@ export class SyncEventsService implements OnModuleInit {
           `startSlot: ${startSlot}; slotSinceGenesis: ${slotSinceGenesis}`,
         );
 
+        const allRounds = Object.keys(
+          this.stateManager.state[network.networkID].plotteryManagers,
+        )
+          .map((v) => +v)
+          .sort((a, b) => a - b);
+
         const curRound = Math.floor(
           (slotSinceGenesis - +startSlot) / BLOCK_PER_ROUND,
         );
@@ -87,7 +93,7 @@ export class SyncEventsService implements OnModuleInit {
           ? curRound > 0
             ? [curRound - 1, curRound]
             : [curRound]
-          : [...Array(curRound + 1)].map((_, i) => i);
+          : allRounds;
 
         console.log(`Rounds to check: ${roundsToCheck}`);
 

@@ -29,6 +29,7 @@ function randomIntFromInterval(min, max) {
 @Injectable()
 export class RevealValueService implements OnApplicationBootstrap {
   private readonly logger = new Logger(RevealValueService.name);
+  private isRunning = false;
 
   constructor(
     private stateManager: StateService,
@@ -55,9 +56,6 @@ export class RevealValueService implements OnApplicationBootstrap {
       // const randomValue = rm.curRandomValue.get();
       const randomValue = '2';
 
-      console.log(`elem`);
-      console.log(elem);
-
       if (+randomValue == 0 || rm.commit.get().toBigInt() == 0) {
         continue;
       } else {
@@ -79,6 +77,11 @@ export class RevealValueService implements OnApplicationBootstrap {
 
   @Cron('*/2 * * * *')
   async handleCron() {
+    if (this.isRunning) {
+      this.logger.log('Already running');
+      return;
+    }
+    this.isRunning = true;
     console.log('Reveal value module started');
 
     for (let network of ALL_NETWORKS) {
@@ -86,42 +89,38 @@ export class RevealValueService implements OnApplicationBootstrap {
         const { shouldStart, round, commitValue, commitSalt, doc } =
           await this.checkRoundConditions(network.networkID);
         if (shouldStart) {
-          this.logger.debug('Revealing value for round: ', round);
-
-          const sender = PrivateKey.fromBase58(process.env.PK);
-
-          this.logger.log(
-            'Revealing value ',
-            commitValue,
-            ' salt: ',
-            commitSalt,
-          );
-
-          const contract =
-            this.stateManager.state[network.networkID].randomManagers[round]
-              .contract;
-
-          console.log(
-            `Using: ${contract.address.toBase58()} for round: ${round}`,
-          );
-
-          console.log(`Value: ${commitValue} salt: ${commitSalt}`);
-
-          const commitValueValue = new CommitValue({
-            value: Field(commitValue),
-            salt: Field(commitSalt),
-          });
-
-          console.log(
-            `Commit value hash: ${commitValueValue.hash().toString()}`,
-          );
-          console.log(`Onchain state: ${contract.commit.get().toString()}`);
-
-          console.log(
-            `${commitValueValue.hash().toString()} =? ${contract.commit.get().toString()}`,
-          );
-
           await this.stateManager.transactionMutex.runExclusive(async () => {
+            this.logger.debug('Revealing value for round: ', round);
+
+            const sender = PrivateKey.fromBase58(process.env.PK);
+
+            this.logger.log(
+              'Revealing value ',
+              commitValue,
+              ' salt: ',
+              commitSalt,
+            );
+
+            const contract =
+              this.stateManager.state[network.networkID].randomManagers[round]
+                .contract;
+
+            console.log(`Value: ${commitValue} salt: ${commitSalt}`);
+
+            const commitValueValue = new CommitValue({
+              value: Field(commitValue),
+              salt: Field(commitSalt),
+            });
+
+            console.log(
+              `Commit value hash: ${commitValueValue.hash().toString()}`,
+            );
+            console.log(`Onchain state: ${contract.commit.get().toString()}`);
+
+            console.log(
+              `${commitValueValue.hash().toString()} =? ${contract.commit.get().toString()}`,
+            );
+
             let tx = await Mina.transaction(
               { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
               async () => {
@@ -154,5 +153,7 @@ export class RevealValueService implements OnApplicationBootstrap {
         this.logger.error('Error', e.stack);
       }
     }
+
+    this.isRunning = false;
   }
 }

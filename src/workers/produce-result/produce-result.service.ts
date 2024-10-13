@@ -20,6 +20,7 @@ function randomIntFromInterval(min, max) {
 @Injectable()
 export class ProduceResultService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ProduceResultService.name);
+  private lastProduceInRound = 0;
 
   constructor(private stateManager: StateService) {}
 
@@ -43,15 +44,18 @@ export class ProduceResultService implements OnApplicationBootstrap {
 
     console.log(`${roundId}: ${isReduced} ${haveRandomValue} ${noProduce}`);
 
-    return isReduced && haveRandomValue && noProduce;
+    return {
+      shouldStart: isReduced && haveRandomValue && noProduce,
+      noProduce,
+    };
   }
 
   @Cron('*/2 * * * *')
   async handleCron() {
     console.log('Initial in reduce proving', this.stateManager.inReduceProving);
-    if (this.stateManager.inReduceProving) return;
+    // if (this.stateManager.inReduceProving) return;
     console.log('Then in reduce proving', this.stateManager.inReduceProving);
-    this.stateManager.inReduceProving = true;
+    // this.stateManager.inReduceProving = true;
     console.log('After in reduce proving', this.stateManager.inReduceProving);
 
     for (let network of ALL_NETWORKS) {
@@ -67,32 +71,57 @@ export class ProduceResultService implements OnApplicationBootstrap {
         );
         this.logger.debug('Current round id', currentRoundId);
 
-        for (let roundId = 0; roundId < currentRoundId; roundId++) {
+        for (
+          let roundId = this.lastProduceInRound + 1;
+          roundId < currentRoundId;
+          roundId++
+        ) {
           this.logger.debug('Checking round ', roundId);
-          if (await this.checkRoundConditions(network.networkID, roundId)) {
-            this.logger.debug('Producing result', roundId);
 
-            // console.log(`Digest: `, await MockLottery.digest());
-            const sender = PrivateKey.fromBase58(process.env.PK);
-            this.logger.debug('Tx init');
+          const { shouldStart, noProduce } = await this.checkRoundConditions(
+            network.networkID,
+            roundId,
+          );
 
-            await this.stateManager.transactionMutex.runExclusive(async () => {
-              let tx = await Mina.transaction(
-                { sender: sender.toPublicKey(), fee: Number('0.3') * 1e9 },
+          if (!noProduce) {
+            this.lastProduceInRound = roundId;
+            continue;
+          }
+
+          // If round is not ready to be produced - do not check next rounds
+          if (!shouldStart) {
+            break;
+          }
+
+          if (shouldStart) {
+            this.stateManager.transactionMutex.runExclusive(async () => {
+              this.logger.debug('Producing result', roundId);
+
+              // console.log(`Digest: `, await MockLottery.digest());
+              const sender = PrivateKey.fromBase58(process.env.PK);
+              this.logger.debug('Tx init');
+
+              await this.stateManager.transactionMutex.runExclusive(
                 async () => {
-                  await this.stateManager.state[
-                    network.networkID
-                  ].plotteryManagers[roundId].contract.produceResult();
+                  let tx = await Mina.transaction(
+                    { sender: sender.toPublicKey(), fee: Number('0.3') * 1e9 },
+                    async () => {
+                      await this.stateManager.state[
+                        network.networkID
+                      ].plotteryManagers[roundId].contract.produceResult();
+                    },
+                  );
+                  this.logger.debug('Proving tx');
+                  await tx.prove();
+                  this.logger.debug('Proved tx');
+                  let txResult = await tx.sign([sender]).send();
+
+                  this.logger.debug(`Tx successful. Hash: `, txResult.hash);
+                  this.logger.debug('Waiting for tx');
+                  await txResult.wait();
+                  this.logger.debug('Got tx');
                 },
               );
-              this.logger.debug('Proving tx');
-              await tx.prove();
-              this.logger.debug('Proved tx');
-              let txResult = await tx.sign([sender]).send();
-
-              this.logger.debug(`Tx successful. Hash: `, txResult.hash);
-              this.logger.debug('Waiting for tx');
-              await txResult.wait();
             });
           }
         }
@@ -101,6 +130,6 @@ export class ProduceResultService implements OnApplicationBootstrap {
       }
     }
 
-    this.stateManager.inReduceProving = false;
+    // this.stateManager.inReduceProving = false;
   }
 }

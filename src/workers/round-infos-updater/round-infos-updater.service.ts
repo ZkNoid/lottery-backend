@@ -3,7 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from '../../constants/networks.js';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Field } from 'o1js';
+import { fetchAccount, Field } from 'o1js';
 import { HttpService } from '@nestjs/axios';
 import {
   BLOCK_PER_ROUND,
@@ -26,29 +26,82 @@ const SCORE_COEFFICIENTS: bigint[] = [
 @Injectable()
 export class RoundInfoUpdaterService implements OnApplicationBootstrap {
   private readonly logger = new Logger(RoundInfoUpdaterService.name);
+  private lastCompleteRound = 0;
 
   constructor(
     @InjectModel(RoundsData.name)
     private rounds: Model<RoundsData>,
     private stateManager: StateService,
   ) {}
-  async onApplicationBootstrap() {}
+  async onApplicationBootstrap() {
+    await this.handleCron(true);
+  }
+
+  // Round is finished and winning combination is generated
+  async isRoundComplete(roundId: number, currentRound: number) {
+    const roundInfo = await this.rounds.findOne({
+      roundId,
+    });
+
+    const winningCombinationIsGenerated = !!roundInfo?.winningCombination;
+
+    console.log(
+      `Round: ${roundId}. ${roundId < currentRound} ${winningCombinationIsGenerated}`,
+    );
+
+    return roundId < currentRound && winningCombinationIsGenerated;
+  }
 
   @Cron(CronExpression.EVERY_MINUTE)
-  async handleCron() {
+  async handleCron(onBootstrap = true) {
     try {
       for (let network of ALL_NETWORKS) {
         if (!this.stateManager.slotSinceGenesis[network.networkID]) continue;
 
-        const stateM = this.stateManager.state[network.networkID]!;
-
-        const currentRoundId = await this.stateManager.getCurrentRound(
+        let currentRound = await this.stateManager.getCurrentRound(
           network.networkID,
         );
-        this.logger.debug('Current round id', currentRoundId);
 
-        for (let roundId = 0; roundId <= currentRoundId; roundId++) {
+        const stateM = this.stateManager.state[network.networkID]!;
+
+        this.logger.debug('Deployed rounds data');
+
+        this.logger.debug(
+          Object.keys(
+            this.stateManager.state[network.networkID].plotteryManagers,
+          ),
+        );
+
+        const allDeployedRounds = Object.keys(
+          this.stateManager.state[network.networkID].plotteryManagers,
+        )
+          .map((v) => +v)
+          .sort((a, b) => a - b);
+
+        const roundsToCheck = onBootstrap
+          ? allDeployedRounds
+          : currentRound > 0
+            ? [currentRound - 1, currentRound]
+            : [currentRound];
+
+        this.logger.debug('Amount of rounds to check', roundsToCheck.length);
+        // console.log(
+        //   this.stateManager.state[network.networkID].plotteryManagers,
+        // );
+
+        // console.log(deployedRounds);
+
+        for (const roundId of roundsToCheck) {
+          this.logger.debug('Processing round', roundId);
           const roundStateManager = stateM.plotteryManagers[roundId];
+          const isComplete = await this.isRoundComplete(roundId, currentRound);
+
+          // Skipping rounds that are not going to change
+          if (isComplete) {
+            this.logger.debug('Skipping processed round: ', roundId);
+            this.lastCompleteRound = roundId;
+            continue;
+          }
 
           if (!roundStateManager) {
             this.logger.warn(
@@ -58,9 +111,12 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
           }
 
           const plotteryContract = roundStateManager.contract;
+
+          await fetchAccount({ publicKey: plotteryContract.address });
+
           this.logger.debug(
             'Fetching bought tickets',
-            network.networkID.length,
+            network.networkID,
             roundId,
           );
 

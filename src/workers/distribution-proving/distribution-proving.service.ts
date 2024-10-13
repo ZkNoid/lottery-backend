@@ -39,44 +39,52 @@ export class DistributionProvingService implements OnApplicationBootstrap {
 
       this.logger.debug('Current round id', currentRoundId);
 
-      for (let roundId = 0; roundId < currentRoundId; roundId++) {
+      let leastRoundWithNoDP = await this.rounds.findOne({ roundId: null });
+
+      for (
+        let roundId = leastRoundWithNoDP.roundId;
+        roundId < currentRoundId;
+        roundId++
+      ) {
         this.logger.debug('Round', roundId);
 
         if (await this.checkConditionsForRound(network.networkID, roundId)) {
-          this.logger.debug('Generation of DP', roundId);
+          await this.stateManager.transactionMutex.runExclusive(async () => {
+            this.logger.debug('Generation of DP', roundId);
 
-          let dp =
-            await this.stateManager.state[network.networkID].plotteryManagers[
-              roundId
-            ].getDP(roundId);
+            let dp =
+              await this.stateManager.state[network.networkID].plotteryManagers[
+                roundId
+              ].getDP(roundId);
 
-          this.logger.debug('DP generated');
+            this.logger.debug('DP generated');
 
-          const events = this.stateManager.state[
-            network.networkID
-          ]!.plotteryManagers[roundId].roundTickets.map((x) => ({
-            amount: Number(x.amount.toBigInt()),
-            numbers: x.numbers.map((x) => Number(x.toBigint())),
-            owner: x.owner.toBase58(),
-          }));
-          this.logger.debug('Distribution proof events', events);
-          await this.rounds
-            .updateOne(
-              {
-                roundId,
-              },
-              {
-                $set: {
-                  dp: dp.toJSON(),
-                  events: events,
-                  total: Number(dp.publicOutput.total.toBigInt()),
+            const events = this.stateManager.state[
+              network.networkID
+            ]!.plotteryManagers[roundId].roundTickets.map((x) => ({
+              amount: Number(x.amount.toBigInt()),
+              numbers: x.numbers.map((x) => Number(x.toBigint())),
+              owner: x.owner.toBase58(),
+            }));
+            this.logger.debug('Distribution proof events', events);
+            await this.rounds
+              .updateOne(
+                {
+                  roundId,
                 },
-              },
-              {
-                upsert: true,
-              },
-            )
-            .exec();
+                {
+                  $set: {
+                    dp: dp.toJSON(),
+                    events: events,
+                    total: Number(dp.publicOutput.total.toBigInt()),
+                  },
+                },
+                {
+                  upsert: true,
+                },
+              )
+              .exec();
+          });
         }
       }
     }

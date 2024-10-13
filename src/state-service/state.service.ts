@@ -339,7 +339,6 @@ export class StateService implements OnModuleInit {
     }
     this.state[networkID].plotteryManagers[round] = stateM;
     this.stateInitialized[networkID] = true;
-    console.log('Setting bought tickets', boughtTickets, networkID);
     this.boughtTickets[networkID] = boughtTickets;
   }
 
