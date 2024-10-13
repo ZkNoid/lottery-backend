@@ -20,6 +20,7 @@ function randomIntFromInterval(min, max) {
 @Injectable()
 export class ProduceResultService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ProduceResultService.name);
+  private isRunning = false;
   private lastProduceInRound = 0;
 
   constructor(private stateManager: StateService) {}
@@ -29,6 +30,14 @@ export class ProduceResultService implements OnApplicationBootstrap {
   }
 
   async checkRoundConditions(networkId: string, roundId: number) {
+    if (roundId == 8) {
+      // Only for testing purpose, as 8th round is fucked up
+      return {
+        shouldStart: false,
+        noProduce: false,
+      };
+    }
+
     const plottery =
       this.stateManager.state[networkId].plotteryManagers[roundId].contract;
     const randomManager =
@@ -52,6 +61,11 @@ export class ProduceResultService implements OnApplicationBootstrap {
 
   @Cron('*/2 * * * *')
   async handleCron() {
+    if (this.isRunning) {
+      this.logger.debug(`Is running`);
+      return;
+    }
+    this.isRunning = true;
     console.log('Initial in reduce proving', this.stateManager.inReduceProving);
     // if (this.stateManager.inReduceProving) return;
     console.log('Then in reduce proving', this.stateManager.inReduceProving);
@@ -94,34 +108,30 @@ export class ProduceResultService implements OnApplicationBootstrap {
           }
 
           if (shouldStart) {
-            this.stateManager.transactionMutex.runExclusive(async () => {
+            await this.stateManager.transactionMutex.runExclusive(async () => {
               this.logger.debug('Producing result', roundId);
 
               // console.log(`Digest: `, await MockLottery.digest());
               const sender = PrivateKey.fromBase58(process.env.PK);
               this.logger.debug('Tx init');
 
-              await this.stateManager.transactionMutex.runExclusive(
+              let tx = await Mina.transaction(
+                { sender: sender.toPublicKey(), fee: Number('0.3') * 1e9 },
                 async () => {
-                  let tx = await Mina.transaction(
-                    { sender: sender.toPublicKey(), fee: Number('0.3') * 1e9 },
-                    async () => {
-                      await this.stateManager.state[
-                        network.networkID
-                      ].plotteryManagers[roundId].contract.produceResult();
-                    },
-                  );
-                  this.logger.debug('Proving tx');
-                  await tx.prove();
-                  this.logger.debug('Proved tx');
-                  let txResult = await tx.sign([sender]).send();
-
-                  this.logger.debug(`Tx successful. Hash: `, txResult.hash);
-                  this.logger.debug('Waiting for tx');
-                  await txResult.wait();
-                  this.logger.debug('Got tx');
+                  await this.stateManager.state[
+                    network.networkID
+                  ].plotteryManagers[roundId].contract.produceResult();
                 },
               );
+              this.logger.debug('Proving tx');
+              await tx.prove();
+              this.logger.debug('Proved tx');
+              let txResult = await tx.sign([sender]).send();
+
+              this.logger.debug(`Tx successful. Hash: `, txResult.hash);
+              this.logger.debug('Waiting for tx');
+              await txResult.wait();
+              this.logger.debug('Got tx');
             });
           }
         }
@@ -130,6 +140,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
       }
     }
 
+    this.isRunning = false;
     // this.stateManager.inReduceProving = false;
   }
 }

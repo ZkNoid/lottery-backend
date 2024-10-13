@@ -7,6 +7,7 @@ import { StateService } from '../../state-service/state.service.js';
 @Injectable()
 export class ProveReduceService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ProveReduceService.name);
+  private isRunning = false;
   private lastReducedRound = 0;
 
   constructor(private stateManager: StateService) {}
@@ -64,6 +65,12 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
+    if (this.isRunning) {
+      this.logger.log('Already running');
+      return;
+    }
+
+    this.isRunning = true;
     // if (this.stateManager.inReduceProving) return;
     // this.stateManager.inReduceProving = true;
 
@@ -79,6 +86,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
           roundId < currentRound;
           roundId++
         ) {
+          this.logger.debug(`Checking round ${roundId}`);
           const { shouldStart, isReduced } = await this.checkConditions(
             network.networkID,
             roundId,
@@ -114,27 +122,21 @@ export class ProveReduceService implements OnApplicationBootstrap {
                 reduceProof.publicOutput.finalState.toString(),
               );
 
-              await this.stateManager.transactionMutex.runExclusive(
+              this.logger.debug('Creating transaction');
+              let tx2_1 = await Mina.transaction(
+                { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
                 async () => {
-                  let tx2_1 = await Mina.transaction(
-                    { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
-                    async () => {
-                      await plotteryState.contract.reduceTickets(reduceProof);
-                    },
-                  );
-                  this.logger.debug('Proving reduce tx');
-                  await tx2_1.prove();
-                  this.logger.debug('Proved reduce tx');
-                  let txResult = await tx2_1.sign([sender]).send();
-
-                  this.logger.debug(
-                    `Reduce tx successful. Hash: `,
-                    txResult.hash,
-                  );
-                  this.logger.debug('Waiting for reduce tx');
-                  await txResult.wait();
+                  await plotteryState.contract.reduceTickets(reduceProof);
                 },
               );
+              this.logger.debug('Proving reduce tx');
+              await tx2_1.prove();
+              this.logger.debug('Proved reduce tx');
+              let txResult = await tx2_1.sign([sender]).send();
+
+              this.logger.debug(`Reduce tx successful. Hash: `, txResult.hash);
+              this.logger.debug('Waiting for reduce tx');
+              await txResult.wait();
             });
           }
         }
@@ -142,6 +144,8 @@ export class ProveReduceService implements OnApplicationBootstrap {
     } catch (e) {
       console.error('Error in reduce proving', e.stack);
     }
+
+    this.isRunning = false;
     // this.stateManager.inReduceProving = false;
   }
 }

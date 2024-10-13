@@ -30,6 +30,7 @@ function randomIntFromInterval(min, max) {
 export class CommitValueService implements OnApplicationBootstrap {
   private readonly logger = new Logger(CommitValueService.name);
   private isRunning = false;
+  private lastCommitInRound = 0;
 
   constructor(
     private stateManager: StateService,
@@ -49,15 +50,31 @@ export class CommitValueService implements OnApplicationBootstrap {
     const currentSlot = await getCurrentSlot(networkId);
     const currentRound = (currentSlot - +initSlot) / BLOCK_PER_ROUND;
 
-    const lastCommit = await this.commitData.findOne({}).sort({ round: -1 });
-    const lastCommitedRound = lastCommit ? lastCommit.round : -1;
+    for (let i = this.lastCommitInRound; i < currentRound; i++) {
+      const rmContract =
+        this.stateManager.state[networkId].randomManagers[i].contract;
 
-    const shouldStart = currentRound > lastCommitedRound + 1;
-    const round = lastCommitedRound + 1;
+      await fetchAccount({ publicKey: rmContract.address });
+      if (rmContract.commit.get().toBigInt() > 0) {
+        this.lastCommitInRound = i;
+        continue;
+      }
+
+      return {
+        shouldStart: true,
+        round: i,
+      };
+    }
+
+    // const lastCommit = await this.commitData.findOne({}).sort({ round: -1 });
+    // const lastCommitedRound = lastCommit ? lastCommit.round : -1;
+
+    // const shouldStart = currentRound > lastCommitedRound + 1;
+    // const round = lastCommitedRound + 1;
 
     return {
-      shouldStart,
-      round,
+      shouldStart: false,
+      round: -1,
     };
   }
 
@@ -73,11 +90,13 @@ export class CommitValueService implements OnApplicationBootstrap {
 
     for (let network of ALL_NETWORKS) {
       try {
+        this.logger.log('Checking conditions');
         const { shouldStart, round } = await this.checkRoundConditions(
           network.networkID,
         );
+        this.logger.log(shouldStart, round);
         if (shouldStart) {
-          this.stateManager.transactionMutex.runExclusive(async () => {
+          await this.stateManager.transactionMutex.runExclusive(async () => {
             this.logger.debug('Commiting value for round: ', round);
 
             // console.log(`Digest: `, await MockLottery.digest());
@@ -101,14 +120,19 @@ export class CommitValueService implements OnApplicationBootstrap {
               round: round,
               commitValue: randomValue.toString(),
               commitSalt: randomSalt.toString(),
-              revealed: false,
+              hash: new CommitValue({
+                value: randomValue,
+                salt: randomSalt,
+              })
+                .hash()
+                .toString(),
             });
 
             this.logger.log('Writing new commit to database', newDock);
 
             await this.commitData.updateOne(
               {
-                round,
+                _id: newDock._id,
               },
               {
                 $set: newDock,
@@ -142,16 +166,13 @@ export class CommitValueService implements OnApplicationBootstrap {
 
               this.logger.debug(`Tx successful. Hash: `, txResult.hash);
               this.logger.debug('Waiting for tx');
-              await txResult.wait();
+              await txResult.safeWait();
               this.logger.debug('Got tx');
             } catch (e) {
               this.logger.debug(
                 'Got error while sending commit transaction: ',
                 e,
               );
-              await this.commitData.deleteOne({
-                round,
-              });
             }
           });
         }
@@ -160,6 +181,7 @@ export class CommitValueService implements OnApplicationBootstrap {
       }
     }
 
+    this.logger.debug('Releasing');
     this.isRunning = false;
   }
 }

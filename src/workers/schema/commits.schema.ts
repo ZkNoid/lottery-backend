@@ -15,7 +15,7 @@ export class BaseCommitDocument extends Document {
   @Prop()
   commitSalt: string;
   @Prop()
-  revealed: boolean;
+  hash: string;
 }
 
 @Schema({ timestamps: true, collection: 'random_commits' })

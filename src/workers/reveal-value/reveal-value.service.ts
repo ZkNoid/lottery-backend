@@ -30,6 +30,7 @@ function randomIntFromInterval(min, max) {
 export class RevealValueService implements OnApplicationBootstrap {
   private readonly logger = new Logger(RevealValueService.name);
   private isRunning = false;
+  private lastRevealInRound = 0;
 
   constructor(
     private stateManager: StateService,
@@ -41,38 +42,87 @@ export class RevealValueService implements OnApplicationBootstrap {
     // await this.handleCron();
   }
 
-  async checkRoundConditions(networkId: string) {
-    const unrevealed = await this.commitData.find({ revealed: { $eq: false } });
+  async checkRoundConditions(networkId: string, roundId: number) {
+    if (roundId == 8) {
+      // Only for testing perpuses, as 8th round is fucked up
+      return {
+        shouldStart: false,
+        isRevealed: true,
+      };
+    }
+    const contract =
+      this.stateManager.state[networkId].randomManagers[roundId].contract;
 
-    for (const elem of unrevealed) {
-      const round = elem.round;
+    await fetchAccount({ publicKey: contract.address });
 
-      const rm =
-        this.stateManager.state[networkId].randomManagers[round].contract;
+    const commit = contract.commit.get();
+    const result = contract.result.get();
 
-      await fetchAccount({ publicKey: rm.address });
+    if (commit.toBigInt() != 0 && result.toBigInt() == 0) {
+      const commitData = await this.commitData.findOne({
+        round: roundId,
+        hash: commit.toString(),
+      });
 
-      // Commented for better time with ZKON
-      // const randomValue = rm.curRandomValue.get();
-      const randomValue = '2';
-
-      if (+randomValue == 0 || rm.commit.get().toBigInt() == 0) {
-        continue;
-      } else {
+      if (!commitData) {
+        this.logger.error(
+          'No commit data for round.',
+          roundId,
+          commit.toString(),
+        );
         return {
-          shouldStart: true,
-          round,
-          commitValue: elem.commitValue,
-          commitSalt: elem.commitSalt,
-          doc: elem,
+          shouldStart: false,
         };
       }
+
+      return {
+        shouldStart: true,
+        commitValue: commitData.commitValue,
+        commitSalt: commitData.commitSalt,
+      };
+    }
+
+    if (result.toBigInt() != 0) {
+      return {
+        shouldStart: false,
+        isRevealed: true,
+      };
     }
 
     return {
       shouldStart: false,
-      round: 0,
+      isRevealed: false,
     };
+
+    // for (const elem of unrevealed) {
+    //   const round = elem.round;
+
+    //   const rm =
+    //     this.stateManager.state[networkId].randomManagers[round].contract;
+
+    //   await fetchAccount({ publicKey: rm.address });
+
+    //   // Commented for better time with ZKON
+    //   // const randomValue = rm.curRandomValue.get();
+    //   const randomValue = '2';
+
+    //   if (+randomValue == 0 || rm.commit.get().toBigInt() == 0) {
+    //     continue;
+    //   } else {
+    //     return {
+    //       shouldStart: true,
+    //       round,
+    //       commitValue: elem.commitValue,
+    //       commitSalt: elem.commitSalt,
+    //       doc: elem,
+    //     };
+    //   }
+    // }
+
+    // return {
+    //   shouldStart: false,
+    //   round: 0,
+    // };
   }
 
   @Cron('*/2 * * * *')
@@ -86,68 +136,82 @@ export class RevealValueService implements OnApplicationBootstrap {
 
     for (let network of ALL_NETWORKS) {
       try {
-        const { shouldStart, round, commitValue, commitSalt, doc } =
-          await this.checkRoundConditions(network.networkID);
-        if (shouldStart) {
-          await this.stateManager.transactionMutex.runExclusive(async () => {
-            this.logger.debug('Revealing value for round: ', round);
+        const currentRound = await this.stateManager.getCurrentRound(
+          network.networkID,
+        );
 
-            const sender = PrivateKey.fromBase58(process.env.PK);
+        this.logger.debug('Last reveal in round: ', this.lastRevealInRound);
+        this.logger.debug('Current round: ', currentRound);
 
-            this.logger.log(
-              'Revealing value ',
-              commitValue,
-              ' salt: ',
-              commitSalt,
-            );
+        for (
+          let roundId = this.lastRevealInRound;
+          roundId <= currentRound;
+          roundId++
+        ) {
+          this.logger.debug('Checking round: ', roundId);
+          const { shouldStart, commitValue, commitSalt, isRevealed } =
+            await this.checkRoundConditions(network.networkID, roundId);
 
-            const contract =
-              this.stateManager.state[network.networkID].randomManagers[round]
-                .contract;
+          if (isRevealed) {
+            this.lastRevealInRound = roundId;
+            continue;
+          }
 
-            console.log(`Value: ${commitValue} salt: ${commitSalt}`);
+          // If can't reveal current round - do not check following rounds
+          if (!shouldStart) {
+            break;
+          }
 
-            const commitValueValue = new CommitValue({
-              value: Field(commitValue),
-              salt: Field(commitSalt),
+          if (shouldStart) {
+            await this.stateManager.transactionMutex.runExclusive(async () => {
+              this.logger.debug('Revealing value for round: ', roundId);
+
+              const sender = PrivateKey.fromBase58(process.env.PK);
+
+              this.logger.log(
+                'Revealing value ',
+                commitValue,
+                ' salt: ',
+                commitSalt,
+              );
+
+              const contract =
+                this.stateManager.state[network.networkID].randomManagers[
+                  roundId
+                ].contract;
+
+              console.log(`Value: ${commitValue} salt: ${commitSalt}`);
+
+              const commitValueValue = new CommitValue({
+                value: Field(commitValue),
+                salt: Field(commitSalt),
+              });
+
+              console.log(
+                `Commit value hash: ${commitValueValue.hash().toString()}`,
+              );
+              console.log(`Onchain state: ${contract.commit.get().toString()}`);
+
+              console.log(
+                `${commitValueValue.hash().toString()} =? ${contract.commit.get().toString()}`,
+              );
+
+              let tx = await Mina.transaction(
+                { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
+                async () => {
+                  await contract.reveal(commitValueValue);
+                },
+              );
+              this.logger.debug('Proving tx');
+              await tx.prove();
+              this.logger.debug('Proved tx');
+              let txResult = await tx.sign([sender]).send();
+
+              this.logger.debug(`Tx successful. Hash: `, txResult.hash);
+              this.logger.debug('Waiting for tx');
+              await txResult.wait();
             });
-
-            console.log(
-              `Commit value hash: ${commitValueValue.hash().toString()}`,
-            );
-            console.log(`Onchain state: ${contract.commit.get().toString()}`);
-
-            console.log(
-              `${commitValueValue.hash().toString()} =? ${contract.commit.get().toString()}`,
-            );
-
-            let tx = await Mina.transaction(
-              { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
-              async () => {
-                await contract.reveal(commitValueValue);
-              },
-            );
-            this.logger.debug('Proving tx');
-            await tx.prove();
-            this.logger.debug('Proved tx');
-            let txResult = await tx.sign([sender]).send();
-
-            await this.commitData.updateOne(
-              {
-                _id: doc._id,
-              },
-              {
-                $set: { revealed: true },
-              },
-              {
-                upsert: true,
-              },
-            );
-
-            this.logger.debug(`Tx successful. Hash: `, txResult.hash);
-            this.logger.debug('Waiting for tx');
-            await txResult.wait();
-          });
+          }
         }
       } catch (e) {
         this.logger.error('Error', e.stack);

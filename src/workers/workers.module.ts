@@ -23,7 +23,7 @@ import { GiftTicketBuyerModule } from './gift-ticket-buyer/gift-ticket-buyer.mod
     MongooseModule.forRootAsync({
       imports: [
         ZknoidConfigModule,
-        SyncEventsModule,
+        // SyncEventsModule,
         CommitValueModule,
         RevealValueModule,
         ProduceResultModule,

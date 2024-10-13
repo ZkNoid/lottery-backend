@@ -71,32 +71,32 @@ export class StateService implements OnModuleInit {
 
     console.log('Compilation');
     await DistributionProgram.compile({
-      // cache: Cache.FileSystem('./cache'),
+      cache: Cache.FileSystem('./cache'),
     });
     console.log('Compilation ended');
 
     console.log('Compilation');
     await TicketReduceProgram.compile({
-      // cache: Cache.FileSystem('./cache'),
+      cache: Cache.FileSystem('./cache'),
     });
 
     console.log('Compilation ended');
 
     console.log('Compilation');
     await PLottery.compile({
-      // cache: Cache.FileSystem('./cache'),
+      cache: Cache.FileSystem('./cache'),
     });
 
     console.log('ZkonZkProgramm compile');
     let zk1 = await ZkonZkProgram.compile({
-      // cache: Cache.FileSystem('./cache'),
+      cache: Cache.FileSystem('./cache'),
     });
 
     console.log(`Zkon programm proof: ${zk1.verificationKey.hash.toString()}`);
 
     console.log('ZkonRequestCoordinator compile');
     let zk2 = await ZkonRequestCoordinator.compile({
-      // cache: Cache.FileSystem('./cache'),
+      cache: Cache.FileSystem('./cache'),
     });
 
     console.log(
@@ -105,7 +105,7 @@ export class StateService implements OnModuleInit {
 
     console.log('RandomManager compile');
     const randomManagerCompileInfo = await RandomManager.compile({
-      // cache: Cache.FileSystem('./cache'),
+      cache: Cache.FileSystem('./cache'),
     });
 
     console.log(`rm verification key`);
