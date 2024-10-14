@@ -100,13 +100,13 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
         for (const roundId of roundsToCheck) {
           this.logger.debug('Processing round', roundId);
           const roundStateManager = stateM.plotteryManagers[roundId];
-          const isComplete = await this.isRoundComplete(roundId, currentRound);
+          // const isComplete = await this.isRoundComplete(roundId, currentRound);
 
-          // Skipping rounds that are not going to change
-          if (isComplete) {
-            this.logger.debug('Skipping processed round: ', roundId);
-            continue;
-          }
+          // // Skipping rounds that are not going to change
+          // if (isComplete) {
+          //   this.logger.debug('Skipping processed round: ', roundId);
+          //   continue;
+          // }
 
           if (!roundStateManager) {
             this.logger.warn(

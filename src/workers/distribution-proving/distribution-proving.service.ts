@@ -31,7 +31,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
     );
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async handleCron() {
     for (let network of ALL_NETWORKS) {
       if (!this.stateManager.stateInitialized[network.networkID]) {

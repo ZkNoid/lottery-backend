@@ -32,14 +32,6 @@ export class ProduceResultService implements OnApplicationBootstrap {
   }
 
   async checkRoundConditions(networkId: string, roundId: number) {
-    if (roundId == 8) {
-      // Only for testing purpose, as 8th round is fucked up
-      return {
-        shouldStart: false,
-        noProduce: false,
-      };
-    }
-
     const plottery =
       this.stateManager.state[networkId].plotteryManagers[roundId].contract;
     const randomManager =
