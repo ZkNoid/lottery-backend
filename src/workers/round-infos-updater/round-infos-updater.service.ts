@@ -54,7 +54,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
   }
 
   @Cron(CronExpression.EVERY_MINUTE)
-  async handleCron(onBootstrap = true) {
+  async handleCron(onBootstrap = false) {
     if (this.isRunning) {
       this.logger.debug('Already running');
       return;
@@ -92,11 +92,6 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
             : [currentRound];
 
         this.logger.debug('Amount of rounds to check', roundsToCheck.length);
-        // console.log(
-        //   this.stateManager.state[network.networkID].plotteryManagers,
-        // );
-
-        // console.log(deployedRounds);
 
         for (const roundId of roundsToCheck) {
           this.logger.debug('Processing round', roundId);

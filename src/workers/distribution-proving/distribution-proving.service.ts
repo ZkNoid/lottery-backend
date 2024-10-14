@@ -3,7 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { ALL_NETWORKS } from '../../constants/networks.js';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Field } from 'o1js';
+import { fetchAccount, Field } from 'o1js';
 import { RoundsData } from '../schema/rounds.schema.js';
 import { StateService } from '../../state-service/state.service.js';
 
@@ -22,6 +22,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
   async checkConditionsForRound(networkId: string, roundId: number) {
     const rm =
       this.stateManager.state[networkId].randomManagers[roundId].contract;
+    await fetchAccount({ publicKey: rm.address });
     const result = rm.result.get();
 
     return (
@@ -30,7 +31,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
     );
   }
 
-  @Cron(CronExpression.EVERY_10_MINUTES)
+  @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
     for (let network of ALL_NETWORKS) {
       const currentRoundId = await this.stateManager.getCurrentRound(
@@ -41,7 +42,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
 
       let leastRoundWithNoDP = await this.rounds.findOne({ roundId: null });
 
-      let startRoundId = Math.max(55, leastRoundWithNoDP?.roundId || 55);
+      let startRoundId = Math.max(52, leastRoundWithNoDP?.roundId || 52);
 
       for (let roundId = startRoundId; roundId < currentRoundId; roundId++) {
         this.logger.debug('Round', roundId);
@@ -50,6 +51,11 @@ export class DistributionProvingService implements OnApplicationBootstrap {
           await this.stateManager.transactionMutex.runExclusive(async () => {
             this.logger.debug('Generation of DP', roundId);
 
+            const contact =
+              this.stateManager.state[network.networkID].plotteryManagers[
+                roundId
+              ].contract;
+            await fetchAccount({ publicKey: contact.address });
             let dp =
               await this.stateManager.state[network.networkID].plotteryManagers[
                 roundId

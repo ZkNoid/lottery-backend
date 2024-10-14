@@ -21,7 +21,7 @@ function randomIntFromInterval(min, max) {
 export class ProduceResultService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ProduceResultService.name);
   private isRunning = false;
-  private lastProduceInRound = 52;
+  private lastProduceInRound = 51;
 
   constructor(private stateManager: StateService) {}
 
@@ -66,11 +66,6 @@ export class ProduceResultService implements OnApplicationBootstrap {
       return;
     }
     this.isRunning = true;
-    console.log('Initial in reduce proving', this.stateManager.inReduceProving);
-    // if (this.stateManager.inReduceProving) return;
-    console.log('Then in reduce proving', this.stateManager.inReduceProving);
-    // this.stateManager.inReduceProving = true;
-    console.log('After in reduce proving', this.stateManager.inReduceProving);
 
     for (let network of ALL_NETWORKS) {
       try {
