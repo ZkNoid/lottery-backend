@@ -34,6 +34,9 @@ export class DistributionProvingService implements OnApplicationBootstrap {
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
     for (let network of ALL_NETWORKS) {
+      if (!this.stateManager.stateInitialized[network.networkID]) {
+        this.logger.debug('State is not initialized');
+      }
       const currentRoundId = await this.stateManager.getCurrentRound(
         network.networkID,
       );
@@ -60,6 +63,15 @@ export class DistributionProvingService implements OnApplicationBootstrap {
               await this.stateManager.state[network.networkID].plotteryManagers[
                 roundId
               ].getDP(roundId);
+
+            const ticketRoot = contact.ticketRoot.get();
+
+            if (ticketRoot.toBigInt() != dp.publicOutput.root.toBigInt()) {
+              this.logger.error(
+                'DP root is not equal to contract root. Aborting dp generation',
+              );
+              return;
+            }
 
             this.logger.debug('DP generated');
 

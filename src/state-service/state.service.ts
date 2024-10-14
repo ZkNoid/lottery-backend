@@ -296,7 +296,7 @@ export class StateService implements OnModuleInit {
 
         for (; ticketId < stateM.lastTicketInRound; ticketId++) {
           if (
-            stateM.ticketMap[round]
+            stateM.ticketMap
               .get(Field(ticketId))
               .equals(data.ticket.hash())
               .toBoolean()
