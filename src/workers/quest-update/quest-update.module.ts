@@ -3,10 +3,9 @@ import { MinaEventData, MinaEventDataSchema } from '../schema/events.schema.js';
 import { MongooseModule } from '@nestjs/mongoose';
 import { QuestUpdateService } from './quest-update.service.js';
 import { ScheduleModule } from '@nestjs/schedule';
-import { HttpModule } from '@nestjs/axios';
 import { StateModule } from '../../state-service/state.module.js';
-import { CommitData, CommitDataSchema } from '../schema/commits.schema.js';
 import { QuestData, QuestDataSchema } from '../schema/quest.schema.js';
+import { StatusesData, StatusesDataSchema } from '../schema/statuses.schema.js';
 
 @Module({
   imports: [
@@ -21,6 +20,13 @@ import { QuestData, QuestDataSchema } from '../schema/quest.schema.js';
         schema: QuestDataSchema,
       },
     ]),
+
+    MongooseModule.forFeature([
+      {
+        name: StatusesData.name,
+        schema: StatusesDataSchema,
+      },
+    ], 'questDb'),
     StateModule,
   ],
   providers: [QuestUpdateService],

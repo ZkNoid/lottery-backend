@@ -15,6 +15,7 @@ import { CommitValue } from 'node_modules/l1-lottery-contracts/build/src/Random/
 import { InjectModel } from '@nestjs/mongoose';
 import { MinaEventData } from '../schema/events.schema.js';
 import { QuestData } from '../schema/quest.schema.js';
+import { StatusesData } from '../schema/statuses.schema.js';
 
 interface ITicket {
   owner: string;
@@ -54,6 +55,8 @@ export class QuestUpdateService implements OnApplicationBootstrap {
     private questData: Model<QuestData>,
     @InjectModel(MinaEventData.name)
     private minaEventData: Model<MinaEventData>,
+    @InjectModel(StatusesData.name, 'questDb')
+    private statusesData: Model<StatusesData>,
   ) {}
 
   async onApplicationBootstrap() {
@@ -116,6 +119,29 @@ export class QuestUpdateService implements OnApplicationBootstrap {
           });
 
           delete userData._id;
+
+          await this.statusesData.updateOne(
+            { address: user },
+            {
+              $set: {
+                [`statuses.${'LOTTERY GAME'}.1`]: firstTicketBought,
+                [`statuses.${'LOTTERY GAME'}.2`]: twoSameTicketsBought,
+                [`statuses.${'LOTTERY GAME'}.3`]: twoDifferentTicketBought,
+                [`statuses.${'LOTTERY GAME'}.4`]: wonInRound,
+                [`statuses.${'LOTTERY GAME'}.5`]: playedIn3Rounds,
+              },
+              $inc: {
+                [`counter.${'LOTTERY GAME'}.1`]: firstTicketBought ? 1 : 0,
+                [`counter.${'LOTTERY GAME'}.2`]: twoSameTicketsBought ? 1 : 0,
+                [`counter.${'LOTTERY GAME'}.3`]: twoDifferentTicketBought ? 1 : 0,
+                [`counter.${'LOTTERY GAME'}.4`]: wonInRound ? 1 : 0,
+                [`counter.${'LOTTERY GAME'}.5`]: playedIn3Rounds ? 1 : 0,
+              },
+            },
+            {
+              upsert: true,
+            },
+          );
 
           await this.questData.updateOne(
             {

@@ -18,6 +18,14 @@ import { ConfigService } from '@nestjs/config';
     MongooseModule.forRootAsync({
       useFactory: async () => ({
         uri: process.env.MONGODB_URI,
+        dbName: process.env.MONGODB_QUEST_DB,
+      }),
+      inject: [ConfigService],
+      connectionName: 'questDb'
+    }),
+    MongooseModule.forRootAsync({
+      useFactory: async () => ({
+        uri: process.env.MONGODB_URI,
         dbName: process.env.MONGODB_DB,
       }),
       inject: [ConfigService],
