@@ -13,6 +13,7 @@ import { NetworkIds } from '../../constants/networks.js';
 @Injectable()
 export class ApproveGiftCodesService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ApproveGiftCodesService.name);
+  private isRunning = false;
 
   constructor(
     @InjectModel(PromoQueueData.name)
@@ -25,8 +26,11 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async handleCron() {
-    if (this.stateManager.inReduceProving) return;
-    this.stateManager.inReduceProving = true;
+    if (this.isRunning) {
+      this.logger.debug('Already running');
+      return;
+    }
+    this.isRunning = true;
 
     try {
       this.logger.log('Promo queue checking');
@@ -54,54 +58,57 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
         );
 
         if (dbPromo) {
-          const signer = PrivateKey.fromBase58(
-            process.env.GIFT_CODES_TREASURY_PRIVATE,
-          );
-          console.log('Db promo found', dbPromo);
-          const signerAccount = PublicKey.fromBase58(
-            signer.toPublicKey().toBase58(),
-          );
+          await this.stateManager.transactionMutex.runExclusive(async () => {
+            const signer = PrivateKey.fromBase58(
+              process.env.GIFT_CODES_TREASURY_PRIVATE,
+            );
+            console.log('Db promo found', dbPromo);
+            const signerAccount = PublicKey.fromBase58(
+              signer.toPublicKey().toBase58(),
+            );
 
-          const ticket = Ticket.from(
-            giftRequested.ticket.numbers,
-            PublicKey.fromBase58(giftRequested.userAddress),
-            1,
-          );
-          console.log('Making tx from', signerAccount.toBase58());
+            const ticket = Ticket.from(
+              giftRequested.ticket.numbers,
+              PublicKey.fromBase58(giftRequested.userAddress),
+              1,
+            );
+            console.log('Making tx from', signerAccount.toBase58());
 
-          const curRound = await this.stateManager.getCurrentRound(
-            NetworkIds.MINA_DEVNET,
-          );
+            const curRound = await this.stateManager.getCurrentRound(
+              NetworkIds.MINA_DEVNET,
+            );
 
-          let tx = await Mina.transaction(
-            { sender: signerAccount, fee: Number('0.01') * 1e9 },
-            async () => {
-              this.stateManager.state[NetworkIds.MINA_DEVNET].plotteryManagers[
-                curRound
-              ].contract.buyTicket(ticket);
-            },
-          );
-
-          console.log('BUY TX', tx);
-
-          await tx.prove();
-          const sentTx = await tx.sign([signer]).send();
-
-          await this.giftCodes.updateOne(
-            {
-              _id: giftRequested._id,
-            },
-            {
-              $set: {
-                buyTxHash: sentTx.hash,
+            let tx = await Mina.transaction(
+              { sender: signerAccount, fee: Number('0.1') * 1e9 },
+              async () => {
+                this.stateManager.state[
+                  NetworkIds.MINA_DEVNET
+                ].plotteryManagers[curRound].contract.buyTicket(ticket);
               },
-            },
-          );
+            );
+
+            console.log('BUY TX', tx);
+
+            await tx.prove();
+            const sentTx = await tx.sign([signer]).send();
+
+            await this.giftCodes.updateOne(
+              {
+                _id: giftRequested._id,
+              },
+              {
+                $set: {
+                  buyTxHash: sentTx.hash,
+                },
+              },
+            );
+          });
         }
       }
     } catch (e) {
       this.logger.error('Approve gift codes error', e.stack);
     }
-    this.stateManager.inReduceProving = false;
+
+    this.isRunning = false;
   }
 }

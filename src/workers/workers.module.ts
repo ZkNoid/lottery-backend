@@ -30,8 +30,8 @@ import { GiftTicketBuyerModule } from './gift-ticket-buyer/gift-ticket-buyer.mod
         DistributionProvingModule,
         RoundInfoUpdaterModule,
         ProveReduceModule,
-        // ApproveGiftCodesModule,
-        // GiftTicketBuyerModule,
+        ApproveGiftCodesModule,
+        GiftTicketBuyerModule,
       ],
       useFactory: async () => ({
         uri: process.env.MONGODB_URI,
