@@ -27,7 +27,6 @@ const SCORE_COEFFICIENTS: bigint[] = [
 export class RoundInfoUpdaterService implements OnApplicationBootstrap {
   private readonly logger = new Logger(RoundInfoUpdaterService.name);
   private isRunning = false;
-  private lastCompleteRound = 52;
 
   constructor(
     @InjectModel(RoundsData.name)
@@ -79,10 +78,15 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
           ),
         );
 
+        const startFrom = process.env.START_FROM_ROUND
+          ? +process.env.START_FROM_ROUND
+          : 0;
+
         const allDeployedRounds = Object.keys(
           this.stateManager.state[network.networkID].plotteryManagers,
         )
           .map((v) => +v)
+          .filter((v) => v >= startFrom)
           .sort((a, b) => a - b);
 
         const roundsToCheck = onBootstrap
@@ -101,7 +105,6 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
           // Skipping rounds that are not going to change
           if (isComplete) {
             this.logger.debug('Skipping processed round: ', roundId);
-            this.lastCompleteRound = roundId;
             continue;
           }
 

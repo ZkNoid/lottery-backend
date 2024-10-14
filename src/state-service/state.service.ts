@@ -306,7 +306,25 @@ export class StateService implements OnModuleInit {
           }
         }
 
+        console.log(
+          `Before: ${stateM.ticketNullifierMap.getRoot().toString()}`,
+        );
+        console.log(
+          JSON.stringify(
+            stateM.ticketNullifierMap.getWitness(Field(ticketId)),
+            null,
+            2,
+          ),
+        );
         stateM.ticketNullifierMap.set(Field(ticketId), Field(1));
+        console.log(`After ${stateM.ticketNullifierMap.getRoot().toString()}`);
+        console.log(
+          JSON.stringify(
+            stateM.ticketNullifierMap.getWitness(Field(ticketId)),
+            null,
+            2,
+          ),
+        );
       }
 
       if (event.type == 'reduce') {
@@ -336,6 +354,10 @@ export class StateService implements OnModuleInit {
           // }
         });
       }
+    }
+
+    if (round == 52) {
+      console.log('Setting state for round!!!!!!!!!!!!, ', round);
     }
     this.state[networkID].plotteryManagers[round] = stateM;
     this.stateInitialized[networkID] = true;

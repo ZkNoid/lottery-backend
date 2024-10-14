@@ -27,7 +27,7 @@ import { GiftTicketBuyerModule } from './gift-ticket-buyer/gift-ticket-buyer.mod
         // CommitValueModule,
         // RevealValueModule,
         // ProduceResultModule,
-        DistributionProvingModule,
+        // DistributionProvingModule,
         // RoundInfoUpdaterModule,
         // ProveReduceModule,
         // EmptyTicketBuyingModule,

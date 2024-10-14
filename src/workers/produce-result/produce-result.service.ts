@@ -21,7 +21,9 @@ function randomIntFromInterval(min, max) {
 export class ProduceResultService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ProduceResultService.name);
   private isRunning = false;
-  private lastProduceInRound = 51;
+  private lastProduceInRound = process.env.START_FROM_ROUND
+    ? +process.env.START_FROM_ROUND
+    : 0;
 
   constructor(private stateManager: StateService) {}
 
@@ -81,7 +83,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
         this.logger.debug('Current round id', currentRoundId);
 
         for (
-          let roundId = this.lastProduceInRound + 1;
+          let roundId = this.lastProduceInRound;
           roundId < currentRoundId;
           roundId++
         ) {

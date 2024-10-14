@@ -14,7 +14,9 @@ import { InjectModel } from '@nestjs/mongoose';
 export class CommitValueService implements OnApplicationBootstrap {
   private readonly logger = new Logger(CommitValueService.name);
   private isRunning = false;
-  private lastCommitInRound = 52;
+  private lastCommitInRound = process.env.START_FROM_ROUND
+    ? +process.env.START_FROM_ROUND
+    : 0;
 
   constructor(
     private stateManager: StateService,
@@ -34,7 +36,7 @@ export class CommitValueService implements OnApplicationBootstrap {
     const currentSlot = await getCurrentSlot(networkId);
     const currentRound = (currentSlot - +initSlot) / BLOCK_PER_ROUND;
 
-    for (let i = this.lastCommitInRound; i < currentRound; i++) {
+    for (let i = this.lastCommitInRound + 1; i < currentRound; i++) {
       const rmContract =
         this.stateManager.state[networkId].randomManagers[i].contract;
 

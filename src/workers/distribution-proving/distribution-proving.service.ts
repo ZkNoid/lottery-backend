@@ -45,7 +45,11 @@ export class DistributionProvingService implements OnApplicationBootstrap {
 
       let leastRoundWithNoDP = await this.rounds.findOne({ roundId: null });
 
-      let startRoundId = Math.max(52, leastRoundWithNoDP?.roundId || 52);
+      let startFromRound = +process.env.START_FROM_ROUND;
+      let startRoundId = Math.max(
+        startFromRound,
+        leastRoundWithNoDP?.roundId || startFromRound,
+      );
 
       for (let roundId = startRoundId; roundId < currentRoundId; roundId++) {
         this.logger.debug('Round', roundId);

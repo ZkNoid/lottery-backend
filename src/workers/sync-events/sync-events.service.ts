@@ -77,11 +77,16 @@ export class SyncEventsService implements OnModuleInit {
           `startSlot: ${startSlot}; slotSinceGenesis: ${slotSinceGenesis}`,
         );
 
+        const startFrom = process.env.START_FROM_ROUND
+          ? +process.env.START_FROM_ROUND
+          : 0;
+
         const allRounds = Object.keys(
           this.stateManager.state[network.networkID].plotteryManagers,
         )
           .map((v) => +v)
-          .sort((a, b) => a - b);
+          .sort((a, b) => a - b)
+          .filter((x) => x >= startFrom); // For testing purpose only
 
         const curRound = Math.floor(
           (slotSinceGenesis - +startSlot) / BLOCK_PER_ROUND,

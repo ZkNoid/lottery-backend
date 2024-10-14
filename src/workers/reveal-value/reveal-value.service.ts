@@ -30,7 +30,9 @@ function randomIntFromInterval(min, max) {
 export class RevealValueService implements OnApplicationBootstrap {
   private readonly logger = new Logger(RevealValueService.name);
   private isRunning = false;
-  private lastRevealInRound = 52;
+  private lastRevealInRound = process.env.START_FROM_ROUND
+    ? +process.env.START_FROM_ROUND
+    : 0;
 
   constructor(
     private stateManager: StateService,
@@ -43,13 +45,6 @@ export class RevealValueService implements OnApplicationBootstrap {
   }
 
   async checkRoundConditions(networkId: string, roundId: number) {
-    if (roundId == 8) {
-      // Only for testing perpuses, as 8th round is fucked up
-      return {
-        shouldStart: false,
-        isRevealed: true,
-      };
-    }
     const contract =
       this.stateManager.state[networkId].randomManagers[roundId].contract;
 
