@@ -36,7 +36,7 @@ export class CommitValueService implements OnApplicationBootstrap {
     const currentSlot = await getCurrentSlot(networkId);
     const currentRound = (currentSlot - +initSlot) / BLOCK_PER_ROUND;
 
-    for (let i = this.lastCommitInRound + 1; i < currentRound; i++) {
+    for (let i = this.lastCommitInRound; i < currentRound; i++) {
       const rmContract =
         this.stateManager.state[networkId].randomManagers[i].contract;
 
