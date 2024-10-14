@@ -17,6 +17,7 @@ import { ApproveGiftCodesModule } from './approve-gift-codes/approve-gift-codes.
 
 // import { StateService } from 'src/state-service/state.service.js';
 import { GiftTicketBuyerModule } from './gift-ticket-buyer/gift-ticket-buyer.module.js';
+import { QuestUpdateModule } from './quest-update/quest-update.module.js';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { GiftTicketBuyerModule } from './gift-ticket-buyer/gift-ticket-buyer.mod
         ProveReduceModule,
         ApproveGiftCodesModule,
         GiftTicketBuyerModule,
+        QuestUpdateModule,
       ],
       useFactory: async () => ({
         uri: process.env.MONGODB_URI,
