@@ -94,11 +94,12 @@ export class SyncEventsService implements OnModuleInit {
 
         const isInitalized =
           this.stateManager.stateInitialized[network.networkID];
-        const roundsToCheck = isInitalized
-          ? curRound > 0
-            ? [curRound - 1, curRound]
-            : [curRound]
-          : allRounds;
+        const roundsToCheck = allRounds;
+        // const roundsToCheck = isInitalized
+        //   ? curRound > 0
+        //     ? [curRound - 1, curRound]
+        //     : [curRound]
+        //   : allRounds;
 
         console.log(`Rounds to check: ${roundsToCheck}`);
 
