@@ -89,11 +89,12 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
           .filter((v) => v >= startFrom)
           .sort((a, b) => a - b);
 
-        const roundsToCheck = onBootstrap
-          ? allDeployedRounds
-          : currentRound > 0
-            ? [currentRound - 1, currentRound]
-            : [currentRound];
+        const roundsToCheck = allDeployedRounds;
+        // const roundsToCheck = onBootstrap
+        //   ? allDeployedRounds
+        //   : currentRound > 0
+        //     ? [currentRound - 1, currentRound]
+        //     : [currentRound];
 
         this.logger.debug('Amount of rounds to check', roundsToCheck.length);
 
