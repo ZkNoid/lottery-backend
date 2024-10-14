@@ -24,7 +24,7 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
   ) {}
   async onApplicationBootstrap() {}
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async handleCron() {
     if (this.isRunning) {
       this.logger.debug('Already running');
