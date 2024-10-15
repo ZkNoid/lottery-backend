@@ -78,5 +78,10 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "o1js": "patches/o1js.patch"
+    }
   }
 }
