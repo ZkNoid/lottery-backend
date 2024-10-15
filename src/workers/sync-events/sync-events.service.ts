@@ -29,7 +29,7 @@ export class SyncEventsService implements OnModuleInit {
     console.log('Initizlied');
   }
 
-  @Interval('events_sync', 300_000)
+  @Interval('events_sync', 300_00)
   async handleCron() {
     if (this.stateManager.inReduceProving) {
       console.log('It will kill reduce. Do not do it');
