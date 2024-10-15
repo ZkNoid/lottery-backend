@@ -19,6 +19,12 @@ class BasePromoQueueDocument extends Document {
   roundId: number;
   @Prop()
   ticket: PromoTicket;
+  @Prop()
+  failed: boolean;
+  @Prop()
+  processed: boolean;
+  @Prop()
+  processingStarted: boolean;
 }
 
 @Schema({ timestamps: true, collection: 'promo_tickets_queue' })
