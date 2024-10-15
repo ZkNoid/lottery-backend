@@ -35,30 +35,36 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
     try {
       this.logger.log('Promo queue checking');
 
-      const queueRequests = await this.promoQueueData.find({
-        failed: { $ne: true },
-        processed: { $ne: true },
-        processingStarted: { $ne: true },
-      });
-      this.logger.log('Promo queue checking', queueRequests);
-
-      for (const giftRequested of queueRequests) {
-        this.logger.log('Promo queue request', giftRequested);
-
-        const dbPromo = await this.giftCodes.findOneAndUpdate(
-          {
-            code: giftRequested.giftCode,
-            used: false,
+      const giftRequested = await this.promoQueueData.findOneAndUpdate(
+        {
+          failed: { $ne: true },
+          processed: { $ne: true },
+          processingStarted: { $ne: true },
+        },
+        {
+          $set: {
+            processingStarted: true,
           },
-          {
-            $set: {
-              used: true,
-            },
-          },
-        );
+        },
+      );
 
-        if (dbPromo) {
-          await this.stateManager.transactionMutex.runExclusive(async () => {
+      this.logger.log('Promo queue request', giftRequested);
+
+      const dbPromo = await this.giftCodes.findOneAndUpdate(
+        {
+          code: giftRequested.giftCode,
+          used: false,
+        },
+        {
+          $set: {
+            used: true,
+          },
+        },
+      );
+
+      if (dbPromo) {
+        await this.stateManager.transactionMutex.runExclusive(async () => {
+          try {
             const signer = PrivateKey.fromBase58(
               process.env.GIFT_CODES_TREASURY_PRIVATE,
             );
@@ -92,6 +98,18 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
             await tx.prove();
             const sentTx = await tx.sign([signer]).send();
 
+            await this.promoQueueData.updateOne(
+              {
+                _id: giftRequested._id,
+              },
+              {
+                $set: {
+                  processed: true,
+                  processingStarted: false,
+                },
+              },
+            );
+
             await this.giftCodes.updateOne(
               {
                 _id: giftRequested._id,
@@ -102,8 +120,22 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
                 },
               },
             );
-          });
-        }
+          } catch (e) {
+            this.logger.error('Approve gift codes error', e);
+
+            await this.promoQueueData.updateOne(
+              {
+                _id: giftRequested._id,
+              },
+              {
+                $set: {
+                  failed: true,
+                  processingStarted: false,
+                },
+              },
+            );
+          }
+        });
       }
     } catch (e) {
       this.logger.error('Approve gift codes error', e.stack);

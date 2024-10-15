@@ -140,7 +140,7 @@ export class RevealValueService implements OnApplicationBootstrap {
 
         for (
           let roundId = this.lastRevealInRound;
-          roundId <= currentRound;
+          roundId < currentRound;
           roundId++
         ) {
           this.logger.debug('Checking round: ', roundId);

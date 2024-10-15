@@ -11,6 +11,10 @@ export class BaseQuestDocument extends Document {
   @Prop()
   userEvents: Mixed[];
   @Prop()
+  boughtGiftCodes: string[];
+  @Prop()
+  usedGiftCodes: string[];
+  @Prop()
   firstTicketBought: boolean;
   @Prop()
   twoSameTicketsBought: boolean;
