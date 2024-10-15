@@ -272,16 +272,14 @@ export class StateService implements OnModuleInit {
       );
 
       if (event.type == 'buy-ticket') {
-        console.log('Adding ticket to state', event.event.data, 'round', round);
+        // console.log('Adding ticket to state', event.event.data, 'round', round);
         boughtTickets[round].push(data.ticket);
         // this.state[networkID].addTicket(data.ticket, +data.round, false);
-        console.log('Adding ticket');
+        // console.log('Adding ticket');
       }
       if (event.type == 'produce-result') {
-        console.log('Produced result', event.event.data, 'round' + round);
-
+        // console.log('Produced result', event.event.data, 'round' + round);
         // stateM.roundResultMap.set(data.round, data.result);
-
         // const curBankValue = stateM.bankMap.get(data.round);
         // const newBankValue = curBankValue
         //   .mul(PRESICION - COMMISION)
@@ -289,7 +287,7 @@ export class StateService implements OnModuleInit {
         // stateM.bankMap.set(data.round, newBankValue);
       }
       if (event.type == 'get-reward') {
-        console.log('Got reward', event.event.data, 'round' + round);
+        // console.log('Got reward', event.event.data, 'round' + round);
 
         let ticketId = 0;
         let ticketWitness;
@@ -306,29 +304,29 @@ export class StateService implements OnModuleInit {
           }
         }
 
-        console.log(
-          `Before: ${stateM.ticketNullifierMap.getRoot().toString()}`,
-        );
-        console.log(
-          JSON.stringify(
-            stateM.ticketNullifierMap.getWitness(Field(ticketId)),
-            null,
-            2,
-          ),
-        );
+        // console.log(
+        //   `Before: ${stateM.ticketNullifierMap.getRoot().toString()}`,
+        // );
+        // console.log(
+        //   JSON.stringify(
+        //     stateM.ticketNullifierMap.getWitness(Field(ticketId)),
+        //     null,
+        //     2,
+        //   ),
+        // );
         stateM.ticketNullifierMap.set(Field(ticketId), Field(1));
-        console.log(`After ${stateM.ticketNullifierMap.getRoot().toString()}`);
-        console.log(
-          JSON.stringify(
-            stateM.ticketNullifierMap.getWitness(Field(ticketId)),
-            null,
-            2,
-          ),
-        );
+        // console.log(`After ${stateM.ticketNullifierMap.getRoot().toString()}`);
+        // console.log(
+        //   JSON.stringify(
+        //     stateM.ticketNullifierMap.getWitness(Field(ticketId)),
+        //     null,
+        //     2,
+        //   ),
+        // );
       }
 
       if (event.type == 'reduce') {
-        console.log('Reduce: ', event.event.data, 'round' + round);
+        // console.log('Reduce: ', event.event.data, 'round' + round);
         // let fromActionState = data.startActionState;
         // let endActionState = data.endActionState;
 
@@ -338,11 +336,11 @@ export class StateService implements OnModuleInit {
         });
 
         actions.flat(1).map((action) => {
-          console.log(
-            'Adding ticket in reduce',
-            action.ticket.numbers.map((x) => x.toString()),
-            round,
-          );
+          // console.log(
+          //   'Adding ticket in reduce',
+          //   action.ticket.numbers.map((x) => x.toString()),
+          //   round,
+          // );
 
           stateM.addTicket(action.ticket, true);
 

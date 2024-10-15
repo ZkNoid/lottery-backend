@@ -53,7 +53,7 @@ export class ProduceResultService implements OnApplicationBootstrap {
     };
   }
 
-  @Cron('*/2 * * * *')
+  @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
     if (this.isRunning) {
       this.logger.debug(`Is running`);

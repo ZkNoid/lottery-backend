@@ -244,7 +244,7 @@ export class SyncEventsService implements OnModuleInit {
               round: { $eq: round },
             });
 
-            console.log(`All events: ${allEvents}`);
+            // console.log(`All events: ${allEvents}`);
 
             await this.stateManager.initState(
               network.networkID,
