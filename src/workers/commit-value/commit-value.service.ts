@@ -29,12 +29,7 @@ export class CommitValueService implements OnApplicationBootstrap {
   }
 
   async checkRoundConditions(networkId: string) {
-    const factory = this.stateManager.factory[networkId];
-
-    await fetchAccount({ publicKey: factory.address });
-    const initSlot = factory.startSlot.get();
-    const currentSlot = await getCurrentSlot(networkId);
-    const currentRound = (currentSlot - +initSlot) / BLOCK_PER_ROUND;
+    const currentRound = await this.stateManager.getCurrentRound(networkId);
 
     for (let i = this.lastCommitInRound; i < currentRound; i++) {
       const rmContract =
