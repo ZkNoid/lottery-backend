@@ -128,7 +128,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
 
           const boughtTickets =
             this.stateManager.boughtTickets[network.networkID][roundId];
-          this.logger.debug('Bought tickets', boughtTickets);
+          // this.logger.debug('Bought tickets', boughtTickets);
 
           const winningCombination = NumberPacked.unpackToBigints(
             plotteryContract.result.get(),
