@@ -123,12 +123,12 @@ export class StateService implements OnModuleInit {
       const events = await this.factory[network.networkID].fetchEvents();
 
       events.forEach((event) => {
-        console.log(event.event.data);
+        // console.log(event.event.data);
         const data = event.event.data as any;
 
-        console.log(
-          `Adding: ${data.round} ${data.randomManager} ${data.plottery}`,
-        );
+        // console.log(
+        //   `Adding: ${data.round} ${data.randomManager} ${data.plottery}`,
+        // );
 
         state.addDeploy(data.round, data.randomManager, data.plottery);
       });
@@ -164,7 +164,7 @@ export class StateService implements OnModuleInit {
     // .filter((x) => x.event.transactionInfo.transactionStatus == 'applied');
 
     let sortedEventTypes = Object.keys(lottery.events).sort();
-    console.log('sortedEventTypes', sortedEventTypes);
+    // console.log('sortedEventTypes', sortedEventTypes);
     return events.map((eventData) => {
       // if there is only one event type, the event structure has no index and can directly be matched to the event type
       if (sortedEventTypes.length === 1) {
