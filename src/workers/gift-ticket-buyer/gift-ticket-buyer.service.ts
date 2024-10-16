@@ -35,11 +35,18 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
     try {
       this.logger.log('Promo queue checking');
 
-      const giftRequested = await this.promoQueueData.findOne({
-        failed: { $ne: true },
-        processed: { $ne: true },
-        processingStarted: { $ne: true },
-      });
+      const giftRequested = await this.promoQueueData.findOneAndUpdate(
+        {
+          failed: { $ne: true },
+          processed: { $ne: true },
+          processingStarted: { $ne: true },
+        },
+        {
+          $set: {
+            processingStarted: true,
+          },
+        },
+      );
 
       if (!giftRequested) {
         this.logger.log('No gift codes left');
@@ -62,17 +69,6 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
       );
 
       if (dbPromo) {
-        await this.promoQueueData.updateOne(
-          {
-            _id: giftRequested._id,
-          },
-          {
-            $set: {
-              processingStarted: true,
-            },
-          },
-        );
-
         await this.stateManager.transactionMutex.runExclusive(async () => {
           try {
             const signer = PrivateKey.fromBase58(
