@@ -41,8 +41,8 @@ importers:
         specifier: ^1.7.2
         version: 1.7.7
       l1-lottery-contracts:
-        specifier: 0.7.38
-        version: 0.7.38(o1js@1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4))
+        specifier: 0.7.40
+        version: 0.7.40(o1js@1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4))
       mongoose:
         specifier: ^8.4.4
         version: 8.7.1
@@ -2318,8 +2318,8 @@ packages:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
 
-  l1-lottery-contracts@0.7.38:
-    resolution: {integrity: sha512-43/ZbRcDhXRPNGm1DdfezJYgzn7ZDDICvYFo8TnhSVDFvZmpuyT2B5P/VvY8lR/aayNlONTX5uo+0HM9592l0Q==}
+  l1-lottery-contracts@0.7.40:
+    resolution: {integrity: sha512-WmQk09Bd2XYcEjlsXtLFqZRh6+Dj/Ya3yOQCevDNXu4vRbKOz4ApjAA2JfSprLoLY461tgYC75jrmBEwFvIkJQ==}
     engines: {node: '>=18.14.0'}
     peerDependencies:
       o1js: ^1.6.0
@@ -6116,7 +6116,7 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  l1-lottery-contracts@0.7.38(o1js@1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4)):
+  l1-lottery-contracts@0.7.40(o1js@1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4)):
     dependencies:
       '@types/node': 20.16.11
       axios: 1.7.7

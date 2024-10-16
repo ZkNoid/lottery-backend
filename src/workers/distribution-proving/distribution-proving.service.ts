@@ -25,10 +25,15 @@ export class DistributionProvingService implements OnApplicationBootstrap {
     await fetchAccount({ publicKey: rm.address });
     const result = rm.result.get();
 
-    return (
-      !(await this.rounds.findOne({ roundId: roundId }))?.dp &&
-      result.toBigInt() > 0
+    const noDP = !(await this.rounds.findOne({ roundId: roundId }))?.dp;
+    const haveResult = result.toBigInt() > 0;
+    this.logger.debug(
+      `Checking condition for round ${roundId}`,
+      noDP,
+      haveResult,
     );
+
+    return noDP && haveResult;
   }
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -79,10 +84,13 @@ export class DistributionProvingService implements OnApplicationBootstrap {
                 this.logger.error(
                   'DP root is not equal to contract root. Aborting dp generation',
                 );
+                this.logger.error(ticketRoot.toString());
+                this.logger.error(dp.publicOutput.root.toString());
                 return;
               }
 
               this.logger.debug('DP generated');
+              this.logger.debug(dp);
 
               const events = this.stateManager.state[
                 network.networkID

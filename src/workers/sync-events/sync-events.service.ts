@@ -29,7 +29,7 @@ export class SyncEventsService implements OnModuleInit {
     console.log('Initizlied');
   }
 
-  @Interval('events_sync', 300_00)
+  @Interval('events_sync', 30_000)
   async handleCron() {
     if (this.stateManager.inReduceProving) {
       console.log('It will kill reduce. Do not do it');
@@ -144,7 +144,7 @@ export class SyncEventsService implements OnModuleInit {
               }),
           );
 
-          console.log('New events', events);
+          // console.log('New events', events);
 
           /*
         // Events that was previously recorded from archive node. If they're dropped, they was orphaned
@@ -211,15 +211,15 @@ export class SyncEventsService implements OnModuleInit {
           const newEventsToAdd = fetchedEvents.slice(deleteStartIndex);
 
           // Removing old event and adding new events to mongodb
-          console.log(`Removing elements: ${eventsIdForDelete}`);
+          // console.log(`Removing elements: ${eventsIdForDelete}`);
           await this.minaEventData.deleteMany({
             _id: { $in: eventsIdForDelete },
           });
 
-          console.log('newEventsToAdd');
-          console.log(newEventsToAdd);
+          // console.log('newEventsToAdd');
+          // console.log(newEventsToAdd);
           for (const eventToAdd of newEventsToAdd) {
-            console.log(eventToAdd);
+            // console.log(eventToAdd);
             await this.minaEventData.updateOne(
               {
                 'event.transactionInfo.transactionHash':
