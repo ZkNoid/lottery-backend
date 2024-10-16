@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   o1js:
-    hash: zpunxwibvpt7ltlinapff55gu4
+    hash: c6i47jdiyaz6mulra2zgu3oxl4
     path: patches/o1js.patch
 
 importers:
@@ -42,13 +42,13 @@ importers:
         version: 1.7.7
       l1-lottery-contracts:
         specifier: 0.7.38
-        version: 0.7.38(o1js@1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4))
+        version: 0.7.38(o1js@1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4))
       mongoose:
         specifier: ^8.4.4
         version: 8.7.1
       o1js:
         specifier: ^1.8.0
-        version: 1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4)
+        version: 1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4)
       reflect-metadata:
         specifier: ^0.2.0
         version: 0.2.2
@@ -57,7 +57,7 @@ importers:
         version: 7.8.1
       zkon-zkapp:
         specifier: git://github.com/ZKON-Network/zkapp.git#fa772df63e10f29155ef1ea60fe6fae23485c80f
-        version: zkonmina@https://codeload.github.com/ZKON-Network/zkapp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4))
+        version: zkonmina@https://codeload.github.com/ZKON-Network/zkapp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4))
     devDependencies:
       '@nestjs/cli':
         specifier: ^10.0.0
@@ -6116,17 +6116,17 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  l1-lottery-contracts@0.7.38(o1js@1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4)):
+  l1-lottery-contracts@0.7.38(o1js@1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4)):
     dependencies:
       '@types/node': 20.16.11
       axios: 1.7.7
       dotenv: 16.4.5
       esbuild: 0.21.5
       minimist: 1.2.8
-      o1js: 1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4)
+      o1js: 1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4)
       pinata: 0.3.4
       zkapp-cli: 0.21.7
-      zkon-zkapp: zkonmina@https://codeload.github.com/ZKON-Network/zkapp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4))
+      zkon-zkapp: zkonmina@https://codeload.github.com/ZKON-Network/zkapp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4))
     transitivePeerDependencies:
       - debug
       - encoding
@@ -6230,9 +6230,9 @@ snapshots:
 
   mimic-function@5.0.1: {}
 
-  mina-fungible-token@https://codeload.github.com/MinaFoundation/mina-fungible-token/tar.gz/971bf58962d47870d5bcf5a220dc3a80ca5321a0(o1js@1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4)):
+  mina-fungible-token@https://codeload.github.com/MinaFoundation/mina-fungible-token/tar.gz/971bf58962d47870d5bcf5a220dc3a80ca5321a0(o1js@1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4)):
     dependencies:
-      o1js: 1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4)
+      o1js: 1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4)
 
   mina-signer@3.0.7:
     dependencies:
@@ -6355,7 +6355,7 @@ snapshots:
     dependencies:
       path-key: 3.1.1
 
-  o1js@1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4):
+  o1js@1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4):
     dependencies:
       blakejs: 1.2.1
       cachedir: 2.4.0
@@ -7213,7 +7213,7 @@ snapshots:
       find-npm-prefix: 1.0.2
       fs-extra: 11.2.0
       mina-signer: 3.0.7
-      o1js: 1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4)
+      o1js: 1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4)
       opener: 1.5.2
       ora: 8.1.0
       semver: 7.6.3
@@ -7224,14 +7224,14 @@ snapshots:
       - encoding
       - supports-color
 
-  zkonmina@https://codeload.github.com/ZKON-Network/zkapp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4)):
+  zkonmina@https://codeload.github.com/ZKON-Network/zkapp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4)):
     dependencies:
       '@noble/curves': 1.6.0
       dotenv: 16.4.5
-      mina-fungible-token: https://codeload.github.com/MinaFoundation/mina-fungible-token/tar.gz/971bf58962d47870d5bcf5a220dc3a80ca5321a0(o1js@1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4))
+      mina-fungible-token: https://codeload.github.com/MinaFoundation/mina-fungible-token/tar.gz/971bf58962d47870d5bcf5a220dc3a80ca5321a0(o1js@1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4))
       mina-signer: 3.0.7
       node-fetch: 3.3.2
-      o1js: 1.8.0(patch_hash=zpunxwibvpt7ltlinapff55gu4)
+      o1js: 1.8.0(patch_hash=c6i47jdiyaz6mulra2zgu3oxl4)
       zkapp-cli: 0.21.7
     transitivePeerDependencies:
       - encoding
