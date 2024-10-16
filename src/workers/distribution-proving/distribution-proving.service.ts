@@ -36,7 +36,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
     return noDP && haveResult;
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async handleCron() {
     this.stateManager.inReduceProving = true;
     try {
