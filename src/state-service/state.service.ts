@@ -219,11 +219,12 @@ export class StateService implements OnModuleInit {
   ) {
     const updateOnly: boolean = false;
     const lottery = this.state[networkID].plotteryManagers[round].contract;
+    stateM = new PStateManager(lottery, false, false);
     // console.log(`Fetch account: ${lottery.address.toBase58()}`);
     await fetchAccount({ publicKey: lottery.address });
     const startBlock = lottery.startSlot.get();
     // if (!stateM) {
-    stateM = this.state[networkID].plotteryManagers[round];
+    // stateM = this.state[networkID].plotteryManagers[round];
     // }
 
     const syncBlockSlot =
@@ -354,9 +355,6 @@ export class StateService implements OnModuleInit {
       }
     }
 
-    if (round == 52) {
-      console.log('Setting state for round!!!!!!!!!!!!, ', round);
-    }
     this.state[networkID].plotteryManagers[round] = stateM;
     this.stateInitialized[networkID] = true;
     this.boughtTickets[networkID] = boughtTickets;
