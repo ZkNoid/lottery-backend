@@ -11,8 +11,8 @@ import { StateService } from '../../state-service/state.service.js';
 import { NetworkIds } from '../../constants/networks.js';
 
 @Injectable()
-export class ApproveGiftCodesService implements OnApplicationBootstrap {
-  private readonly logger = new Logger(ApproveGiftCodesService.name);
+export class GiftCodesBuyerService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(GiftCodesBuyerService.name);
   private isRunning = false;
 
   constructor(
@@ -35,18 +35,17 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
     try {
       this.logger.log('Promo queue checking');
 
-      const giftRequested = await this.promoQueueData.findOneAndUpdate(
-        {
-          failed: { $ne: true },
-          processed: { $ne: true },
-          processingStarted: { $ne: true },
-        },
-        {
-          $set: {
-            processingStarted: true,
-          },
-        },
-      );
+      const giftRequested = await this.promoQueueData.findOne({
+        failed: { $ne: true },
+        processed: { $ne: true },
+        processingStarted: { $ne: true },
+      });
+
+      if (!giftRequested) {
+        this.logger.log('No gift codes left');
+        this.isRunning = false;
+        return;
+      }
 
       this.logger.log('Promo queue request', giftRequested);
 
@@ -63,6 +62,17 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
       );
 
       if (dbPromo) {
+        await this.promoQueueData.updateOne(
+          {
+            _id: giftRequested._id,
+          },
+          {
+            $set: {
+              processingStarted: true,
+            },
+          },
+        );
+
         await this.stateManager.transactionMutex.runExclusive(async () => {
           try {
             const signer = PrivateKey.fromBase58(
@@ -93,10 +103,12 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
               },
             );
 
-            console.log('BUY TX', tx);
+            this.logger.log('BUY TX', tx);
 
             await tx.prove();
+            this.logger.log('Proved, Waiting for send');
             const sentTx = await tx.sign([signer]).send();
+            this.logger.log('Got tx');
 
             await this.promoQueueData.updateOne(
               {
@@ -121,7 +133,7 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
               },
             );
           } catch (e) {
-            this.logger.error('Approve gift codes error', e);
+            this.logger.error('Buy gift codes error', e);
 
             await this.promoQueueData.updateOne(
               {

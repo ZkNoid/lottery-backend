@@ -17,7 +17,7 @@ import {
   GiftCodesDataSchema,
 } from '../schema/gift-codes.schema.js';
 
-import { ApproveGiftCodesService } from './gift-ticket-buyer.service.js';
+import { GiftCodesBuyerService } from './gift-ticket-buyer.service.js';
 import { StateService } from '../../state-service/state.service.js';
 
 @Module({
@@ -44,6 +44,6 @@ import { StateService } from '../../state-service/state.service.js';
       }),
     }),
   ],
-  providers: [ApproveGiftCodesService, StateService],
+  providers: [GiftCodesBuyerService, StateService],
 })
 export class GiftTicketBuyerModule {}

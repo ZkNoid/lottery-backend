@@ -18,6 +18,8 @@ class BaseGiftCodesdDocument extends Document {
   deleted: boolean;
   @Prop()
   createdAt: string;
+  @Prop()
+  buyTxHash: string;
 }
 
 @Schema({ timestamps: true, collection: 'gift-codes' })
