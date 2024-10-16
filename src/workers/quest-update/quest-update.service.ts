@@ -274,6 +274,35 @@ export class QuestUpdateService implements OnApplicationBootstrap {
       },
       { upsert: true },
     );
+
+    console.log(`Updating address: ${user}`);
+
+    await this.statusesData.updateOne(
+      { address: user },
+      {
+        $set: {
+          [`statuses.${'GIFT CODE MECHANISM'}.1`]: generatedGiftCode,
+          [`statuses.${'GIFT CODE MECHANISM'}.2`]: usedGiftCode,
+          [`statuses.${'GIFT CODE MECHANISM'}.3`]: generated2GiftCodes,
+          [`statuses.${'GIFT CODE MECHANISM'}.4`]: boughtGiftCodeRedeemed,
+          [`statuses.${'GIFT CODE MECHANISM'}.5`]:
+            usedGiftCodeGeneratedByOtherUser,
+        },
+        $inc: {
+          [`counter.${'GIFT CODE MECHANISM'}.1`]: generatedGiftCode ? 1 : 0,
+          [`counter.${'GIFT CODE MECHANISM'}.2`]: usedGiftCode ? 1 : 0,
+          [`counter.${'GIFT CODE MECHANISM'}.3`]: generated2GiftCodes ? 1 : 0,
+          [`counter.${'GIFT CODE MECHANISM'}.4`]: boughtGiftCodeRedeemed
+            ? 1
+            : 0,
+          [`counter.${'GIFT CODE MECHANISM'}.5`]:
+            usedGiftCodeGeneratedByOtherUser ? 1 : 0,
+        },
+      },
+      {
+        upsert: true,
+      },
+    );
   }
 
   // #TODO consider updating it by api
