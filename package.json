@@ -20,7 +20,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prepare_token": "node build-mina-fungible-token.mjs && cd ./node_modules/mina-fungible-token && npm run build",
-    "prepare": "cd node_modules/.pnpm/zkonmina@https+++codeload.github.com+ZKON-Network+zkapp+tar.gz+fa772df63e10f29155ef1ea60fe6fa_3nskjohipr5ii4tmyjex4zbvxu/node_modules/mina-fungible-token && pnpm build || true"
+    "prepare": "cd node_modules/.pnpm/zkonmina@https+++codeload.github.com+ZKON-Network+zkapp+tar.gz+fa772df63e10f29155ef1ea60fe6fa_d4g4q4xqjbcso7vtchzt5v2e6u/node_modules/mina-fungible-token && pnpm build || true"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.2",
