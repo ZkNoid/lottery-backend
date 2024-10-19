@@ -26,3 +26,29 @@ services:
       interval: 5m
       timeout: 5m
       retries: 3
+
+  reduce_prover:
+    env_file:
+      .env
+    build: .
+
+    environment:
+      TZ: Europe/Moscow
+
+    command: sh -c "pnpm start-rp"
+    ports:
+      - "5100:3040"
+    restart: unless-stopped
+
+  distribution_prover:
+    env_file:
+      .env
+    build: .
+
+    environment:
+      TZ: Europe/Moscow
+
+    command: sh -c "pnpm start-dp"
+    ports:
+      - "5100:3042"
+    restart: unless-stopped

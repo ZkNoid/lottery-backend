@@ -1,8 +1,8 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ALL_NETWORKS } from '../../constants/networks.js';
+import { ALL_NETWORKS } from '../constants/networks.js';
 import { fetchAccount, Field, Mina, PrivateKey, Proof } from 'o1js';
-import { StateService } from '../../state-service/state.service.js';
+import { StateService } from '../state-service/state.service.js';
 import {
   LotteryAction,
   TicketReduceProgram,
@@ -11,7 +11,7 @@ import {
 import { TicketReduceProof } from 'l1-lottery-contracts';
 import { MerkleMap20, Ticket } from 'l1-lottery-contracts';
 import { Model } from 'mongoose';
-import { RoundsData } from '../schema/rounds.schema.js';
+import { RoundsData } from '../workers/schema/rounds.schema.js';
 import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
@@ -119,7 +119,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
     for (let actionList of actionLists) {
       actionsPackId++;
-      console.log(`Processing pack ${actionsPackId}`)
+      console.log(`Processing pack ${actionsPackId}`);
       let cached = false;
 
       if (actionsPackId <= lastReducedTicket) {
@@ -219,7 +219,6 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
           if (shouldStart) {
             await this.stateManager.transactionMutex.runExclusive(async () => {
-              
               this.logger.debug(`Time to reduce ${roundId}`);
               const sender = PrivateKey.fromBase58(process.env.PK);
 
@@ -229,7 +228,10 @@ export class ProveReduceService implements OnApplicationBootstrap {
                 ];
 
               // Reduce tickets
-              let reduceProof = await this.reduceTickets(network.networkID, roundId);
+              let reduceProof = await this.reduceTickets(
+                network.networkID,
+                roundId,
+              );
 
               this.logger.debug(
                 'Reduce proof',

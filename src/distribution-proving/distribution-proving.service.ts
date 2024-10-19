@@ -1,11 +1,11 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ALL_NETWORKS } from '../../constants/networks.js';
+import { ALL_NETWORKS } from '../constants/networks.js';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { fetchAccount, Field, PublicKey } from 'o1js';
-import { RoundsData } from '../schema/rounds.schema.js';
-import { StateService } from '../../state-service/state.service.js';
+import { RoundsData } from '../workers/schema/rounds.schema.js';
+import { StateService } from '../state-service/state.service.js';
 import {
   DistributionProgram,
   DistributionProof,

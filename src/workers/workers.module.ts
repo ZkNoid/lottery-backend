@@ -9,8 +9,6 @@ import { CommitValueModule } from './commit-value/commit-value.module.js';
 import { RevealValueModule } from './reveal-value/reveal-value.module.js';
 // import { ProduceResultEvent } from 'l1-lottery-contracts/build/src/PLottery';
 import { ProduceResultModule } from './produce-result/produce-result.module.js';
-import { DistributionProvingModule } from './distribution-proving/distribution-proving.module.js';
-import { ProveReduceModule } from './reduce-proving/reduce-proving.module.js';
 import { RoundInfoUpdaterModule } from './round-infos-updater/round-infos-updater.module.js';
 import { ApproveGiftCodesModule } from './approve-gift-codes/approve-gift-codes.module.js';
 
@@ -27,9 +25,7 @@ import { QuestUpdateModule } from './quest-update/quest-update.module.js';
         CommitValueModule,
         RevealValueModule,
         ProduceResultModule,
-        DistributionProvingModule,
         RoundInfoUpdaterModule,
-        ProveReduceModule,
         ApproveGiftCodesModule,
         GiftTicketBuyerModule,
         QuestUpdateModule,
