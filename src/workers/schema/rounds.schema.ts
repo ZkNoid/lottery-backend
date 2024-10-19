@@ -35,6 +35,10 @@ class BaseRoundsDocument extends Document {
   @Prop()
   dp: Proof;
   @Prop()
+  pendingDp: Proof
+  @Prop()
+  lastDpTicket: number
+  @Prop()
   events: Mixed[];
   @Prop()
   total: number;
@@ -42,6 +46,10 @@ class BaseRoundsDocument extends Document {
   plotteryAddress: string;
   @Prop()
   randomManagerAddress: string;
+  @Prop()
+  lastReducedTicket: number
+  @Prop()
+  reduceProof: Proof
 }
 
 @Schema({ timestamps: true, collection: 'rounds' })
