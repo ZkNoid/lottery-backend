@@ -36,8 +36,6 @@ services:
       TZ: Europe/Moscow
 
     command: sh -c "pnpm start-rp"
-    ports:
-      - "5100:3040"
     restart: unless-stopped
 
   distribution_prover:
@@ -49,6 +47,4 @@ services:
       TZ: Europe/Moscow
 
     command: sh -c "pnpm start-dp"
-    ports:
-      - "5100:3042"
     restart: unless-stopped
