@@ -12,7 +12,6 @@ import { ProduceResultModule } from './produce-result/produce-result.module.js';
 import { DistributionProvingModule } from './distribution-proving/distribution-proving.module.js';
 import { ProveReduceModule } from './reduce-proving/reduce-proving.module.js';
 import { RoundInfoUpdaterModule } from './round-infos-updater/round-infos-updater.module.js';
-// import { EmptyTicketBuyingModule } from './empty-ticket-buying/empty-ticket-buying.module.js';
 import { ApproveGiftCodesModule } from './approve-gift-codes/approve-gift-codes.module.js';
 
 // import { StateService } from 'src/state-service/state.service.js';
