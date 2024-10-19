@@ -28,10 +28,10 @@ export class DistributionProvingService implements OnApplicationBootstrap {
     // await this.handleCron();
   }
   async checkConditionsForRound(networkId: string, roundId: number) {
-    const rm =
-      this.stateManager.state[networkId].randomManagers[roundId].contract;
-    await fetchAccount({ publicKey: rm.address });
-    const result = rm.result.get();
+    const plottery =
+      this.stateManager.state[networkId].plotteryManagers[roundId].contract;
+    await fetchAccount({ publicKey: plottery.address });
+    const result = plottery.result.get();
 
     return (
       !(await this.rounds.findOne({ roundId: roundId }))?.dp &&
