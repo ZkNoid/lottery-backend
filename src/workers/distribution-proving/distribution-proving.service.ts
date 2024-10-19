@@ -17,6 +17,7 @@ import {
 @Injectable()
 export class DistributionProvingService implements OnApplicationBootstrap {
   private readonly logger = new Logger(DistributionProvingService.name);
+  private isRunning = false;
 
   constructor(
     @InjectModel(RoundsData.name)
@@ -74,7 +75,6 @@ export class DistributionProvingService implements OnApplicationBootstrap {
         continue;
       } else {
         this.logger.log(`Processing ticket ${i}`);
-
       }
 
       const input = new DistributionProofPublicInput({
@@ -103,6 +103,12 @@ export class DistributionProvingService implements OnApplicationBootstrap {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
+    if (this.isRunning) {
+      this.logger.debug('Already running');
+      return;
+    }
+
+    this.isRunning = true;
     this.stateManager.inReduceProving = true;
     try {
       for (let network of ALL_NETWORKS) {
@@ -137,15 +143,14 @@ export class DistributionProvingService implements OnApplicationBootstrap {
             await this.stateManager.transactionMutex.runExclusive(async () => {
               this.logger.debug('Generation of DP', roundId);
 
-              let dp =
-                await this.getDP(network.networkID, roundId);
+              let dp = await this.getDP(network.networkID, roundId);
 
-                const contact =
+              const contact =
                 this.stateManager.state[network.networkID].plotteryManagers[
                   roundId
                 ].contract;
               await fetchAccount({ publicKey: contact.address });
-              
+
               const ticketRoot = contact.ticketRoot.get();
 
               if (ticketRoot.toBigInt() != dp.publicOutput.root.toBigInt()) {
@@ -190,6 +195,7 @@ export class DistributionProvingService implements OnApplicationBootstrap {
       console.log('Error while dp generation', e);
     }
 
+    this.isRunning = false;
     this.stateManager.inReduceProving = false;
   }
 }
