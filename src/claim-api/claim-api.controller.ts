@@ -23,10 +23,4 @@ export class ClaimApiController {
       console.log('Claim error', e.stack);
     }
   }
-  @Get('health')
-  async health(): Promise<{ status: 'OK' }> {
-    return {
-      status: 'OK',
-    };
-  }
 }

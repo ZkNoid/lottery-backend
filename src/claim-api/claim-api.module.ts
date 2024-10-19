@@ -10,6 +10,7 @@ import { ClaimApiController } from './claim-api.controller.js';
 import { StateModule } from '../state-service/state.module.js';
 import { ZknoidConfigModule } from '../config/config.module.js';
 import { ConfigService } from '@nestjs/config';
+import { HealthController } from '../health-api/health-api.controller.js';
 
 @Module({
   imports: [
@@ -39,6 +40,6 @@ import { ConfigService } from '@nestjs/config';
     StateModule
   ],
   providers: [ClaimApiService],
-  controllers: [ClaimApiController],
+  controllers: [ClaimApiController, HealthController],
 })
 export class ClaimApiModule {}

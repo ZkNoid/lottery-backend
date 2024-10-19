@@ -14,6 +14,7 @@ import {
 import { ZknoidConfigModule } from '../config/config.module.js';
 import { ConfigService } from '@nestjs/config';
 import { SyncEventsModule } from '../workers/sync-events/sync-events.module.js';
+import { HealthController } from '../health-api/health-api.controller.js';
 
 
 @Module({
@@ -34,6 +35,7 @@ import { SyncEventsModule } from '../workers/sync-events/sync-events.module.js';
     StateModule,
   ],
   providers: [ProveReduceService],
+  controllers: [HealthController]
 })
 export class ProveReduceModule {}
 

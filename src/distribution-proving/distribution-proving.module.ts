@@ -16,6 +16,7 @@ import { StateModule } from '../state-service/state.module.js';
 import { ZknoidConfigModule } from '../config/config.module.js';
 import { ConfigService } from '@nestjs/config';
 import { SyncEventsModule } from '../workers/sync-events/sync-events.module.js';
+import { HealthController } from '../health-api/health-api.controller.js';
 
 @Module({
   imports: [
@@ -47,5 +48,8 @@ class DistributionProvingModule {}
       inject: [ConfigService],
     }),
   ],
+  controllers: [
+    HealthController
+  ]
 })
 export class DistributionProvingWorkersModule {}

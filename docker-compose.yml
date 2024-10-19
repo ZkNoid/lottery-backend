@@ -37,6 +37,13 @@ services:
 
     command: sh -c "pnpm start-rp"
     restart: unless-stopped
+  
+    healthcheck:
+      test: wget -S -O- http://api_server:3042/claim-api/health || exit 1
+      interval: 5m
+      timeout: 5m
+      retries: 3
+
 
   distribution_prover:
     env_file:
@@ -48,3 +55,8 @@ services:
 
     command: sh -c "pnpm start-dp"
     restart: unless-stopped
+    healthcheck:
+      test: wget -S -O- http://api_server:3041/claim-api/health || exit 1
+      interval: 5m
+      timeout: 5m
+      retries: 3
