@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
 
     healthcheck:
-      test: wget -S -O- http://api_server:3040/claim-api/health || exit 1
+      test: wget -S -O- http://api_server:3040/health-api/health || exit 1
       interval: 5m
       timeout: 5m
       retries: 3
@@ -39,7 +39,7 @@ services:
     restart: unless-stopped
   
     healthcheck:
-      test: wget -S -O- http://api_server:3042/claim-api/health || exit 1
+      test: wget -S -O- http://api_server:3042/health-api/health || exit 1
       interval: 5m
       timeout: 5m
       retries: 3
@@ -56,7 +56,7 @@ services:
     command: sh -c "pnpm start-dp"
     restart: unless-stopped
     healthcheck:
-      test: wget -S -O- http://api_server:3041/claim-api/health || exit 1
+      test: wget -S -O- http://api_server:3041/health-api/health || exit 1
       interval: 5m
       timeout: 5m
       retries: 3
