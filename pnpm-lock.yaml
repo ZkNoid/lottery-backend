@@ -41,8 +41,8 @@ importers:
         specifier: ^1.7.2
         version: 1.7.7
       l1-lottery-contracts:
-        specifier: 0.7.44
-        version: 0.7.44(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu))
+        specifier: 0.7.45
+        version: 0.7.45(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu))
       mongoose:
         specifier: ^8.4.4
         version: 8.7.1
@@ -56,8 +56,8 @@ importers:
         specifier: ^7.8.1
         version: 7.8.1
       zkon-zkapp:
-        specifier: git://github.com/ZKON-Network/zkapp.git#fa772df63e10f29155ef1ea60fe6fae23485c80f
-        version: zkonmina@https://codeload.github.com/ZKON-Network/zkapp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu))
+        specifier: git://github.com/ZKON-Network/zkTLS-Mina-zkApp.git#fa772df63e10f29155ef1ea60fe6fae23485c80f
+        version: zkonmina@https://codeload.github.com/ZKON-Network/zkTLS-Mina-zkApp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu))
     devDependencies:
       '@nestjs/cli':
         specifier: ^10.0.0
@@ -2175,8 +2175,8 @@ packages:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
 
-  l1-lottery-contracts@0.7.44:
-    resolution: {integrity: sha512-0dzOfwiyHxyEhUKwXOIUbzldnfja6AWJIUa99LBUOXLqKd0fU4eT5xqyWs3XbMjBiCn0ywrIHnYM6jSbXFMDNA==}
+  l1-lottery-contracts@0.7.45:
+    resolution: {integrity: sha512-VIHm5sgewxmQ4ArYbiuj0aadB0R3BwIHlRUWW/PRKTaLDC6m3jPYCDY7Wd9R+RIfkyuHvPl/eKSrK0c1RqHJZg==}
     engines: {node: '>=18.14.0'}
     peerDependencies:
       o1js: 1.8.0
@@ -3303,14 +3303,8 @@ packages:
     engines: {node: '>=18.14.0'}
     hasBin: true
 
-  zkonmina@git+https://git@github.com:ZKON-Network/zkapp.git#fa772df63e10f29155ef1ea60fe6fae23485c80f:
-    resolution: {commit: fa772df63e10f29155ef1ea60fe6fae23485c80f, repo: git@github.com:ZKON-Network/zkapp.git, type: git}
-    version: 0.1.0
-    peerDependencies:
-      o1js: ^1.2.0
-
-  zkonmina@https://codeload.github.com/ZKON-Network/zkapp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f:
-    resolution: {tarball: https://codeload.github.com/ZKON-Network/zkapp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f}
+  zkonmina@https://codeload.github.com/ZKON-Network/zkTLS-Mina-zkApp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f:
+    resolution: {tarball: https://codeload.github.com/ZKON-Network/zkTLS-Mina-zkApp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f}
     version: 0.1.0
     peerDependencies:
       o1js: ^1.2.0
@@ -5884,7 +5878,7 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  l1-lottery-contracts@0.7.44(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)):
+  l1-lottery-contracts@0.7.45(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)):
     dependencies:
       '@types/node': 20.16.11
       axios: 1.7.7
@@ -5893,7 +5887,7 @@ snapshots:
       o1js: 1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)
       pinata: 0.3.4
       zkapp-cli: 0.21.7
-      zkon-zkapp: zkonmina@git+https://git@github.com:ZKON-Network/zkapp.git#fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu))
+      zkon-zkapp: zkonmina@https://codeload.github.com/ZKON-Network/zkTLS-Mina-zkApp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu))
     transitivePeerDependencies:
       - debug
       - encoding
@@ -6991,20 +6985,7 @@ snapshots:
       - encoding
       - supports-color
 
-  zkonmina@git+https://git@github.com:ZKON-Network/zkapp.git#fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)):
-    dependencies:
-      '@noble/curves': 1.6.0
-      dotenv: 16.4.5
-      mina-fungible-token: https://codeload.github.com/MinaFoundation/mina-fungible-token/tar.gz/971bf58962d47870d5bcf5a220dc3a80ca5321a0(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu))
-      mina-signer: 3.0.7
-      node-fetch: 3.3.2
-      o1js: 1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)
-      zkapp-cli: 0.21.7
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-
-  zkonmina@https://codeload.github.com/ZKON-Network/zkapp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)):
+  zkonmina@https://codeload.github.com/ZKON-Network/zkTLS-Mina-zkApp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)):
     dependencies:
       '@noble/curves': 1.6.0
       dotenv: 16.4.5
