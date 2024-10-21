@@ -149,22 +149,30 @@ export class QuestUpdateService implements OnApplicationBootstrap {
       };
     });
 
-    const firstTicketBought = userTickets.length > 0;
-    const twoSameTicketsBought = !!userTickets.find(
-      (elem) => +elem.ticket.amount > 1,
-    );
+    const prevData = await this.questData.findOne({
+      address: user,
+    });
 
-    const twoDifferentTicketBought = twoDifferentTicketsCheck(userTickets);
+    const firstTicketBought =
+      userTickets.length > 0 || !!prevData?.firstTicketBought;
+    const twoSameTicketsBought =
+      !!userTickets.find((elem) => +elem.ticket.amount > 1) ||
+      !!prevData?.twoSameTicketsBought;
+
+    const twoDifferentTicketBought =
+      twoDifferentTicketsCheck(userTickets) ||
+      !!prevData?.twoDifferentTicketBought;
 
     const wonInRound =
-      userEvents.filter((event) => event.type == 'get-reward').length > 0;
+      userEvents.filter((event) => event.type == 'get-reward').length > 0 ||
+      !!prevData?.wonInRound;
 
     const playedIn3Rounds =
       userEvents
         .filter((event) => event.type == 'buy-ticket')
         .map((event) => event.round)
         .filter((value, index, array) => array.indexOf(value) === index)
-        .length >= 3;
+        .length >= 3 || !!prevData?.playedIn3Rounds;
 
     const userData = new this.questData({
       address: user,
@@ -237,24 +245,30 @@ export class QuestUpdateService implements OnApplicationBootstrap {
       );
     }
 
-    const generatedGiftCode = giftCodes.length > 0;
+    const prevData = await this.questData.findOne({
+      address: user,
+    });
+
+    const generatedGiftCode =
+      giftCodes.length > 0 || !!prevData?.generatedGiftCode;
     const usedGiftCode =
       buyRequests.filter(
         (request) =>
           request.userAddress === request.giftCodeDetails.userAddress,
-      ).length > 0;
-    const generated2GiftCodes = giftCodes.length > 1;
+      ).length > 0 || !!prevData?.usedGiftCode;
+    const generated2GiftCodes =
+      giftCodes.length > 1 || !!prevData?.generated2GiftCodes;
     const boughtGiftCodeRedeemed =
       giftCodes.filter(
         (giftCode) =>
           giftCode.requestDetails[0] &&
           giftCode.userAddress !== giftCode.requestDetails[0].userAddress,
-      ).length > 0;
+      ).length > 0 || !!prevData?.boughtGiftCodeRedeemed;
     const usedGiftCodeGeneratedByOtherUser =
       buyRequests.filter(
         (request) =>
           request.userAddress !== request.giftCodeDetails.userAddress,
-      ).length > 0;
+      ).length > 0 || !!prevData?.usedGiftCodeGeneratedByOtherUser;
 
     await this.questData.updateOne(
       {

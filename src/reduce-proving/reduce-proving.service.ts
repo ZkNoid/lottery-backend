@@ -8,7 +8,11 @@ import {
   TicketReduceProgram,
   TicketReduceProofPublicInput,
 } from 'node_modules/l1-lottery-contracts/build/src/Proofs/TicketReduceProof.js';
-import { TicketReduceProof } from 'l1-lottery-contracts';
+import {
+  generateNumbersSeed,
+  NumberPacked,
+  TicketReduceProof,
+} from 'l1-lottery-contracts';
 import { MerkleMap20, Ticket } from 'l1-lottery-contracts';
 import { Model } from 'mongoose';
 import { RoundsData } from '../workers/schema/rounds.schema.js';
@@ -18,7 +22,7 @@ import { InjectModel } from '@nestjs/mongoose';
 export class ProveReduceService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ProveReduceService.name);
   private isRunning = false;
-  private lastReducedRound = process.env.START_FROM_ROUND
+  private lastProducedRound = process.env.START_FROM_ROUND
     ? +process.env.START_FROM_ROUND
     : 0;
 
@@ -38,44 +42,21 @@ export class ProveReduceService implements OnApplicationBootstrap {
   ) {
     const contract =
       this.stateManager.state[networkId].plotteryManagers[round].contract;
+    const rm =
+      this.stateManager.state[networkId].randomManagers[round].contract;
 
     await fetchAccount({ publicKey: contract.address });
 
-    const isReduced = contract.reduced.get();
+    const isProduced = contract.result.get();
+    const haveRandomValue = rm.result.get();
 
-    // const currentRoundId = this.stateManager.roundIds[networkId];
-
-    // const lastReduceInRound = this.stateManager.lottery[
-    //   networkId
-    // ].lastReduceInRound
-    //   .get()
-    //   .toBigInt();
-
-    // this.logger.debug(
-    //   'Current round id',
-    //   currentRoundId,
-    //   'ttr',
-    //   lastReduceInRound,
-    // );
-
-    // // Checking that at least one ticket bought after the last reduce round
-    // let ticketBoughtAfterReduce = false;
-
-    // for (let i = Number(lastReduceInRound) + 1; i <= currentRoundId; i++) {
-    //   if (this.stateManager.boughtTickets[networkId][i].length > 0) {
-    //     this.logger.debug(`Found ticket in round ${i}`);
-    //     ticketBoughtAfterReduce = true;
-    //     break;
-    //   }
-    // }
-
-    // if (lastReduceInRound < currentRoundId && !ticketBoughtAfterReduce) {
-    //   this.logger.debug('No tickets bought in the round');
-    // }
-    console.log(`Round is reduced: ${isReduced.toBoolean()}`);
+    console.log(`Round is produced: ${isProduced.toBoolean()}`);
     return {
-      shouldStart: round < currentRound && !isReduced.toBoolean(),
-      isReduced: isReduced.toBoolean(),
+      shouldStart:
+        round < currentRound &&
+        !isProduced.toBoolean() &&
+        haveRandomValue.toBoolean(),
+      isProduced: isProduced.toBoolean(),
     };
   }
 
@@ -85,7 +66,14 @@ export class ProveReduceService implements OnApplicationBootstrap {
   ): Promise<TicketReduceProof> {
     const contract =
       this.stateManager.state[networkId].plotteryManagers[roundId].contract;
+    const rm =
+      this.stateManager.state[networkId].randomManagers[roundId].contract;
     const actionLists = await contract.reducer.fetchActions();
+
+    // Compute winning numbers
+    const rmResult = rm.result.get();
+    const winningNumbers = generateNumbersSeed(rmResult);
+    const winningNumbersPacked = NumberPacked.pack(winningNumbers);
 
     const ticketMap = new MerkleMap20();
 
@@ -99,9 +87,6 @@ export class ProveReduceService implements OnApplicationBootstrap {
       ticketWitness: ticketMap.getWitness(Field(0)),
     });
 
-    let initialTicketRoot = ticketMap.getRoot();
-    let initialBank = contract.bank.get();
-
     let savedReduceInfo = await this.rounds.findOne({ roundId });
 
     let processedTicketData = {
@@ -113,7 +98,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
     let curProof = savedReduceInfo?.reduceProof
       ? // @ts-ignore
         await TicketReduceProof.fromJSON(savedReduceInfo?.reduceProof as any)
-      : await TicketReduceProgram.init(input, initialTicketRoot, initialBank);
+      : await TicketReduceProgram.init(input, winningNumbersPacked);
 
     let actionsPackId = -1;
 
@@ -174,6 +159,26 @@ export class ProveReduceService implements OnApplicationBootstrap {
       }
     }
 
+    // Process refunds
+    const events = await contract.fetchEvents();
+    const refundTicketsEvents = events
+      .filter((event) => event.type === 'get-refund')
+      // @ts-ignore
+      .map((event) => event.event.data as RefundEvent);
+
+    for (const refundEvent of refundTicketsEvents) {
+      console.log(`Remove ticket: <${refundEvent.ticketId.toString()}>`);
+      const input = new TicketReduceProofPublicInput({
+        action: new LotteryAction({
+          ticket: refundEvent.ticket,
+        }),
+        ticketWitness: ticketMap.getWitness(refundEvent.ticketId),
+      });
+      curProof = await TicketReduceProgram.refund(input, curProof);
+
+      ticketMap.set(refundEvent.ticketId, Field(0));
+    }
+
     return curProof;
   }
 
@@ -196,19 +201,19 @@ export class ProveReduceService implements OnApplicationBootstrap {
         );
 
         for (
-          let roundId = this.lastReducedRound;
+          let roundId = this.lastProducedRound;
           roundId < currentRound;
           roundId++
         ) {
           this.logger.debug(`Checking round ${roundId}`);
-          const { shouldStart, isReduced } = await this.checkConditions(
+          const { shouldStart, isProduced } = await this.checkConditions(
             network.networkID,
             roundId,
             currentRound,
           );
 
-          if (isReduced) {
-            this.lastReducedRound = roundId;
+          if (isProduced) {
+            this.lastProducedRound = roundId;
             continue;
           }
 
@@ -243,7 +248,9 @@ export class ProveReduceService implements OnApplicationBootstrap {
               let tx2_1 = await Mina.transaction(
                 { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
                 async () => {
-                  await plotteryState.contract.reduceTickets(reduceProof);
+                  await plotteryState.contract.reduceTicketsAndProduceResult(
+                    reduceProof,
+                  );
                 },
               );
               this.logger.debug('Proving reduce tx');

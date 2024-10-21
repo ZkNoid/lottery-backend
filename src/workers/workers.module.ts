@@ -24,7 +24,7 @@ import { QuestUpdateModule } from './quest-update/quest-update.module.js';
         SyncEventsModule,
         CommitValueModule,
         RevealValueModule,
-        ProduceResultModule,
+        // ProduceResultModule, Removed due to updated contract architecture
         RoundInfoUpdaterModule,
         ApproveGiftCodesModule,
         GiftTicketBuyerModule,
