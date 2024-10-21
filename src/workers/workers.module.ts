@@ -8,7 +8,7 @@ import { SyncEventsModule } from './sync-events/sync-events.module.js';
 import { CommitValueModule } from './commit-value/commit-value.module.js';
 import { RevealValueModule } from './reveal-value/reveal-value.module.js';
 // import { ProduceResultEvent } from 'l1-lottery-contracts/build/src/PLottery';
-import { ProduceResultModule } from './produce-result/produce-result.module.js';
+// import { ProduceResultModule } from './produce-result/produce-result.module.js';
 import { RoundInfoUpdaterModule } from './round-infos-updater/round-infos-updater.module.js';
 import { ApproveGiftCodesModule } from './approve-gift-codes/approve-gift-codes.module.js';
 
