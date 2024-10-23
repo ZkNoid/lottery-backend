@@ -33,12 +33,6 @@ class BaseRoundsDocument extends Document {
   @Prop()
   winningCombination: number[] | null;
   @Prop()
-  dp: Proof;
-  @Prop()
-  pendingDp: Proof
-  @Prop()
-  lastDpTicket: number
-  @Prop()
   events: Mixed[];
   @Prop()
   total: number;
