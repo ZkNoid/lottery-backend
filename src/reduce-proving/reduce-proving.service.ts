@@ -51,13 +51,13 @@ export class ProveReduceService implements OnApplicationBootstrap {
     const isProduced = contract.result.get();
     const haveRandomValue = rm.result.get();
 
-    console.log(`Round is produced: ${isProduced.toBoolean()}`);
+    console.log(`Round is produced: ${(isProduced as Field).greaterThan(0).toBoolean()}`);
     return {
       shouldStart:
         round < currentRound &&
-        !isProduced.toBoolean() &&
-        haveRandomValue.toBoolean(),
-      isProduced: isProduced.toBoolean(),
+        (isProduced as Field).equals(0).toBoolean() &&
+        (haveRandomValue as Field).greaterThan(0).toBoolean(),
+      isProduced: (isProduced as Field).greaterThan(0).toBoolean(),
     };
   }
 
@@ -212,6 +212,8 @@ export class ProveReduceService implements OnApplicationBootstrap {
             roundId,
             currentRound,
           );
+          
+          console.log({shouldStart, isProduced})
 
           if (isProduced) {
             this.lastProducedRound = roundId;
