@@ -46,6 +46,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
       this.stateManager.state[networkId].randomManagers[round].contract;
 
     await fetchAccount({ publicKey: contract.address });
+    await fetchAccount({ publicKey: rm.address });
 
     const isProduced = contract.result.get();
     const haveRandomValue = rm.result.get();
