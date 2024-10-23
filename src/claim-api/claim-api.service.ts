@@ -41,12 +41,10 @@ export class ClaimApiService implements OnApplicationBootstrap {
       PublicKey.fromBase58(senderAccount),
       amount,
     );
-    const round = await this.rounds.findOne({ roundId });
 
     const rp = await stateM.plotteryManagers[roundId].getReward(
       roundId,
       ticket,
-      round.dp,
     );
 
     return {
