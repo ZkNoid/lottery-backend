@@ -22,13 +22,13 @@ import { QuestUpdateModule } from './quest-update/quest-update.module.js';
       imports: [
         ZknoidConfigModule,
         SyncEventsModule,
-        // CommitValueModule,
-        // RevealValueModule,
+        CommitValueModule,
+        RevealValueModule,
         // ProduceResultModule, Removed due to updated contract architecture
-        // RoundInfoUpdaterModule,
-        // ApproveGiftCodesModule,
-        // GiftTicketBuyerModule,
-        // QuestUpdateModule,
+        RoundInfoUpdaterModule,
+        ApproveGiftCodesModule,
+        GiftTicketBuyerModule,
+        QuestUpdateModule,
       ],
       useFactory: async () => ({
         uri: process.env.MONGODB_URI,
