@@ -26,6 +26,8 @@ services:
       interval: 5m
       timeout: 5m
       retries: 3
+    depends_on:
+      - autoheal
 
   reduce_prover:
     env_file:
@@ -43,20 +45,6 @@ services:
       interval: 5m
       timeout: 5m
       retries: 3
+    depends_on:
+      - autoheal
 
-
-  distribution_prover:
-    env_file:
-      .env
-    build: .
-
-    environment:
-      TZ: Europe/Moscow
-
-    command: sh -c "pnpm start-dp"
-    restart: unless-stopped
-    healthcheck:
-      test: wget -S -O- http://distribution_prover:3041/health-api/health || exit 1
-      interval: 5m
-      timeout: 5m
-      retries: 3
