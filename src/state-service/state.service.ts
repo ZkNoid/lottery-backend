@@ -326,7 +326,7 @@ export class StateService implements OnModuleInit {
         // );
       }
 
-      if (event.type == 'reduce') {
+      if (event.type == 'produce-result') {
         // console.log('Reduce: ', event.event.data, 'round' + round);
         // let fromActionState = data.startActionState;
         // let endActionState = data.endActionState;
