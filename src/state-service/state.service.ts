@@ -72,10 +72,6 @@ export class StateService implements OnModuleInit {
 
     await this.fetchRounds();
 
-    console.log('Compilation');
-    await DistributionProgram.compile({
-      cache: Cache.FileSystem('./cache'),
-    });
     console.log('Compilation ended');
 
     console.log('Compilation');
