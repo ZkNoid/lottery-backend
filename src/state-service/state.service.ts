@@ -36,6 +36,9 @@ export class StateService implements OnModuleInit {
   state: Record<string, FactoryManager> = {};
   // state: Record<string, PStateManager> = {};
   boughtTickets: Record<string, Ticket[][]> = {};
+  boughtTicketsHashes: Record<string, string[]> = {};
+  claimedTicketsHashes: Record<string, string[]> = {};
+
   transactionMutex: Mutex = new Mutex();
 
   async onModuleInit() {
@@ -275,6 +278,7 @@ export class StateService implements OnModuleInit {
       if (event.type == 'buy-ticket') {
         // console.log('Adding ticket to state', event.event.data, 'round', round);
         boughtTickets[round].push(data.ticket);
+        this.boughtTicketsHashes[round].push(data.transactionInfo.transactionHash)
         // this.state[networkID].addTicket(data.ticket, +data.round, false);
         // console.log('Adding ticket');
       }
@@ -316,6 +320,8 @@ export class StateService implements OnModuleInit {
         //   ),
         // );
         stateM.ticketNullifierMap.set(Field(ticketId), Field(1));
+        this.claimedTicketsHashes[round].push(data.transactionInfo.transactionHash)
+
         // console.log(`After ${stateM.ticketNullifierMap.getRoot().toString()}`);
         // console.log(
         //   JSON.stringify(
