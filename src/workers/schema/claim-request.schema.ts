@@ -12,9 +12,13 @@ export class BaseClaimRequestDocument extends Document {
   @Prop()
   roundId: number;
   @Prop()
-  ticketId: number;
+  ticketNumbers: number[];
+  @Prop()
+  ticketAmount: number;
   @Prop()
   status: string;
+  @Prop()
+  tx: string;
 }
 
 @Schema({ timestamps: true, collection: 'claim_requests' })
