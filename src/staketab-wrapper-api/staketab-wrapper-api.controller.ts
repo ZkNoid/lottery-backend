@@ -1,6 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Body, Controller, Post, Get, Res, Req } from '@nestjs/common';
-import { NETWORKS, NetworkIds } from '../networks.js';
+import { NETWORKS, NetworkIds } from '../constants/networks.js';
 import { Response } from 'express';
 
 @Controller('mina-node')
