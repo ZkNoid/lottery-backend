@@ -9,7 +9,7 @@ class BaseGiftCodesRequestedDocument extends Document {
   @Prop()
   userAddress: string;
   @Prop()
-  transactionHash: string;
+  paymentHash: string;
   @Prop()
   codes: string[];
   @Prop()
@@ -20,6 +20,8 @@ class BaseGiftCodesRequestedDocument extends Document {
   processed: boolean;
   @Prop()
   failed: boolean;
+  @Prop()
+  reason: string;
 }
 
 @Schema({ timestamps: true, collection: 'gift-codes-requested' })

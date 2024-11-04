@@ -128,6 +128,11 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
 
           const boughtTickets =
             this.stateManager.boughtTickets[network.networkID][roundId];
+          const boughtTicketsHashes =
+            this.stateManager.boughtTicketsHashes[network.networkID][roundId];
+          const claimedTicketsHashes =
+            this.stateManager.claimedTicketsHashes[network.networkID][roundId];
+
           // this.logger.debug('Bought tickets', boughtTickets);
 
           const winningCombination = NumberPacked.unpackToBigints(
@@ -188,6 +193,13 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
                       .get(Field.from(i))
                       .equals(Field.from(1))
                       .toBoolean(),
+                    buyHash: boughtTicketsHashes[i],
+                    claimHash: roundStateManager.ticketNullifierMap
+                      .get(Field.from(i))
+                      .equals(Field.from(1))
+                      .toBoolean()
+                      ? claimedTicketsHashes[i]
+                      : undefined,
                   })),
                   winningCombination: winningCombination.every((x) => !x)
                     ? null

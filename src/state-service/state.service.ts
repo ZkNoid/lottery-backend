@@ -36,6 +36,9 @@ export class StateService implements OnModuleInit {
   state: Record<string, FactoryManager> = {};
   // state: Record<string, PStateManager> = {};
   boughtTickets: Record<string, Ticket[][]> = {};
+  boughtTicketsHashes: Record<string, string[][]> = {};
+  claimedTicketsHashes: Record<string, Record<number, string>[]> = {};
+
   transactionMutex: Mutex = new Mutex();
 
   async onModuleInit() {
@@ -69,10 +72,6 @@ export class StateService implements OnModuleInit {
 
     await this.fetchRounds();
 
-    console.log('Compilation');
-    await DistributionProgram.compile({
-      cache: Cache.FileSystem('./cache'),
-    });
     console.log('Compilation ended');
 
     console.log('Compilation');
@@ -236,6 +235,14 @@ export class StateService implements OnModuleInit {
       ? this.boughtTickets[networkID]
       : ([] as Ticket[][]);
 
+    const boughtTicketsHashes = this.boughtTicketsHashes[networkID]
+      ? this.boughtTicketsHashes[networkID]
+      : ([] as string[][]);
+
+    const claimedTicketsHashes = this.boughtTicketsHashes[networkID]
+      ? this.claimedTicketsHashes[networkID]
+      : ([] as Record<number, string>[]);
+
     // if (updateOnly) {
     console.log(
       '[sm] initing bought tickets',
@@ -247,6 +254,9 @@ export class StateService implements OnModuleInit {
     }
 
     boughtTickets[round] = [];
+    boughtTicketsHashes[round] = [];
+    claimedTicketsHashes[round] = [];
+
     // } else {
     //   console.log(
     //     '[sm] initing bought tickets2',
@@ -275,6 +285,7 @@ export class StateService implements OnModuleInit {
       if (event.type == 'buy-ticket') {
         // console.log('Adding ticket to state', event.event.data, 'round', round);
         boughtTickets[round].push(data.ticket);
+        boughtTicketsHashes[round].push(event.event.transactionInfo.transactionHash)
         // this.state[networkID].addTicket(data.ticket, +data.round, false);
         // console.log('Adding ticket');
       }
@@ -316,6 +327,8 @@ export class StateService implements OnModuleInit {
         //   ),
         // );
         stateM.ticketNullifierMap.set(Field(ticketId), Field(1));
+        claimedTicketsHashes[round][ticketId] = event.event.transactionInfo.transactionHash
+
         // console.log(`After ${stateM.ticketNullifierMap.getRoot().toString()}`);
         // console.log(
         //   JSON.stringify(
@@ -358,6 +371,10 @@ export class StateService implements OnModuleInit {
     this.state[networkID].plotteryManagers[round] = stateM;
     this.stateInitialized[networkID] = true;
     this.boughtTickets[networkID] = boughtTickets;
+    this.boughtTicketsHashes[networkID] = boughtTicketsHashes;
+    this.claimedTicketsHashes[networkID] = claimedTicketsHashes;
+    this.boughtTickets[networkID] = boughtTickets;
+
   }
 
   async getCurrentRound(networkId: string): Promise<number> {

@@ -10,6 +10,8 @@ import { GiftCodesRequestedData } from '../schema/gift-codes-requested.schema.js
 import { checkZkappTransaction } from 'o1js';
 import { GiftCodesData } from '../schema/gift-codes.schema.js';
 
+const TICKET_PRICE = 10.0;
+
 @Injectable()
 export class ApproveGiftCodesService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ApproveGiftCodesService.name);
@@ -22,85 +24,100 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
   ) {}
   async onApplicationBootstrap() {}
 
+  async processGiftCodeRequest(giftRequested) {
+    this.logger.log('Requested gift', giftRequested);
+    this.logger.log('Checking tx status', giftRequested);
+
+    if (
+      !giftRequested.paymentHash.match(/^[5KL][1-9A-HJ-NP-Za-km-z]{50,58}$/)
+    )
+      throw new Error('Incorrect tx hash');
+
+    const txInfoRequest = await fetch(
+      `https://api.blockberry.one/mina-devnet/v1/transactions/${giftRequested.paymentHash}`,
+      {
+        headers: {
+          'x-api-key': process.env.BLOCKBERRY_API_KEY,
+        },
+      },
+    );
+
+    const confirmationInfoRequest = await fetch(
+      `https://api.blockberry.one/mina-devnet/v1/block-confirmation/${giftRequested.paymentHash}`,
+      {
+        headers: {
+          'x-api-key': process.env.BLOCKBERRY_API_KEY,
+        },
+      },
+    );
+
+    const confirmationInfo = await confirmationInfoRequest.json();
+    const txInfo = await txInfoRequest.json();
+
+    this.logger.log('Confirmation info', confirmationInfo);
+    this.logger.log('Tx info', txInfo);
+
+    if (txInfo.amount != giftRequested.codes.length * TICKET_PRICE) {
+      throw new Error('Incorrect gift code amount');
+    }
+
+    if (
+      confirmationInfo.blockConfirmationsCount > 5 &&
+      confirmationInfo.isCanonical &&
+      confirmationInfo.txStatus == 'applied'
+    ) {
+      await this.giftCodesRequested.updateOne(
+        {
+          _id: giftRequested._id,
+        },
+        {
+          $set: {
+            processed: true,
+          },
+        },
+      );
+      for (const code of giftRequested.codes) {
+        await this.giftCodes.updateOne(
+          { code },
+          {
+            $set: {
+              userAddress: txInfo.sourceAddress,
+              paymentHash: txInfo.hash,
+              code,
+            },
+          },
+          {
+            upsert: true,
+          },
+        );
+      }
+    }
+  }
+
   @Cron(CronExpression.EVERY_5_MINUTES)
   async handleCron() {
     try {
       this.logger.log('Requested gifts checking');
 
       const giftsRequested = await this.giftCodesRequested.find({
-        failed: { $ne: true },
         processed: { $ne: true },
-        processingStarted: { $ne: true },
+        failed: { $ne: true },
       });
       this.logger.log('Requested gifts', giftsRequested);
 
       for (const giftRequested of giftsRequested) {
-        this.logger.log('Requested gift', giftRequested);
-        this.logger.log('Checking tx status', giftRequested);
-
-        const txInfoRequest = await fetch(
-          `https://api.blockberry.one/mina-devnet/v1/transactions/${giftRequested.transactionHash}`,
-          {
-            headers: {
-              'x-api-key': process.env.BLOCKBERRY_API_KEY,
-            },
-          },
-        );
-
-        const confirmationInfoRequest = await fetch(
-          `https://api.blockberry.one/mina-devnet/v1/block-confirmation/${giftRequested.transactionHash}`,
-          {
-            headers: {
-              'x-api-key': process.env.BLOCKBERRY_API_KEY,
-            },
-          },
-        );
-
-        const confirmationInfo = await confirmationInfoRequest.json();
-        const txInfo = await txInfoRequest.json();
-
-        this.logger.log('Confirmation info', confirmationInfo);
-        this.logger.log('Tx info', txInfo);
-
-        if (
-          confirmationInfo.blockConfirmationsCount > 5 &&
-          confirmationInfo.isCanonical &&
-          confirmationInfo.txStatus == 'applied'
-        ) {
+        try {
+          await this.processGiftCodeRequest(giftRequested);
+        } catch (e) {
+          console.log('Process error', e);
           await this.giftCodesRequested.updateOne(
             {
               _id: giftRequested._id,
             },
             {
               $set: {
-                processingStarted: true,
-              },
-            },
-          );
-          for (const code of giftRequested.codes) {
-            await this.giftCodes.updateOne(
-              { code },
-              {
-                $set: {
-                  userAddress: txInfo.sourceAddress,
-                  transactionHash: txInfo.hash,
-                  code,
-                  used: false,
-                  deleted: false,
-                },
-              },
-              {
-                upsert: true,
-              },
-            );
-          }
-          await this.giftCodesRequested.updateOne(
-            {
-              _id: giftRequested._id,
-            },
-            {
-              $set: {
-                processed: true,
+                failed: true,
+                reason: e.toString() || 'Unknown',
               },
             },
           );
