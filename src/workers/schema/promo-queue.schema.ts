@@ -20,7 +20,11 @@ class BasePromoQueueDocument extends Document {
   @Prop()
   ticket: PromoTicket;
   @Prop()
+  buyTxHash: string;
+  @Prop()
   failed: boolean;
+  @Prop()
+  reason: string;
   @Prop()
   processed: boolean;
   @Prop()
