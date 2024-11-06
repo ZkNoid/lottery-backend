@@ -135,7 +135,6 @@ export class StateService implements OnModuleInit {
   }
 
   async fetchEvents(networkID: string, round: number, startBlock: number = 0) {
-    console.log(`fetching events for round: ${round}`);
     const lottery = this.state[networkID].plotteryManagers[round].contract;
 
     if (!lottery) {
@@ -163,7 +162,6 @@ export class StateService implements OnModuleInit {
     // .filter((x) => x.event.transactionInfo.transactionStatus == 'applied');
 
     let sortedEventTypes = Object.keys(lottery.events).sort();
-    // console.log('sortedEventTypes', sortedEventTypes);
     return events.map((eventData) => {
       // if there is only one event type, the event structure has no index and can directly be matched to the event type
       if (sortedEventTypes.length === 1) {
@@ -219,7 +217,6 @@ export class StateService implements OnModuleInit {
     const updateOnly: boolean = false;
     const lottery = this.state[networkID].plotteryManagers[round].contract;
     stateM = new PStateManager(lottery, false, false);
-    // console.log(`Fetch account: ${lottery.address.toBase58()}`);
     await fetchAccount({ publicKey: lottery.address });
     const startBlock = lottery.startSlot.get();
     // if (!stateM) {
@@ -244,11 +241,7 @@ export class StateService implements OnModuleInit {
       : ([] as Record<number, string>[]);
 
     // if (updateOnly) {
-    console.log(
-      '[sm] initing bought tickets',
-      boughtTickets.length,
-      boughtTickets.length,
-    );
+    console.log('[sm] initing bought tickets', boughtTickets.length);
     for (let i = boughtTickets.length; i < round + 1; i++) {
       boughtTickets.push([]);
     }
@@ -285,7 +278,9 @@ export class StateService implements OnModuleInit {
       if (event.type == 'buy-ticket') {
         // console.log('Adding ticket to state', event.event.data, 'round', round);
         boughtTickets[round].push(data.ticket);
-        boughtTicketsHashes[round].push(event.event.transactionInfo.transactionHash)
+        boughtTicketsHashes[round].push(
+          event.event.transactionInfo.transactionHash,
+        );
         // this.state[networkID].addTicket(data.ticket, +data.round, false);
         // console.log('Adding ticket');
       }
@@ -327,7 +322,8 @@ export class StateService implements OnModuleInit {
         //   ),
         // );
         stateM.ticketNullifierMap.set(Field(ticketId), Field(1));
-        claimedTicketsHashes[round][ticketId] = event.event.transactionInfo.transactionHash
+        claimedTicketsHashes[round][ticketId] =
+          event.event.transactionInfo.transactionHash;
 
         // console.log(`After ${stateM.ticketNullifierMap.getRoot().toString()}`);
         // console.log(
@@ -340,7 +336,7 @@ export class StateService implements OnModuleInit {
       }
 
       if (event.type == 'produce-result') {
-        // console.log('Reduce: ', event.event.data, 'round' + round);
+        console.log('Reduce: ', event.event.data, 'round' + round);
         // let fromActionState = data.startActionState;
         // let endActionState = data.endActionState;
 
@@ -350,12 +346,6 @@ export class StateService implements OnModuleInit {
         });
 
         actions.flat(1).map((action) => {
-          // console.log(
-          //   'Adding ticket in reduce',
-          //   action.ticket.numbers.map((x) => x.toString()),
-          //   round,
-          // );
-
           stateM.addTicket(action.ticket, true);
 
           // if (stateM.processedTicketData.round == +action.round) {
@@ -374,7 +364,6 @@ export class StateService implements OnModuleInit {
     this.boughtTicketsHashes[networkID] = boughtTicketsHashes;
     this.claimedTicketsHashes[networkID] = claimedTicketsHashes;
     this.boughtTickets[networkID] = boughtTickets;
-
   }
 
   async getCurrentRound(networkId: string): Promise<number> {
@@ -388,6 +377,25 @@ export class StateService implements OnModuleInit {
     );
 
     return currentRound;
+  }
+
+  async checkPlotteryConsistency(
+    networkID: string,
+    roundId: number,
+  ): Promise<boolean> {
+    const stateM = this.state[networkID]!;
+    const roundStateManager = stateM.plotteryManagers[roundId];
+    const contract = roundStateManager.contract;
+    await fetchAccount({ publicKey: contract.address });
+    const ticketRoot = roundStateManager.ticketMap.getRoot();
+    const nullifierRoot = roundStateManager.ticketNullifierMap.getRoot();
+    const contractTicketRoot = contract.ticketRoot.get();
+    const contractNullifierRoot = contract.ticketNullifier.get();
+
+    return ticketRoot
+      .equals(contractTicketRoot)
+      .and(nullifierRoot.equals(contractNullifierRoot))
+      .toBoolean();
   }
   /*
   // !processedTicketData should be update according to contract state after that call

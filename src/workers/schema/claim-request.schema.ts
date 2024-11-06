@@ -19,6 +19,10 @@ export class BaseClaimRequestDocument extends Document {
   status: string;
   @Prop()
   tx: string;
+  @Prop()
+  pos: number | null;
+  @Prop()
+  numOfErrors: number | null;
 }
 
 @Schema({ timestamps: true, collection: 'claim_requests' })

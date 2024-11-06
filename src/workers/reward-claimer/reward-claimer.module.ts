@@ -8,6 +8,9 @@ import {
   ClaimRequestData,
   ClaimRequestDataSchema,
 } from '../schema/claim-request.schema.js';
+import { StateModule } from '../../state-service/state.module.js';
+import { RoundInfoUpdaterModule } from '../round-infos-updater/round-infos-updater.module.js';
+import { RoundInfoUpdaterService } from '../round-infos-updater/round-infos-updater.service.js';
 
 @Module({
   imports: [
@@ -24,7 +27,9 @@ import {
         maxRedirects: 5,
       }),
     }),
+    StateModule,
+    RoundInfoUpdaterModule,
   ],
-  providers: [RewardClaimerService, StateService],
+  providers: [RewardClaimerService],
 })
 export class RewardClaimerModule {}
