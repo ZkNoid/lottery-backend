@@ -24,5 +24,6 @@ import { StateModule } from '../../state-service/state.module.js';
     StateModule,
   ],
   providers: [RoundInfoUpdaterService],
+  exports: [RoundInfoUpdaterService],
 })
 export class RoundInfoUpdaterModule {}
