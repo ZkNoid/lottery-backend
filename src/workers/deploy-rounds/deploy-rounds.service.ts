@@ -9,6 +9,7 @@ import { Model } from 'mongoose';
 import { CommitData } from '../schema/commits.schema.js';
 import { CommitValue } from 'node_modules/l1-lottery-contracts/build/src/Random/RandomManager.js';
 import { InjectModel } from '@nestjs/mongoose';
+import { RoundsData } from '../schema/rounds.schema.js';
 
 @Injectable()
 export class DeployRoundService implements OnApplicationBootstrap {
@@ -20,8 +21,8 @@ export class DeployRoundService implements OnApplicationBootstrap {
 
   constructor(
     private stateManager: StateService,
-    @InjectModel(CommitData.name)
-    private commitData: Model<CommitData>,
+    @InjectModel(RoundsData.name)
+    private rounds: Model<RoundsData>,
   ) {}
 
   async onApplicationBootstrap() {
@@ -29,7 +30,13 @@ export class DeployRoundService implements OnApplicationBootstrap {
   }
 
   async checkRoundConditions(networkId: string) {
-    return true;
+    const currentRound = await this.stateManager.getCurrentRound(networkId);
+
+    const lastRound = await this.rounds.findOne().sort({ roundId: -1 });
+
+    return (
+      lastRound.roundId < currentRound - +process.env.MAX_DEPLOYED_ROUNDS_GAP
+    );
   }
 
   @Cron(CronExpression.EVERY_MINUTE)
