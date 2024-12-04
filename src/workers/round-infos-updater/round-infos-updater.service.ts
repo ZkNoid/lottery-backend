@@ -77,6 +77,10 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
       };
     }
 
+    if (!this.stateManager.stateInitialized[networkID][roundId]) {
+      await this.stateManager.initState(networkID, roundId, []);
+    }
+
     const plotteryContract = roundStateManager.contract;
 
     await fetchAccount({ publicKey: plotteryContract.address });

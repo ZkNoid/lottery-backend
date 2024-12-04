@@ -26,7 +26,7 @@ export class StateService implements OnModuleInit {
   slotSinceGenesis: Record<string, number> = {};
   // roundIds: Record<string, number> = {};
   initialized: boolean;
-  stateInitialized: Record<string, boolean> = {};
+  stateInitialized: Record<string, Record<number, boolean>> = {};
 
   inReduceProving = false;
 
@@ -110,6 +110,11 @@ export class StateService implements OnModuleInit {
     console.log(`rm verification key`);
     console.log(randomManagerCompileInfo.verificationKey.hash.toString());
 
+    console.log('Factory compile');
+    await PlotteryFactory.compile({
+      cache: Cache.FileSystem('./cache'),
+    });
+
     console.log('Compilation ended');
 
     this.initialized = true;
@@ -118,7 +123,7 @@ export class StateService implements OnModuleInit {
   async fetchRounds() {
     console.log('fetchRounds');
     for (let network of ALL_NETWORKS) {
-      const state = this.state[network.networkID];
+      const state = new FactoryManager(false, false);
       const events = await this.factory[network.networkID].fetchEvents();
 
       events.forEach((event) => {
@@ -131,6 +136,8 @@ export class StateService implements OnModuleInit {
 
         state.addDeploy(data.round, data.randomManager, data.plottery);
       });
+
+      this.state[network.networkID] = state;
     }
   }
 
@@ -239,6 +246,10 @@ export class StateService implements OnModuleInit {
     const claimedTicketsHashes = this.boughtTicketsHashes[networkID]
       ? this.claimedTicketsHashes[networkID]
       : ([] as Record<number, string>[]);
+
+    const stateInitialized = this.stateInitialized[networkID]
+      ? this.stateInitialized[networkID]
+      : ([] as Record<number, boolean>);
 
     // if (updateOnly) {
     console.log('[sm] initing bought tickets', boughtTickets.length);
@@ -358,8 +369,10 @@ export class StateService implements OnModuleInit {
       }
     }
 
+    stateInitialized[round] = true;
+
     this.state[networkID].plotteryManagers[round] = stateM;
-    this.stateInitialized[networkID] = true;
+    this.stateInitialized[networkID] = stateInitialized;
     this.boughtTickets[networkID] = boughtTickets;
     this.boughtTicketsHashes[networkID] = boughtTicketsHashes;
     this.claimedTicketsHashes[networkID] = claimedTicketsHashes;

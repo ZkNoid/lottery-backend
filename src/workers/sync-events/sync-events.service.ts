@@ -92,8 +92,6 @@ export class SyncEventsService implements OnModuleInit {
           (slotSinceGenesis - +startSlot) / BLOCK_PER_ROUND,
         );
 
-        const isInitalized =
-          this.stateManager.stateInitialized[network.networkID];
         const roundsToCheck = allRounds;
         // const roundsToCheck = isInitalized
         //   ? curRound > 0
@@ -238,6 +236,7 @@ export class SyncEventsService implements OnModuleInit {
           // Update state if not initially updated or if there are new events
           if (
             !this.stateManager.stateInitialized[network.networkID] ||
+            !this.stateManager.stateInitialized[network.networkID][round] ||
             newEventsToAdd
           ) {
             const allEvents = await this.minaEventData.find({

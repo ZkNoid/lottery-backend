@@ -6,6 +6,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { HttpModule } from '@nestjs/axios';
 import { StateModule } from '../../state-service/state.module.js';
 import { CommitData, CommitDataSchema } from '../schema/commits.schema.js';
+import { RoundsData, RoundsDataSchema } from '../schema/rounds.schema.js';
 
 @Module({
   imports: [
@@ -16,8 +17,8 @@ import { CommitData, CommitDataSchema } from '../schema/commits.schema.js';
         schema: MinaEventDataSchema,
       },
       {
-        name: CommitData.name,
-        schema: CommitDataSchema,
+        name: RoundsData.name,
+        schema: RoundsDataSchema,
       },
     ]),
     StateModule,
