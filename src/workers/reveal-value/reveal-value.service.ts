@@ -1,6 +1,5 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ALL_NETWORKS } from '../../constants/networks.js';
 import {
   Field,
   Mina,
@@ -44,9 +43,9 @@ export class RevealValueService implements OnApplicationBootstrap {
     // await this.handleCron();
   }
 
-  async checkRoundConditions(networkId: string, roundId: number) {
+  async checkRoundConditions(roundId: number) {
     const contract =
-      this.stateManager.state[networkId].randomManagers[roundId].contract;
+      this.stateManager.state.randomManagers[roundId].contract;
 
     await fetchAccount({ publicKey: contract.address });
 
@@ -129,10 +128,8 @@ export class RevealValueService implements OnApplicationBootstrap {
     this.isRunning = true;
     console.log('Reveal value module started');
 
-    for (let network of ALL_NETWORKS) {
       try {
         const currentRound = await this.stateManager.getCurrentRound(
-          network.networkID,
         );
 
         this.logger.debug('Last reveal in round: ', this.lastRevealInRound);
@@ -145,7 +142,7 @@ export class RevealValueService implements OnApplicationBootstrap {
         ) {
           this.logger.debug('Checking round: ', roundId);
           const { shouldStart, commitValue, commitSalt, isRevealed } =
-            await this.checkRoundConditions(network.networkID, roundId);
+            await this.checkRoundConditions(roundId);
 
           if (isRevealed) {
             this.lastRevealInRound = roundId;
@@ -171,7 +168,7 @@ export class RevealValueService implements OnApplicationBootstrap {
               );
 
               const contract =
-                this.stateManager.state[network.networkID].randomManagers[
+                this.stateManager.state.randomManagers[
                   roundId
                 ].contract;
 
@@ -211,7 +208,7 @@ export class RevealValueService implements OnApplicationBootstrap {
       } catch (e) {
         this.logger.error('Error', e.stack);
       }
-    }
+    
 
     this.isRunning = false;
   }

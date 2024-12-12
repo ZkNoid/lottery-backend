@@ -4,14 +4,13 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { Cron, CronExpression, Interval } from '@nestjs/schedule';
-import { ALL_NETWORKS } from '../../constants/networks.js';
 import { InjectModel } from '@nestjs/mongoose';
 import { MinaEventData } from '../schema/events.schema.js';
 import { Model } from 'mongoose';
 import { HttpService } from '@nestjs/axios';
 import { BLOCK_PER_ROUND } from 'l1-lottery-contracts';
 import { StateService } from '../../state-service/state.service.js';
-import { fetchAccount } from 'o1js';
+import { fetchAccount, Mina } from 'o1js';
 
 const BLOCK_UPDATE_DEPTH = 6;
 
@@ -38,11 +37,10 @@ export class SyncEventsService implements OnModuleInit {
 
     try {
       console.log('Events sync');
-      for (let network of ALL_NETWORKS) {
-        const data = await this.httpService.axiosRef.post(
-          network.graphql,
-          JSON.stringify({
-            query: `
+      const data = await this.httpService.axiosRef.post(
+        this.stateManager.network.graphql,
+        JSON.stringify({
+          query: `
         query {
           bestChain(maxLength:1) {
             protocolState {
@@ -54,99 +52,97 @@ export class SyncEventsService implements OnModuleInit {
           }
         }
       `,
-          }),
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            responseType: 'json',
+        }),
+        {
+          headers: {
+            'Content-Type': 'application/json',
           },
-        );
-        const slotSinceGenesis =
-          data.data.data.bestChain[0].protocolState.consensusState
-            .slotSinceGenesis;
+          responseType: 'json',
+        },
+      );
+      const slotSinceGenesis =
+        data.data.data.bestChain[0].protocolState.consensusState
+          .slotSinceGenesis;
 
-        const currBlockHeight =
-          data.data.data.bestChain[0].protocolState.consensusState.blockHeight;
+      const currBlockHeight =
+        data.data.data.bestChain[0].protocolState.consensusState.blockHeight;
 
-        const contract = this.stateManager.factory[network.networkID];
-        await fetchAccount({ publicKey: contract.address });
-        const startSlot = contract.startSlot.get();
+      const contract = this.stateManager.factory;
+      await fetchAccount({ publicKey: contract.address });
+      const startSlot = contract.startSlot.get();
 
-        console.log(
-          `startSlot: ${startSlot}; slotSinceGenesis: ${slotSinceGenesis}`,
-        );
+      console.log(
+        `startSlot: ${startSlot}; slotSinceGenesis: ${slotSinceGenesis}`,
+      );
 
-        const startFrom = process.env.START_FROM_ROUND
-          ? +process.env.START_FROM_ROUND
+      const startFrom = process.env.START_FROM_ROUND
+        ? +process.env.START_FROM_ROUND
+        : 0;
+
+      const allRounds = Object.keys(
+        this.stateManager.state.plotteryManagers,
+      )
+        .map((v) => +v)
+        .sort((a, b) => a - b)
+        .filter((x) => x >= startFrom); // For testing purpose only
+
+      const curRound = Math.floor(
+        (slotSinceGenesis - +startSlot) / BLOCK_PER_ROUND,
+      );
+
+      const isInitalized =
+        this.stateManager.stateInitialized;
+      const roundsToCheck = allRounds;
+      // const roundsToCheck = isInitalized
+      //   ? curRound > 0
+      //     ? [curRound - 1, curRound]
+      //     : [curRound]
+      //   : allRounds;
+
+      console.log(`Rounds to check: ${roundsToCheck}`);
+
+      // const dbEvents = await this.minaEventData.find({});
+
+      for (const round of roundsToCheck) {
+        const lastEvent = await this.minaEventData
+          .findOne({
+            round: { $eq: round },
+          })
+          .sort({ _id: -1 });
+
+        const updateEventsFrom = lastEvent
+          ? lastEvent.blockHeight - BLOCK_UPDATE_DEPTH
           : 0;
 
-        const allRounds = Object.keys(
-          this.stateManager.state[network.networkID].plotteryManagers,
-        )
-          .map((v) => +v)
-          .sort((a, b) => a - b)
-          .filter((x) => x >= startFrom); // For testing purpose only
-
-        const curRound = Math.floor(
-          (slotSinceGenesis - +startSlot) / BLOCK_PER_ROUND,
+        const events = await this.stateManager.fetchEvents(
+          round,
+          lastEvent ? updateEventsFrom : 0,
         );
 
-        const isInitalized =
-          this.stateManager.stateInitialized[network.networkID];
-        const roundsToCheck = allRounds;
-        // const roundsToCheck = isInitalized
-        //   ? curRound > 0
-        //     ? [curRound - 1, curRound]
-        //     : [curRound]
-        //   : allRounds;
-
-        console.log(`Rounds to check: ${roundsToCheck}`);
-
-        // const dbEvents = await this.minaEventData.find({});
-
-        for (const round of roundsToCheck) {
-          const lastEvent = await this.minaEventData
-            .findOne({
-              round: { $eq: round },
-            })
-            .sort({ _id: -1 });
-
-          const updateEventsFrom = lastEvent
-            ? lastEvent.blockHeight - BLOCK_UPDATE_DEPTH
-            : 0;
-
-          const events = await this.stateManager.fetchEvents(
-            network.networkID,
-            round,
-            lastEvent ? updateEventsFrom : 0,
-          );
-
-          let fetchedEvents = events.map(
-            (x) =>
-              new this.minaEventData({
-                type: x.type,
-                event: {
-                  data: x.event.data,
-                  transactionInfo: {
-                    transactionHash: x.event.transactionInfo.transactionHash,
-                    transactionMemo: x.event.transactionInfo.transactionMemo,
-                    transactionStatus:
-                      x.event.transactionInfo.transactionStatus,
-                  },
+        let fetchedEvents = events.map(
+          (x) =>
+            new this.minaEventData({
+              type: x.type,
+              event: {
+                data: x.event.data,
+                transactionInfo: {
+                  transactionHash: x.event.transactionInfo.transactionHash,
+                  transactionMemo: x.event.transactionInfo.transactionMemo,
+                  transactionStatus: x.event.transactionInfo.transactionStatus,
                 },
-                blockHeight: x.blockHeight,
-                blockHash: x.blockHash,
-                parentBlockHash: x.parentBlockHash,
-                globalSlot: x.globalSlot,
-                chainStatus: x.chainStatus,
-                round,
-              }),
-          );
+              },
+              blockHeight: x.blockHeight,
+              blockHash: x.blockHash,
+              parentBlockHash: x.parentBlockHash,
+              globalSlot: x.globalSlot,
+              chainStatus: x.chainStatus,
+              round,
+            }),
+        );
 
-          // console.log('New events', events);
+        // console.log('New events', events);
 
-          /*
+        /*
         // Events that was previously recorded from archive node. If they're dropped, they was orphaned
         const eventsToVerifyUncles = fetchedEvents.filter((x) =>
           lastEvent ? x.blockHeight == lastEvent.blockHeight : false,
@@ -179,113 +175,111 @@ export class SyncEventsService implements OnModuleInit {
         }
         */
 
-          let eventsToBeDeleted = await this.minaEventData.find({
-            blockHeight: { $gte: updateEventsFrom },
+        let eventsToBeDeleted = await this.minaEventData.find({
+          blockHeight: { $gte: updateEventsFrom },
+          round: { $eq: round },
+        });
+
+        let eventsIdForDelete = [];
+
+        let deleteStartIndex = 0;
+        // Find equal prefix of eventsToBeDeleted and fetchedEvents. We can ommit it
+        for (
+          ;
+          deleteStartIndex < eventsToBeDeleted.length;
+          deleteStartIndex++
+        ) {
+          let dbEvent = eventsToBeDeleted[deleteStartIndex];
+          let nodeEvent = fetchedEvents[deleteStartIndex];
+
+          if (
+            dbEvent.event.transactionInfo.transactionHash !==
+            nodeEvent.event.transactionInfo.transactionHash
+          ) {
+            break;
+          }
+        }
+
+        eventsIdForDelete = eventsToBeDeleted
+          .slice(deleteStartIndex)
+          .map((event) => event._id);
+        eventsToBeDeleted = eventsToBeDeleted.slice(deleteStartIndex);
+        const newEventsToAdd = fetchedEvents.slice(deleteStartIndex);
+
+        // Removing old event and adding new events to mongodb
+        // console.log(`Removing elements: ${eventsIdForDelete}`);
+        await this.minaEventData.deleteMany({
+          _id: { $in: eventsIdForDelete },
+        });
+
+        // console.log('newEventsToAdd');
+        // console.log(newEventsToAdd);
+        for (const eventToAdd of newEventsToAdd) {
+          // console.log(eventToAdd);
+          await this.minaEventData.updateOne(
+            {
+              'event.transactionInfo.transactionHash':
+                eventToAdd.event.transactionInfo.transactionHash,
+            },
+            {
+              $set: eventToAdd,
+            },
+            {
+              upsert: true,
+            },
+          );
+        }
+        console.log(`Events added`);
+
+        // Update state if not initially updated or if there are new events
+        if (
+          !this.stateManager.stateInitialized ||
+          newEventsToAdd
+        ) {
+          const allEvents = await this.minaEventData.find({
             round: { $eq: round },
           });
 
-          let eventsIdForDelete = [];
+          // console.log(`All events: ${allEvents}`);
 
-          let deleteStartIndex = 0;
-          // Find equal prefix of eventsToBeDeleted and fetchedEvents. We can ommit it
-          for (
-            ;
-            deleteStartIndex < eventsToBeDeleted.length;
-            deleteStartIndex++
-          ) {
-            let dbEvent = eventsToBeDeleted[deleteStartIndex];
-            let nodeEvent = fetchedEvents[deleteStartIndex];
-
-            if (
-              dbEvent.event.transactionInfo.transactionHash !==
-              nodeEvent.event.transactionInfo.transactionHash
-            ) {
-              break;
-            }
-          }
-
-          eventsIdForDelete = eventsToBeDeleted
-            .slice(deleteStartIndex)
-            .map((event) => event._id);
-          eventsToBeDeleted = eventsToBeDeleted.slice(deleteStartIndex);
-          const newEventsToAdd = fetchedEvents.slice(deleteStartIndex);
-
-          // Removing old event and adding new events to mongodb
-          // console.log(`Removing elements: ${eventsIdForDelete}`);
-          await this.minaEventData.deleteMany({
-            _id: { $in: eventsIdForDelete },
-          });
-
-          // console.log('newEventsToAdd');
-          // console.log(newEventsToAdd);
-          for (const eventToAdd of newEventsToAdd) {
-            // console.log(eventToAdd);
-            await this.minaEventData.updateOne(
-              {
-                'event.transactionInfo.transactionHash':
-                  eventToAdd.event.transactionInfo.transactionHash,
-              },
-              {
-                $set: eventToAdd,
-              },
-              {
-                upsert: true,
-              },
-            );
-          }
-          console.log(`Events added`);
-
-          // Update state if not initially updated or if there are new events
-          if (
-            !this.stateManager.stateInitialized[network.networkID] ||
-            newEventsToAdd
-          ) {
-            const allEvents = await this.minaEventData.find({
-              round: { $eq: round },
-            });
-
-            // console.log(`All events: ${allEvents}`);
-
-            await this.stateManager.initState(
-              network.networkID,
-              round,
-              allEvents,
-            );
-          } else {
-            // await this.stateManager.undoLastEvents(
-            //   network.networkID,
-            //   eventsToBeDeleted,
-            //   this.stateManager.state[network.networkID],
-            // );
-            // await this.stateManager.initState(
-            //   network.networkID,
-            //   newEventsToAdd,
-            //   this.stateManager.state[network.networkID],
-            // );
-            // this.stateManager.updateProcessedTicketData(
-            //   this.stateManager.state[network.networkID],
-            // );
-          }
-          // console.log(
-          //   `Curr slot ${slotSinceGenesis}. \
-          // Start block: ${Number(
-          //   this.stateManager.lottery[network.networkID].startBlock.get(),
-          // )}`,
+          await this.stateManager.initState(
+            round,
+            allEvents,
+          );
+        } else {
+          // await this.stateManager.undoLastEvents(
+          //   network.networkID,
+          //   eventsToBeDeleted,
+          //   this.stateManager.state[network.networkID],
           // );
-
-          // const currentRoundId = Math.floor(
-          //   (slotSinceGenesis -
-          //     Number(
-          //       this.stateManager.lottery[network.networkID].startBlock.get(),
-          //     )) /
-          //     BLOCK_PER_ROUND,
+          // await this.stateManager.initState(
+          //   network.networkID,
+          //   newEventsToAdd,
+          //   this.stateManager.state[network.networkID],
           // );
-
-          this.stateManager.blockHeight[network.networkID] = currBlockHeight;
-          this.stateManager.slotSinceGenesis[network.networkID] =
-            slotSinceGenesis;
-          // this.stateManager.roundIds[network.networkID] = currentRoundId;
+          // this.stateManager.updateProcessedTicketData(
+          //   this.stateManager.state[network.networkID],
+          // );
         }
+        // console.log(
+        //   `Curr slot ${slotSinceGenesis}. \
+        // Start block: ${Number(
+        //   this.stateManager.lottery[network.networkID].startBlock.get(),
+        // )}`,
+        // );
+
+        // const currentRoundId = Math.floor(
+        //   (slotSinceGenesis -
+        //     Number(
+        //       this.stateManager.lottery[network.networkID].startBlock.get(),
+        //     )) /
+        //     BLOCK_PER_ROUND,
+        // );
+
+        this.stateManager.blockHeight = currBlockHeight;
+        this.stateManager.slotSinceGenesis =
+          slotSinceGenesis;
+        // this.stateManager.roundIds[network.networkID] = currentRoundId;
       }
     } catch (e) {
       console.log('Events sync error', e.stack);

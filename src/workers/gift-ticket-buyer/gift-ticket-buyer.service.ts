@@ -57,9 +57,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
       );
       console.log('Making tx from', signerAccount.toBase58());
 
-      const curRound = await this.stateManager.getCurrentRound(
-        NetworkIds.MINA_DEVNET,
-      );
+      const curRound = await this.stateManager.getCurrentRound();
 
       let tx = await Mina.transaction(
         { sender: signerAccount, fee: Number('0.1') * 1e9 },

@@ -1,6 +1,5 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ALL_NETWORKS } from 'src/constants/networks.js';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -30,12 +29,11 @@ export class ClaimApiService implements OnApplicationBootstrap {
 
   async getClaimData(
     roundId: number,
-    networkID: string,
     ticketNums: number[],
     senderAccount: string,
     amount: number,
   ) {
-    const stateM = this.stateManager.state[networkID];
+    const stateM = this.stateManager.state;
     const ticket = Ticket.from(
       ticketNums,
       PublicKey.fromBase58(senderAccount),

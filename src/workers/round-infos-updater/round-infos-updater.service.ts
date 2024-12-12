@@ -1,6 +1,5 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ALL_NETWORKS } from '../../constants/networks.js';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { fetchAccount, Field } from 'o1js';
@@ -61,159 +60,146 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
     this.isRunning = true;
 
     try {
-      for (let network of ALL_NETWORKS) {
-        if (!this.stateManager.slotSinceGenesis[network.networkID]) continue;
+      if (!this.stateManager.slotSinceGenesis) return;
 
-        let currentRound = await this.stateManager.getCurrentRound(
-          network.networkID,
-        );
+      let currentRound = await this.stateManager.getCurrentRound();
 
-        const stateM = this.stateManager.state[network.networkID]!;
+      const stateM = this.stateManager.state!;
 
-        this.logger.debug('Deployed rounds data');
+      this.logger.debug('Deployed rounds data');
 
-        this.logger.debug(
-          Object.keys(
-            this.stateManager.state[network.networkID].plotteryManagers,
-          ),
-        );
+      this.logger.debug(Object.keys(this.stateManager.state.plotteryManagers));
 
-        const startFrom = process.env.START_FROM_ROUND
-          ? +process.env.START_FROM_ROUND
-          : 0;
+      const startFrom = process.env.START_FROM_ROUND
+        ? +process.env.START_FROM_ROUND
+        : 0;
 
-        const allDeployedRounds = Object.keys(
-          this.stateManager.state[network.networkID].plotteryManagers,
-        )
-          .map((v) => +v)
-          .filter((v) => v >= startFrom)
-          .sort((a, b) => a - b);
+      const allDeployedRounds = Object.keys(
+        this.stateManager.state.plotteryManagers,
+      )
+        .map((v) => +v)
+        .filter((v) => v >= startFrom)
+        .sort((a, b) => a - b);
 
-        const roundsToCheck = allDeployedRounds;
-        // const roundsToCheck = onBootstrap
-        //   ? allDeployedRounds
-        //   : currentRound > 0
-        //     ? [currentRound - 1, currentRound]
-        //     : [currentRound];
+      const roundsToCheck = allDeployedRounds;
+      // const roundsToCheck = onBootstrap
+      //   ? allDeployedRounds
+      //   : currentRound > 0
+      //     ? [currentRound - 1, currentRound]
+      //     : [currentRound];
 
-        this.logger.debug('Amount of rounds to check', roundsToCheck.length);
+      this.logger.debug('Amount of rounds to check', roundsToCheck.length);
 
-        for (const roundId of roundsToCheck) {
-          this.logger.debug('Processing round', roundId);
-          const roundStateManager = stateM.plotteryManagers[roundId];
-          // const isComplete = await this.isRoundComplete(roundId, currentRound);
+      for (const roundId of roundsToCheck) {
+        this.logger.debug('Processing round', roundId);
+        const roundStateManager = stateM.plotteryManagers[roundId];
+        // const isComplete = await this.isRoundComplete(roundId, currentRound);
 
-          // // Skipping rounds that are not going to change
-          // if (isComplete) {
-          //   this.logger.debug('Skipping processed round: ', roundId);
-          //   continue;
-          // }
+        // // Skipping rounds that are not going to change
+        // if (isComplete) {
+        //   this.logger.debug('Skipping processed round: ', roundId);
+        //   continue;
+        // }
 
-          if (!roundStateManager) {
-            this.logger.warn(
-              `No contract for round ${roundId}. Consider deploying it.`,
-            );
-            break;
-          }
-
-          const plotteryContract = roundStateManager.contract;
-
-          await fetchAccount({ publicKey: plotteryContract.address });
-
-          this.logger.debug(
-            'Fetching bought tickets',
-            network.networkID,
-            roundId,
+        if (!roundStateManager) {
+          this.logger.warn(
+            `No contract for round ${roundId}. Consider deploying it.`,
           );
-
-          const boughtTickets =
-            this.stateManager.boughtTickets[network.networkID][roundId];
-          const boughtTicketsHashes =
-            this.stateManager.boughtTicketsHashes[network.networkID][roundId];
-          const claimedTicketsHashes =
-            this.stateManager.claimedTicketsHashes[network.networkID][roundId];
-
-          // this.logger.debug('Bought tickets', boughtTickets);
-
-          const winningCombination = NumberPacked.unpackToBigints(
-            plotteryContract.result.get(),
-          )
-            .map((v) => Number(v))
-            .slice(0, 6);
-
-          const roundBank = boughtTickets
-            .filter((x) => !x.numbers.every((x) => x.toBigint() == 0n))
-            .map((x) => x.amount.toBigInt() * TICKET_PRICE.toBigInt())
-            .reduce((x, y) => x + y, 0n);
-
-          const ticketsShares = boughtTickets.map((x) => {
-            const ticketShares =
-              SCORE_COEFFICIENTS[
-                Array.from({ length: 6 }, (p, i) => i)
-                  .map((i) =>
-                    Number(x.numbers[i].toBigint()) == winningCombination[i]
-                      ? 1
-                      : (0 as number),
-                  )
-
-                  .reduce((a, b) => a + b)
-              ] * x.amount.toBigInt();
-
-            return ticketShares;
-          });
-
-          const totalShares = ticketsShares.reduce((x, y) => x + y, 0n);
-
-          const plotteryAddress = plotteryContract.address.toBase58();
-          const randomManagerAddress =
-            stateM.randomManagers[roundId].contract.address.toBase58();
-
-          console.log(`Adding round info for round ${roundId}`);
-
-          await this.rounds
-            .updateOne(
-              {
-                roundId,
-              },
-              {
-                $set: {
-                  roundId,
-                  bank: boughtTickets
-                    .map((x) => x.amount.toBigInt())
-                    .reduce((x, y) => x + y, 0n),
-                  tickets: boughtTickets.map((x, i) => ({
-                    amount: x.amount.toBigInt(),
-                    numbers: x.numbers.map((x) => Number(x.toBigint())),
-                    owner: x.owner.toBase58(),
-                    funds: totalShares
-                      ? (roundBank * ticketsShares[i]) /
-                        ((totalShares * 103n) / 100n)
-                      : 0n,
-                    claimed: roundStateManager.ticketNullifierMap
-                      .get(Field.from(i))
-                      .equals(Field.from(1))
-                      .toBoolean(),
-                    buyHash: boughtTicketsHashes[i],
-                    claimHash: roundStateManager.ticketNullifierMap
-                      .get(Field.from(i))
-                      .equals(Field.from(1))
-                      .toBoolean()
-                      ? claimedTicketsHashes[i]
-                      : undefined,
-                  })),
-                  winningCombination: winningCombination.every((x) => !x)
-                    ? null
-                    : winningCombination,
-                  plotteryAddress,
-                  randomManagerAddress,
-                },
-              },
-              {
-                upsert: true,
-              },
-            )
-            .exec();
+          break;
         }
+
+        const plotteryContract = roundStateManager.contract;
+
+        await fetchAccount({ publicKey: plotteryContract.address });
+
+        this.logger.debug('Fetching bought tickets', roundId);
+
+        const boughtTickets = this.stateManager.boughtTickets[roundId];
+        const boughtTicketsHashes =
+          this.stateManager.boughtTicketsHashes[roundId];
+        const claimedTicketsHashes =
+          this.stateManager.claimedTicketsHashes[roundId];
+
+        // this.logger.debug('Bought tickets', boughtTickets);
+
+        const winningCombination = NumberPacked.unpackToBigints(
+          plotteryContract.result.get(),
+        )
+          .map((v) => Number(v))
+          .slice(0, 6);
+
+        const roundBank = boughtTickets
+          .filter((x) => !x.numbers.every((x) => x.toBigint() == 0n))
+          .map((x) => x.amount.toBigInt() * TICKET_PRICE.toBigInt())
+          .reduce((x, y) => x + y, 0n);
+
+        const ticketsShares = boughtTickets.map((x) => {
+          const ticketShares =
+            SCORE_COEFFICIENTS[
+              Array.from({ length: 6 }, (p, i) => i)
+                .map((i) =>
+                  Number(x.numbers[i].toBigint()) == winningCombination[i]
+                    ? 1
+                    : (0 as number),
+                )
+
+                .reduce((a, b) => a + b)
+            ] * x.amount.toBigInt();
+
+          return ticketShares;
+        });
+
+        const totalShares = ticketsShares.reduce((x, y) => x + y, 0n);
+
+        const plotteryAddress = plotteryContract.address.toBase58();
+        const randomManagerAddress =
+          stateM.randomManagers[roundId].contract.address.toBase58();
+
+        console.log(`Adding round info for round ${roundId}`);
+
+        await this.rounds
+          .updateOne(
+            {
+              roundId,
+            },
+            {
+              $set: {
+                roundId,
+                bank: boughtTickets
+                  .map((x) => x.amount.toBigInt())
+                  .reduce((x, y) => x + y, 0n),
+                tickets: boughtTickets.map((x, i) => ({
+                  amount: x.amount.toBigInt(),
+                  numbers: x.numbers.map((x) => Number(x.toBigint())),
+                  owner: x.owner.toBase58(),
+                  funds: totalShares
+                    ? (roundBank * ticketsShares[i]) /
+                      ((totalShares * 103n) / 100n)
+                    : 0n,
+                  claimed: roundStateManager.ticketNullifierMap
+                    .get(Field.from(i))
+                    .equals(Field.from(1))
+                    .toBoolean(),
+                  buyHash: boughtTicketsHashes[i],
+                  claimHash: roundStateManager.ticketNullifierMap
+                    .get(Field.from(i))
+                    .equals(Field.from(1))
+                    .toBoolean()
+                    ? claimedTicketsHashes[i]
+                    : undefined,
+                })),
+                winningCombination: winningCombination.every((x) => !x)
+                  ? null
+                  : winningCombination,
+                plotteryAddress,
+                randomManagerAddress,
+              },
+            },
+            {
+              upsert: true,
+            },
+          )
+          .exec();
       }
     } catch (e) {
       this.logger.error('Round info update error', e.stack);

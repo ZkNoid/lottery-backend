@@ -1,6 +1,5 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ALL_NETWORKS } from '../../constants/networks.js';
 import { Field, Mina, PrivateKey, fetchAccount } from 'o1js';
 import { BLOCK_PER_ROUND, ZkOnCoordinatorAddress } from 'l1-lottery-contracts';
 import { StateService } from '../../state-service/state.service.js';
@@ -28,12 +27,11 @@ export class CommitValueService implements OnApplicationBootstrap {
     // await this.handleCron();
   }
 
-  async checkRoundConditions(networkId: string) {
-    const currentRound = await this.stateManager.getCurrentRound(networkId);
+  async checkRoundConditions() {
+    const currentRound = await this.stateManager.getCurrentRound();
 
     for (let i = this.lastCommitInRound; i < currentRound; i++) {
-      const rmContract =
-        this.stateManager.state[networkId].randomManagers[i].contract;
+      const rmContract = this.stateManager.state.randomManagers[i].contract;
 
       await fetchAccount({ publicKey: rmContract.address });
       if (rmContract.commit.get().toBigInt() > 0) {
@@ -63,94 +61,89 @@ export class CommitValueService implements OnApplicationBootstrap {
     this.isRunning = true;
     this.logger.log('Commit value module started');
 
-    for (let network of ALL_NETWORKS) {
-      try {
-        this.logger.debug('Checking conditions');
-        const { shouldStart, round } = await this.checkRoundConditions(
-          network.networkID,
-        );
-        this.logger.debug(shouldStart, round);
-        if (shouldStart) {
-          await this.stateManager.transactionMutex.runExclusive(async () => {
-            this.logger.debug('Commiting value for round: ', round);
+    try {
+      this.logger.debug('Checking conditions');
+      const { shouldStart, round } = await this.checkRoundConditions();
+      this.logger.debug(shouldStart, round);
+      if (shouldStart) {
+        await this.stateManager.transactionMutex.runExclusive(async () => {
+          this.logger.debug('Commiting value for round: ', round);
 
-            const sender = PrivateKey.fromBase58(process.env.PK);
+          const sender = PrivateKey.fromBase58(process.env.PK);
 
-            const randomValue = Field.random();
-            const randomSalt = Field.random();
+          const randomValue = Field.random();
+          const randomSalt = Field.random();
 
-            this.logger.debug(
-              'Commiting value ',
-              randomValue.toString(),
-              ' salt: ',
-              randomSalt.toString(),
-            );
+          this.logger.debug(
+            'Commiting value ',
+            randomValue.toString(),
+            ' salt: ',
+            randomSalt.toString(),
+          );
 
-            const contract =
-              this.stateManager.state[network.networkID].randomManagers[round]
-                .contract;
+          const contract =
+            this.stateManager.state.randomManagers[round].contract;
 
-            const newDock = new this.commitData({
-              round: round,
-              commitValue: randomValue.toString(),
-              commitSalt: randomSalt.toString(),
-              hash: new CommitValue({
-                value: randomValue,
-                salt: randomSalt,
-              })
-                .hash()
-                .toString(),
-            });
-
-            this.logger.debug('Writing new commit to database', newDock);
-
-            await this.commitData.updateOne(
-              {
-                _id: newDock._id,
-              },
-              {
-                $set: newDock,
-              },
-              {
-                upsert: true,
-              },
-            );
-
-            await fetchAccount({
-              publicKey: ZkOnCoordinatorAddress,
-            });
-
-            try {
-              let tx = await Mina.transaction(
-                { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
-                async () => {
-                  await contract.commitValue(
-                    new CommitValue({
-                      value: randomValue,
-                      salt: randomSalt,
-                    }),
-                  );
-                },
-              );
-              this.logger.debug('Proving tx');
-              await tx.prove();
-              const txResult = await tx.sign([sender]).send();
-
-              this.logger.debug(`Tx successful. Hash: `, txResult.hash);
-              this.logger.debug('Waiting for tx');
-              await txResult.safeWait();
-              this.logger.debug('Got tx');
-            } catch (e) {
-              this.logger.debug(
-                'Got error while sending commit transaction: ',
-                e,
-              );
-            }
+          const newDock = new this.commitData({
+            round: round,
+            commitValue: randomValue.toString(),
+            commitSalt: randomSalt.toString(),
+            hash: new CommitValue({
+              value: randomValue,
+              salt: randomSalt,
+            })
+              .hash()
+              .toString(),
           });
-        }
-      } catch (e) {
-        this.logger.error('Error', e.stack);
+
+          this.logger.debug('Writing new commit to database', newDock);
+
+          await this.commitData.updateOne(
+            {
+              _id: newDock._id,
+            },
+            {
+              $set: newDock,
+            },
+            {
+              upsert: true,
+            },
+          );
+
+          await fetchAccount({
+            publicKey: ZkOnCoordinatorAddress,
+          });
+
+          try {
+            let tx = await Mina.transaction(
+              { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
+              async () => {
+                await contract.commitValue(
+                  new CommitValue({
+                    value: randomValue,
+                    salt: randomSalt,
+                  }),
+                );
+              },
+            );
+            this.logger.debug('Proving tx');
+            await tx.prove();
+            const txResult = await tx.sign([sender]).send();
+
+            this.logger.debug(`Tx successful. Hash: `, txResult.hash);
+            this.logger.debug('Waiting for tx');
+            await txResult.safeWait();
+            this.logger.debug('Got tx');
+          } catch (e) {
+            this.logger.debug(
+              'Got error while sending commit transaction: ',
+              e,
+            );
+          }
+        });
       }
+    } catch (e) {
+      this.logger.error('Error', e.stack);
     }
 
     this.logger.debug('Releasing');

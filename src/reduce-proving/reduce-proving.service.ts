@@ -1,6 +1,5 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ALL_NETWORKS } from '../constants/networks.js';
 import { fetchAccount, Field, Mina, PrivateKey, Proof } from 'o1js';
 import { StateService } from '../state-service/state.service.js';
 import {
@@ -36,14 +35,13 @@ export class ProveReduceService implements OnApplicationBootstrap {
   }
 
   async checkConditions(
-    networkId: string,
     round: number,
     currentRound: number,
   ) {
     const contract =
-      this.stateManager.state[networkId].plotteryManagers[round].contract;
+      this.stateManager.state.plotteryManagers[round].contract;
     const rm =
-      this.stateManager.state[networkId].randomManagers[round].contract;
+      this.stateManager.state.randomManagers[round].contract;
 
     await fetchAccount({ publicKey: contract.address });
     await fetchAccount({ publicKey: rm.address });
@@ -51,7 +49,9 @@ export class ProveReduceService implements OnApplicationBootstrap {
     const isProduced = contract.result.get();
     const haveRandomValue = rm.result.get();
 
-    console.log(`Round is produced: ${(isProduced as Field).greaterThan(0).toBoolean()}`);
+    console.log(
+      `Round is produced: ${(isProduced as Field).greaterThan(0).toBoolean()}`,
+    );
     return {
       shouldStart:
         round < currentRound &&
@@ -62,13 +62,12 @@ export class ProveReduceService implements OnApplicationBootstrap {
   }
 
   async reduceTickets(
-    networkId: string,
     roundId: number,
   ): Promise<TicketReduceProof> {
     const contract =
-      this.stateManager.state[networkId].plotteryManagers[roundId].contract;
+      this.stateManager.state.plotteryManagers[roundId].contract;
     const rm =
-      this.stateManager.state[networkId].randomManagers[roundId].contract;
+      this.stateManager.state.randomManagers[roundId].contract;
     const actionLists = await contract.reducer.fetchActions();
 
     // Compute winning numbers
@@ -196,76 +195,70 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
     try {
       this.logger.debug('REDUCE PROVING');
-      for (let network of ALL_NETWORKS) {
-        const currentRound = await this.stateManager.getCurrentRound(
-          network.networkID,
+      const currentRound = await this.stateManager.getCurrentRound();
+
+      for (
+        let roundId = this.lastProducedRound;
+        roundId < currentRound;
+        roundId++
+      ) {
+        this.logger.debug(`Checking round ${roundId}`);
+        const { shouldStart, isProduced } = await this.checkConditions(
+          roundId,
+          currentRound,
         );
 
-        for (
-          let roundId = this.lastProducedRound;
-          roundId < currentRound;
-          roundId++
-        ) {
-          this.logger.debug(`Checking round ${roundId}`);
-          const { shouldStart, isProduced } = await this.checkConditions(
-            network.networkID,
-            roundId,
-            currentRound,
-          );
-          
-          console.log({shouldStart, isProduced})
+        console.log({ shouldStart, isProduced });
 
-          if (isProduced) {
-            this.lastProducedRound = roundId;
-            continue;
-          }
+        if (isProduced) {
+          this.lastProducedRound = roundId;
+          continue;
+        }
 
-          // Don not check next rounds, if current round is not ready to be reduced
-          if (!shouldStart) {
-            break;
-          }
+        // Don not check next rounds, if current round is not ready to be reduced
+        if (!shouldStart) {
+          break;
+        }
 
-          if (shouldStart) {
-            await this.stateManager.transactionMutex.runExclusive(async () => {
-              this.logger.debug(`Time to reduce ${roundId}`);
-              const sender = PrivateKey.fromBase58(process.env.PK);
+        if (shouldStart) {
+          await this.stateManager.transactionMutex.runExclusive(async () => {
+            this.logger.debug(`Time to reduce ${roundId}`);
+            const sender = PrivateKey.fromBase58(process.env.PK);
 
-              const plotteryState =
-                this.stateManager.state[network.networkID].plotteryManagers[
-                  roundId
-                ];
+            const plotteryState =
+              this.stateManager.state.plotteryManagers[
+                roundId
+              ];
 
-              // Reduce tickets
-              let reduceProof = await this.reduceTickets(
-                network.networkID,
-                roundId,
-              );
+            // Reduce tickets
+            let reduceProof = await this.reduceTickets(
+              roundId,
+            );
 
-              this.logger.debug(
-                'Reduce proof',
-                'Final state',
-                reduceProof.publicOutput.finalState.toString(),
-              );
+            this.logger.debug(
+              'Reduce proof',
+              'Final state',
+              reduceProof.publicOutput.finalState.toString(),
+            );
 
-              this.logger.debug('Creating transaction');
-              let tx2_1 = await Mina.transaction(
-                { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
-                async () => {
-                  await plotteryState.contract.reduceTicketsAndProduceResult(
-                    reduceProof,
-                  );
-                },
-              );
-              this.logger.debug('Proving reduce tx');
-              await tx2_1.prove();
-              this.logger.debug('Proved reduce tx');
-              let txResult = await tx2_1.sign([sender]).send();
+            this.logger.debug('Creating transaction');
+            let tx2_1 = await Mina.transaction(
+              { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
+              async () => {
+                await plotteryState.contract.reduceTicketsAndProduceResult(
+                  reduceProof,
+                );
+              },
+            );
+            this.logger.debug('Proving reduce tx');
+            await tx2_1.prove();
+            this.logger.debug('Proved reduce tx');
+            let txResult = await tx2_1.sign([sender]).send();
 
-              this.logger.debug(`Reduce tx successful. Hash: `, txResult.hash);
-              this.logger.debug('Waiting for reduce tx');
-              await txResult.wait();
-            });
-          }
+            this.logger.debug(`Reduce tx successful. Hash: `, txResult.hash);
+            this.logger.debug('Waiting for reduce tx');
+            await txResult.wait();
+          });
         }
       }
     } catch (e) {

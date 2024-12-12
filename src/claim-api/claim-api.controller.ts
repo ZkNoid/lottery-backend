@@ -14,7 +14,6 @@ export class ClaimApiController {
     try {
       return await this.claimApiService.getClaimData(
         claimData.roundId,
-        claimData.networkID,
         claimData.ticketNums,
         claimData.senderAccount,
         claimData.amount,

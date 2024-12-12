@@ -29,8 +29,8 @@ export const getLatestBlock = async (networkId: string) => {
   return data;
 };
 
-export const getCurrentSlot = async (networkId: string): Promise<number> => {
-  const latestBlock = await getLatestBlock(networkId);
+export const getCurrentSlot = async (): Promise<number> => {
+  const latestBlock = await getLatestBlock(process.env.NETWORK_ID);
 
   return latestBlock.data.data.bestChain[0].protocolState.consensusState
     .slotSinceGenesis;

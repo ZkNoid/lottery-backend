@@ -24,9 +24,3 @@ export const NETWORKS: {readonly [networkId: string]: Network} = {
     archive: ''
   }
 };
-
-
-export const ALL_NETWORKS = [
-  NETWORKS[NetworkIds.MINA_DEVNET], 
-  // NETWORKS[NetworkIds.ZEKO_TESTNET]
-]

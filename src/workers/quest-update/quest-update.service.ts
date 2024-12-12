@@ -1,17 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ALL_NETWORKS } from '../../constants/networks.js';
-import { Field, Mina, PrivateKey, fetchAccount } from 'o1js';
-import {
-  BLOCK_PER_ROUND,
-  Ticket,
-  ZkOnCoordinatorAddress,
-} from 'l1-lottery-contracts';
-import { StateService } from '../../state-service/state.service.js';
-import { getCurrentSlot } from '../../lib.js';
 import { Model } from 'mongoose';
-import { CommitData } from '../schema/commits.schema.js';
-import { CommitValue } from 'node_modules/l1-lottery-contracts/build/src/Random/RandomManager.js';
 import { InjectModel } from '@nestjs/mongoose';
 import { MinaEventData } from '../schema/events.schema.js';
 import { QuestData } from '../schema/quest.schema.js';
