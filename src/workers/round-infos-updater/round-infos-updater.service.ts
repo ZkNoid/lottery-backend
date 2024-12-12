@@ -51,6 +51,132 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
     return roundId < currentRound && winningCombinationIsGenerated;
   }
 
+  async updateInfoForRound(
+    networkID: string,
+    roundId: number,
+  ): Promise<{ shouldStop: boolean | null }> {
+    const stateM = this.stateManager.state[networkID]!;
+
+    this.logger.debug('Processing round', roundId);
+    const roundStateManager = stateM.plotteryManagers[roundId];
+    // const isComplete = await this.isRoundComplete(roundId, currentRound);
+
+    // // Skipping rounds that are not going to change
+    // if (isComplete) {
+    //   this.logger.debug('Skipping processed round: ', roundId);
+    //   continue;
+    // }
+
+    if (!roundStateManager) {
+      this.logger.warn(
+        `No contract for round ${roundId}. Consider deploying it.`,
+      );
+      return {
+        shouldStop: false,
+      };
+    }
+
+    if (!this.stateManager.stateInitialized[networkID][roundId]) {
+      await this.stateManager.initState(networkID, roundId, []);
+    }
+
+    const plotteryContract = roundStateManager.contract;
+
+    await fetchAccount({ publicKey: plotteryContract.address });
+
+    this.logger.debug('Fetching bought tickets', networkID, roundId);
+
+    const boughtTickets = this.stateManager.boughtTickets[networkID][roundId];
+    const boughtTicketsHashes =
+      this.stateManager.boughtTicketsHashes[networkID][roundId];
+    const claimedTicketsHashes =
+      this.stateManager.claimedTicketsHashes[networkID][roundId];
+
+    // this.logger.debug('Bought tickets', boughtTickets);
+
+    const winningCombination = NumberPacked.unpackToBigints(
+      plotteryContract.result.get(),
+    )
+      .map((v) => Number(v))
+      .slice(0, 6);
+
+    const roundBank = boughtTickets
+      .filter((x) => !x.numbers.every((x) => x.toBigint() == 0n))
+      .map((x) => x.amount.toBigInt() * TICKET_PRICE.toBigInt())
+      .reduce((x, y) => x + y, 0n);
+
+    const ticketsShares = boughtTickets.map((x) => {
+      const ticketShares =
+        SCORE_COEFFICIENTS[
+          Array.from({ length: 6 }, (p, i) => i)
+            .map((i) =>
+              Number(x.numbers[i].toBigint()) == winningCombination[i]
+                ? 1
+                : (0 as number),
+            )
+
+            .reduce((a, b) => a + b)
+        ] * x.amount.toBigInt();
+
+      return ticketShares;
+    });
+
+    const totalShares = ticketsShares.reduce((x, y) => x + y, 0n);
+
+    const plotteryAddress = plotteryContract.address.toBase58();
+    const randomManagerAddress =
+      stateM.randomManagers[roundId].contract.address.toBase58();
+
+    console.log(`Adding round info for round ${roundId}`);
+
+    await this.rounds
+      .updateOne(
+        {
+          roundId,
+        },
+        {
+          $set: {
+            roundId,
+            bank: boughtTickets
+              .map((x) => x.amount.toBigInt())
+              .reduce((x, y) => x + y, 0n),
+            tickets: boughtTickets.map((x, i) => ({
+              amount: x.amount.toBigInt(),
+              numbers: x.numbers.map((x) => Number(x.toBigint())),
+              owner: x.owner.toBase58(),
+              funds: totalShares
+                ? (roundBank * ticketsShares[i]) / ((totalShares * 103n) / 100n)
+                : 0n,
+              claimed: roundStateManager.ticketNullifierMap
+                .get(Field.from(i))
+                .equals(Field.from(1))
+                .toBoolean(),
+              buyHash: boughtTicketsHashes[i],
+              claimHash: roundStateManager.ticketNullifierMap
+                .get(Field.from(i))
+                .equals(Field.from(1))
+                .toBoolean()
+                ? claimedTicketsHashes[i]
+                : undefined,
+            })),
+            winningCombination: winningCombination.every((x) => !x)
+              ? null
+              : winningCombination,
+            plotteryAddress,
+            randomManagerAddress,
+          },
+        },
+        {
+          upsert: true,
+        },
+      )
+      .exec();
+
+    return {
+      shouldStop: false,
+    };
+  }
+
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron(onBootstrap = false) {
     if (this.isRunning) {
@@ -62,11 +188,15 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
     try {
       if (!this.stateManager.slotSinceGenesis) return;
 
+<<<<<<< HEAD
       let currentRound = await this.stateManager.getCurrentRound();
 
       const stateM = this.stateManager.state!;
 
       this.logger.debug('Deployed rounds data');
+=======
+        this.logger.debug('Deployed rounds data');
+>>>>>>> e134370f000e84b9810e5c0d2200d762debebc9d
 
       this.logger.debug(Object.keys(this.stateManager.state.plotteryManagers));
 
@@ -90,6 +220,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
 
       this.logger.debug('Amount of rounds to check', roundsToCheck.length);
 
+<<<<<<< HEAD
       for (const roundId of roundsToCheck) {
         this.logger.debug('Processing round', roundId);
         const roundStateManager = stateM.plotteryManagers[roundId];
@@ -106,6 +237,17 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
             `No contract for round ${roundId}. Consider deploying it.`,
           );
           break;
+=======
+        for (const roundId of roundsToCheck) {
+          let result = await this.updateInfoForRound(
+            network.networkID,
+            roundId,
+          );
+
+          if (result.shouldStop) {
+            break;
+          }
+>>>>>>> e134370f000e84b9810e5c0d2200d762debebc9d
         }
 
         const plotteryContract = roundStateManager.contract;

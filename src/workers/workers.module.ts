@@ -15,6 +15,8 @@ import { ApproveGiftCodesModule } from './approve-gift-codes/approve-gift-codes.
 // import { StateService } from 'src/state-service/state.service.js';
 import { GiftTicketBuyerModule } from './gift-ticket-buyer/gift-ticket-buyer.module.js';
 import { QuestUpdateModule } from './quest-update/quest-update.module.js';
+import { RewardClaimerModule } from './reward-claimer/reward-claimer.module.js';
+import { DeployRoundModule } from './deploy-rounds/deploy-rounds.module.js';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { QuestUpdateModule } from './quest-update/quest-update.module.js';
         ApproveGiftCodesModule,
         GiftTicketBuyerModule,
         QuestUpdateModule,
+        RewardClaimerModule,
+        DeployRoundModule,
       ],
       useFactory: async () => ({
         uri: process.env.MONGODB_URI,
