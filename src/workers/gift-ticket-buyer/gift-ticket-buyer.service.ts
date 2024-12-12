@@ -8,7 +8,6 @@ import { PromoQueueData } from '../schema/promo-queue.schema.js';
 import { Ticket } from 'l1-lottery-contracts';
 import { Field, Mina, PrivateKey, PublicKey } from 'o1js';
 import { StateService } from '../../state-service/state.service.js';
-import { NetworkIds } from '../../constants/networks.js';
 
 @Injectable()
 export class GiftCodesBuyerService implements OnApplicationBootstrap {
@@ -62,7 +61,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
       let tx = await Mina.transaction(
         { sender: signerAccount, fee: Number('0.1') * 1e9 },
         async () => {
-          await this.stateManager.state[NetworkIds.MINA_DEVNET].plotteryManagers[
+          await this.stateManager.state.plotteryManagers[
             curRound
           ].contract.buyTicket(ticket);
         },

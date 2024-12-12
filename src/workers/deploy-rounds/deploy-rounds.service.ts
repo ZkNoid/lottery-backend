@@ -1,6 +1,5 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ALL_NETWORKS } from '../../constants/networks.js';
 import { AccountUpdate, Field, Mina, PrivateKey, fetchAccount } from 'o1js';
 import { BLOCK_PER_ROUND, ZkOnCoordinatorAddress } from 'l1-lottery-contracts';
 import { StateService } from '../../state-service/state.service.js';
@@ -29,8 +28,8 @@ export class DeployRoundService implements OnApplicationBootstrap {
     // await this.handleCron();
   }
 
-  async checkRoundConditions(networkId: string) {
-    const currentRound = await this.stateManager.getCurrentRound(networkId);
+  async checkRoundConditions() {
+    const currentRound = await this.stateManager.getCurrentRound();
 
     const lastRound = await this.rounds.findOne().sort({ roundId: -1 });
 
@@ -51,9 +50,9 @@ export class DeployRoundService implements OnApplicationBootstrap {
     };
   }
 
-  async deployRound(networkId: string, roundId: number) {
-    const factoryManager = this.stateManager.state[networkId];
-    const factory = this.stateManager.factory[networkId];
+  async deployRound(roundId: number) {
+    const factoryManager = this.stateManager.state;
+    const factory = this.stateManager.factory;
     if (
       factoryManager.roundsMap.get(Field(roundId)).greaterThan(0).toBoolean()
     ) {
@@ -117,22 +116,18 @@ export class DeployRoundService implements OnApplicationBootstrap {
     this.isRunning = true;
     this.logger.log('Deploy module started');
 
-    for (let network of ALL_NETWORKS) {
-      try {
-        this.logger.debug('Checking conditions');
-        await this.stateManager.fetchRounds();
-        let { shouldDeploy, round } = await this.checkRoundConditions(
-          network.networkID,
-        );
+    try {
+      this.logger.debug('Checking conditions');
+      await this.stateManager.fetchRounds();
+      let { shouldDeploy, round } = await this.checkRoundConditions();
 
-        if (shouldDeploy) {
-          await this.stateManager.transactionMutex.runExclusive(async () => {
-            await this.deployRound(network.networkID, round);
-          });
-        }
-      } catch (e) {
-        this.logger.error('Error', e.stack);
+      if (shouldDeploy) {
+        await this.stateManager.transactionMutex.runExclusive(async () => {
+          await this.deployRound(round);
+        });
       }
+    } catch (e) {
+      this.logger.error('Error', e.stack);
     }
 
     this.logger.debug('Releasing');

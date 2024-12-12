@@ -32,7 +32,7 @@ export class RewardClaimerService implements OnApplicationBootstrap {
     pos: number = 0, // If there are two similar ticket allows to pick one of those
   ): number {
     const contractSM =
-      this.stateManager.state[NetworkIds.MINA_DEVNET].plotteryManagers[roundId];
+      this.stateManager.state.plotteryManagers[roundId];
 
     const ticket = new Ticket({
       owner: PublicKey.fromBase58(owner),
@@ -90,7 +90,7 @@ export class RewardClaimerService implements OnApplicationBootstrap {
           );
 
           const contractSM =
-            this.stateManager.state[NetworkIds.MINA_DEVNET].plotteryManagers[
+            this.stateManager.state.plotteryManagers[
               pendingRequest.roundId
             ];
 
@@ -101,7 +101,6 @@ export class RewardClaimerService implements OnApplicationBootstrap {
           ) {
             this.logger.debug('Incosistent state. Refetch');
             await this.infoUpdater.updateInfoForRound(
-              NetworkIds.MINA_DEVNET,
               pendingRequest.roundId,
             );
           }

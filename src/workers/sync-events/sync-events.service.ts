@@ -79,9 +79,7 @@ export class SyncEventsService implements OnModuleInit {
         ? +process.env.START_FROM_ROUND
         : 0;
 
-      const allRounds = Object.keys(
-        this.stateManager.state.plotteryManagers,
-      )
+      const allRounds = Object.keys(this.stateManager.state.plotteryManagers)
         .map((v) => +v)
         .sort((a, b) => a - b)
         .filter((x) => x >= startFrom); // For testing purpose only
@@ -90,8 +88,7 @@ export class SyncEventsService implements OnModuleInit {
         (slotSinceGenesis - +startSlot) / BLOCK_PER_ROUND,
       );
 
-      const isInitalized =
-        this.stateManager.stateInitialized;
+      const isInitalized = this.stateManager.stateInitialized;
       const roundsToCheck = allRounds;
       // const roundsToCheck = isInitalized
       //   ? curRound > 0
@@ -118,8 +115,6 @@ export class SyncEventsService implements OnModuleInit {
           round,
           lastEvent ? updateEventsFrom : 0,
         );
-
-<<<<<<< HEAD
         let fetchedEvents = events.map(
           (x) =>
             new this.minaEventData({
@@ -130,48 +125,6 @@ export class SyncEventsService implements OnModuleInit {
                   transactionHash: x.event.transactionInfo.transactionHash,
                   transactionMemo: x.event.transactionInfo.transactionMemo,
                   transactionStatus: x.event.transactionInfo.transactionStatus,
-=======
-        const roundsToCheck = allRounds;
-        // const roundsToCheck = isInitalized
-        //   ? curRound > 0
-        //     ? [curRound - 1, curRound]
-        //     : [curRound]
-        //   : allRounds;
-
-        console.log(`Rounds to check: ${roundsToCheck}`);
-
-        // const dbEvents = await this.minaEventData.find({});
-
-        for (const round of roundsToCheck) {
-          const lastEvent = await this.minaEventData
-            .findOne({
-              round: { $eq: round },
-            })
-            .sort({ _id: -1 });
-
-          const updateEventsFrom = lastEvent
-            ? lastEvent.blockHeight - BLOCK_UPDATE_DEPTH
-            : 0;
-
-          const events = await this.stateManager.fetchEvents(
-            network.networkID,
-            round,
-            lastEvent ? updateEventsFrom : 0,
-          );
-
-          let fetchedEvents = events.map(
-            (x) =>
-              new this.minaEventData({
-                type: x.type,
-                event: {
-                  data: x.event.data,
-                  transactionInfo: {
-                    transactionHash: x.event.transactionInfo.transactionHash,
-                    transactionMemo: x.event.transactionInfo.transactionMemo,
-                    transactionStatus:
-                      x.event.transactionInfo.transactionStatus,
-                  },
->>>>>>> e134370f000e84b9810e5c0d2200d762debebc9d
                 },
               },
               blockHeight: x.blockHeight,
@@ -186,37 +139,37 @@ export class SyncEventsService implements OnModuleInit {
         // console.log('New events', events);
 
         /*
-        // Events that was previously recorded from archive node. If they're dropped, they was orphaned
-        const eventsToVerifyUncles = fetchedEvents.filter((x) =>
-          lastEvent ? x.blockHeight == lastEvent.blockHeight : false,
-        );
-        // New events that are not uncles
-        const newFetchedEvents = fetchedEvents.filter((x) =>
-          lastEvent ? x.blockHeight > lastEvent.blockHeight : true,
-        );
+      // Events that was previously recorded from archive node. If they're dropped, they was orphaned
+      const eventsToVerifyUncles = fetchedEvents.filter((x) =>
+        lastEvent ? x.blockHeight == lastEvent.blockHeight : false,
+      );
+      // New events that are not uncles
+      const newFetchedEvents = fetchedEvents.filter((x) =>
+        lastEvent ? x.blockHeight > lastEvent.blockHeight : true,
+      );
 
-        // If saved events are not presented in archive node response, removing them from db
-        if (lastEvent && eventsToVerifyUncles.length == 0) {
-          await this.minaEventData.deleteMany({
-            blockHeight: lastEvent.blockHeight,
-          });
-        }
+      // If saved events are not presented in archive node response, removing them from db
+      if (lastEvent && eventsToVerifyUncles.length == 0) {
+        await this.minaEventData.deleteMany({
+          blockHeight: lastEvent.blockHeight,
+        });
+      }
 
-        for (const newFetchedEvent of newFetchedEvents) {
-          await this.minaEventData.updateOne(
-            {
-              'event.transactionInfo.transactionHash':
-                newFetchedEvent.event.transactionInfo.transactionHash,
-            },
-            {
-              $set: newFetchedEvent,
-            },
-            {
-              upsert: true,
-            },
-          );
-        }
-        */
+      for (const newFetchedEvent of newFetchedEvents) {
+        await this.minaEventData.updateOne(
+          {
+            'event.transactionInfo.transactionHash':
+              newFetchedEvent.event.transactionInfo.transactionHash,
+          },
+          {
+            $set: newFetchedEvent,
+          },
+          {
+            upsert: true,
+          },
+        );
+      }
+      */
 
         let eventsToBeDeleted = await this.minaEventData.find({
           blockHeight: { $gte: updateEventsFrom },
@@ -277,6 +230,7 @@ export class SyncEventsService implements OnModuleInit {
         // Update state if not initially updated or if there are new events
         if (
           !this.stateManager.stateInitialized ||
+          !this.stateManager.stateInitialized[round] ||
           newEventsToAdd
         ) {
           const allEvents = await this.minaEventData.find({
@@ -285,104 +239,12 @@ export class SyncEventsService implements OnModuleInit {
 
           // console.log(`All events: ${allEvents}`);
 
-<<<<<<< HEAD
-          await this.stateManager.initState(
-            round,
-            allEvents,
-          );
+          await this.stateManager.initState(round, allEvents);
         } else {
           // await this.stateManager.undoLastEvents(
           //   network.networkID,
           //   eventsToBeDeleted,
           //   this.stateManager.state[network.networkID],
-=======
-          let deleteStartIndex = 0;
-          // Find equal prefix of eventsToBeDeleted and fetchedEvents. We can ommit it
-          for (
-            ;
-            deleteStartIndex < eventsToBeDeleted.length;
-            deleteStartIndex++
-          ) {
-            let dbEvent = eventsToBeDeleted[deleteStartIndex];
-            let nodeEvent = fetchedEvents[deleteStartIndex];
-
-            if (
-              dbEvent.event.transactionInfo.transactionHash !==
-              nodeEvent.event.transactionInfo.transactionHash
-            ) {
-              break;
-            }
-          }
-
-          eventsIdForDelete = eventsToBeDeleted
-            .slice(deleteStartIndex)
-            .map((event) => event._id);
-          eventsToBeDeleted = eventsToBeDeleted.slice(deleteStartIndex);
-          const newEventsToAdd = fetchedEvents.slice(deleteStartIndex);
-
-          // Removing old event and adding new events to mongodb
-          // console.log(`Removing elements: ${eventsIdForDelete}`);
-          await this.minaEventData.deleteMany({
-            _id: { $in: eventsIdForDelete },
-          });
-
-          // console.log('newEventsToAdd');
-          // console.log(newEventsToAdd);
-          for (const eventToAdd of newEventsToAdd) {
-            // console.log(eventToAdd);
-            await this.minaEventData.updateOne(
-              {
-                'event.transactionInfo.transactionHash':
-                  eventToAdd.event.transactionInfo.transactionHash,
-              },
-              {
-                $set: eventToAdd,
-              },
-              {
-                upsert: true,
-              },
-            );
-          }
-          console.log(`Events added`);
-
-          // Update state if not initially updated or if there are new events
-          if (
-            !this.stateManager.stateInitialized[network.networkID] ||
-            !this.stateManager.stateInitialized[network.networkID][round] ||
-            newEventsToAdd
-          ) {
-            const allEvents = await this.minaEventData.find({
-              round: { $eq: round },
-            });
-
-            // console.log(`All events: ${allEvents}`);
-
-            await this.stateManager.initState(
-              network.networkID,
-              round,
-              allEvents,
-            );
-          } else {
-            // await this.stateManager.undoLastEvents(
-            //   network.networkID,
-            //   eventsToBeDeleted,
-            //   this.stateManager.state[network.networkID],
-            // );
-            // await this.stateManager.initState(
-            //   network.networkID,
-            //   newEventsToAdd,
-            //   this.stateManager.state[network.networkID],
-            // );
-            // this.stateManager.updateProcessedTicketData(
-            //   this.stateManager.state[network.networkID],
-            // );
-          }
-          // console.log(
-          //   `Curr slot ${slotSinceGenesis}. \
-          // Start block: ${Number(
-          //   this.stateManager.lottery[network.networkID].startBlock.get(),
-          // )}`,
->>>>>>> e134370f000e84b9810e5c0d2200d762debebc9d
           // );
           // await this.stateManager.initState(
           //   network.networkID,
@@ -409,8 +271,7 @@ export class SyncEventsService implements OnModuleInit {
         // );
 
         this.stateManager.blockHeight = currBlockHeight;
-        this.stateManager.slotSinceGenesis =
-          slotSinceGenesis;
+        this.stateManager.slotSinceGenesis = slotSinceGenesis;
         // this.stateManager.roundIds[network.networkID] = currentRoundId;
       }
     } catch (e) {
