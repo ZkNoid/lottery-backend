@@ -24,17 +24,21 @@ import { Mutex } from 'async-mutex';
 export class StateService implements OnModuleInit {
   blockHeight: number = undefined;
   slotSinceGenesis: number = undefined;
+  // roundIds: Record<string, number> = {};
   initialized: boolean;
-  stateInitialized: Record<number, boolean> = undefined;
+  stateInitialized: Record<number, boolean> = {};
 
   inReduceProving = false;
+
+  // distributionProof: DistributionProof;
+  // lottery: Record<string, PLottery> = {};
   factory: PlotteryFactory = undefined;
   state: FactoryManager = undefined;
-  boughtTickets: Ticket[][] = [];
-  boughtTicketsHashes: string[][] = [];
-  claimedTicketsHashes: Record<number, string>[] = [];
-
-  network: Network;
+  // state: Record<string, PStateManager> = {};
+  boughtTickets: Ticket[][] = undefined;
+  boughtTicketsHashes: string[][] = undefined;
+  claimedTicketsHashes: Record<number, string>[] = undefined;
+  network: Network = undefined;
 
   transactionMutex: Mutex = new Mutex();
 
@@ -45,14 +49,12 @@ export class StateService implements OnModuleInit {
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    const network = NETWORKS[process.env.NETWORK_ID];
-    this.network = network;
-
-    console.log('Network choosing', network);
+    const network_ = NETWORKS[process.env.NETWORK_ID];
+    console.log('Network choosing', network_);
 
     const Network = Mina.Network({
-      mina: network?.graphql,
-      archive: network?.archive,
+      mina: network_?.graphql,
+      archive: network_?.archive,
     });
 
     console.log('Network setting');
@@ -60,12 +62,14 @@ export class StateService implements OnModuleInit {
     Mina.setActiveInstance(Network);
     console.log('Network set');
 
-    const factory = new PlotteryFactory(
-      PublicKey.fromBase58(FACTORY_ADDRESS[network.networkID]),
+    const factory_ = new PlotteryFactory(
+      PublicKey.fromBase58(FACTORY_ADDRESS[process.env.NETWORK_ID]),
     );
 
-    this.factory = factory;
+    this.factory = factory_;
     this.state = new FactoryManager(false, false);
+    
+    this.network = network_;
 
     await this.fetchRounds();
 
@@ -119,7 +123,7 @@ export class StateService implements OnModuleInit {
 
   async fetchRounds() {
     console.log('fetchRounds');
-      const state = new FactoryManager(false, false);
+      const state_ = new FactoryManager(false, false);
       const events = await this.factory.fetchEvents();
 
       events.forEach((event) => {
@@ -130,14 +134,16 @@ export class StateService implements OnModuleInit {
         //   `Adding: ${data.round} ${data.randomManager} ${data.plottery}`,
         // );
 
-        state.addDeploy(data.round, data.randomManager, data.plottery);
+        state_.addDeploy(data.round, data.randomManager, data.plottery);
       });
 
-
-      this.state = state;
-    }
+      this.state = state_;
+    
+  }
 
   async fetchEvents(round: number, startBlock: number = 0) {
+    const networkID = process.env.NETWORK_ID;
+
     const lottery = this.state.plotteryManagers[round].contract;
 
     if (!lottery) {
@@ -217,6 +223,7 @@ export class StateService implements OnModuleInit {
     stateM?: PStateManager,
   ) {
     const updateOnly: boolean = false;
+    const networkID = process.env.NETWORK_ID;
     const lottery = this.state.plotteryManagers[round].contract;
     stateM = new PStateManager(lottery, false, false);
     await fetchAccount({ publicKey: lottery.address });
@@ -230,31 +237,31 @@ export class StateService implements OnModuleInit {
 
     // if (events.length != 0) stateM.syncWithCurBlock(syncBlockSlot);
 
-    const boughtTickets = this.boughtTickets
+    const boughtTickets_ = this.boughtTickets
       ? this.boughtTickets
       : ([] as Ticket[][]);
 
-    const boughtTicketsHashes = this.boughtTicketsHashes
+    const boughtTicketsHashes_ = this.boughtTicketsHashes
       ? this.boughtTicketsHashes
       : ([] as string[][]);
 
-    const claimedTicketsHashes = this.boughtTicketsHashes
+    const claimedTicketsHashes_ = this.boughtTicketsHashes
       ? this.claimedTicketsHashes
       : ([] as Record<number, string>[]);
 
-    const stateInitialized = this.stateInitialized
+    const stateInitialized_ = this.stateInitialized
       ? this.stateInitialized
-      : ([] as Record<number, boolean>);
+      : ({} as Record<number, boolean>);
 
     // if (updateOnly) {
-    console.log('[sm] initing bought tickets', boughtTickets.length);
-    for (let i = boughtTickets.length; i < round + 1; i++) {
-      boughtTickets.push([]);
+    console.log('[sm] initing bought tickets', boughtTickets_.length);
+    for (let i = boughtTickets_.length; i < round + 1; i++) {
+      boughtTickets_.push([]);
     }
 
-    boughtTickets[round] = [];
-    boughtTicketsHashes[round] = [];
-    claimedTicketsHashes[round] = [];
+    boughtTickets_[round] = [];
+    boughtTicketsHashes_[round] = [];
+    claimedTicketsHashes_[round] = [];
 
     // } else {
     //   console.log(
@@ -283,8 +290,8 @@ export class StateService implements OnModuleInit {
 
       if (event.type == 'buy-ticket') {
         // console.log('Adding ticket to state', event.event.data, 'round', round);
-        boughtTickets[round].push(data.ticket);
-        boughtTicketsHashes[round].push(
+        boughtTickets_[round].push(data.ticket);
+        boughtTicketsHashes_[round].push(
           event.event.transactionInfo.transactionHash,
         );
         // this.state[networkID].addTicket(data.ticket, +data.round, false);
@@ -328,7 +335,7 @@ export class StateService implements OnModuleInit {
         //   ),
         // );
         stateM.ticketNullifierMap.set(Field(ticketId), Field(1));
-        claimedTicketsHashes[round][ticketId] =
+        claimedTicketsHashes_[round][ticketId] =
           event.event.transactionInfo.transactionHash;
 
         // console.log(`After ${stateM.ticketNullifierMap.getRoot().toString()}`);
@@ -353,21 +360,32 @@ export class StateService implements OnModuleInit {
 
         actions.flat(1).map((action) => {
           stateM.addTicket(action.ticket, true);
+
+          // if (stateM.processedTicketData.round == +action.round) {
+          //   stateM.processedTicketData.ticketId++;
+          // } else {
+          //   stateM.processedTicketData.ticketId = 0;
+          //   stateM.processedTicketData.round = +action.round;
+          // }
         });
       }
     }
 
+    stateInitialized_[round] = true;
+
     this.state.plotteryManagers[round] = stateM;
-    this.stateInitialized = stateInitialized;
-    this.boughtTickets = boughtTickets;
-    this.boughtTicketsHashes = boughtTicketsHashes;
-    this.claimedTicketsHashes = claimedTicketsHashes;
-    this.boughtTickets = boughtTickets;
+    this.stateInitialized = stateInitialized_;
+    this.boughtTickets = boughtTickets_;
+    this.boughtTicketsHashes = boughtTicketsHashes_;
+    this.claimedTicketsHashes = claimedTicketsHashes_;
+    this.boughtTickets = boughtTickets_;
   }
 
   async getCurrentRound(): Promise<number> {
-    await fetchAccount({ publicKey: this.factory.address });
-    const initSlot = this.factory.startSlot.get();
+    const factory = this.factory;
+
+    await fetchAccount({ publicKey: factory.address });
+    const initSlot = factory.startSlot.get();
     const currentSlot = await getCurrentSlot();
     const currentRound = Math.floor(
       (currentSlot - +initSlot) / BLOCK_PER_ROUND,
