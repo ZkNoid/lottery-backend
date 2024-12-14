@@ -48,6 +48,25 @@ services:
     depends_on:
       - autoheal
 
+  second_party:
+    env_file:
+      .env.second-party
+    build: .
+
+    environment:
+      TZ: Europe/Moscow
+
+    command: sh -c "pnpm start-second_party"
+    restart: unless-stopped
+  
+    healthcheck:
+      test: wget -S -O- http://reduce_prover:3044/health-api/health || exit 1
+      interval: 5m
+      timeout: 5m
+      retries: 3
+    depends_on:
+      - autoheal
+
   staketab_proxy_api:
     ports:
       - "3043:3043"
