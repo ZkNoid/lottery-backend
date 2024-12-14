@@ -31,7 +31,9 @@ export class DeployRoundService implements OnApplicationBootstrap {
   async checkRoundConditions() {
     const currentRound = await this.stateManager.getCurrentRound();
 
-    const lastRound = await this.rounds.findOne().sort({ roundId: -1 });
+    const lastRound = await this.rounds.findOne().sort({ roundId: -1 }) || {
+      roundId: 0
+    };
 
     const gap = lastRound.roundId - currentRound;
 
@@ -104,6 +106,10 @@ export class DeployRoundService implements OnApplicationBootstrap {
     this.logger.log(`Tx hash: ${txResult.hash}`);
 
     factoryManager.addDeploy(roundId, randomManagerAddress, plotteryAddress);
+  }
+
+  async onModuleInit() {
+    await this.handleCron();
   }
 
   @Cron(CronExpression.EVERY_6_HOURS)
