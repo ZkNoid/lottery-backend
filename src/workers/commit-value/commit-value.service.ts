@@ -33,8 +33,14 @@ export class CommitValueService implements OnApplicationBootstrap {
     for (let i = this.lastCommitInRound; i < currentRound; i++) {
       const rmContract = this.stateManager.state.randomManagers[i].contract;
 
+      const COMMIT_PARTY_ID = Number(process.env.COMMIT_PARTY_ID);
+      const contractCommit =
+        COMMIT_PARTY_ID == 0
+          ? rmContract.firstCommit.get().toBigInt()
+          : rmContract.secondCommit.get().toBigInt();
+
       await fetchAccount({ publicKey: rmContract.address });
-      if (rmContract.commit.get().toBigInt() > 0) {
+      if (contractCommit > 0) {
         this.lastCommitInRound = i;
         continue;
       }
@@ -114,14 +120,22 @@ export class CommitValueService implements OnApplicationBootstrap {
             publicKey: ZkOnCoordinatorAddress,
           });
 
+          const COMMIT_PARTY_ID = Number(process.env.COMMIT_PARTY_ID);
+
           try {
             let tx = await Mina.transaction(
               { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
               async () => {
-                await contract.commitValue(
+                COMMIT_PARTY_ID == 0 ? 
+                await contract.firstPartyCommit(
                   new CommitValue({
                     value: randomValue,
-                    salt: randomSalt,
+                    salt: randomSalt
+                  }),
+                ) : await contract.secondPartyCommit(
+                  new CommitValue({
+                    value: randomValue,
+                    salt: randomSalt
                   }),
                 );
               },

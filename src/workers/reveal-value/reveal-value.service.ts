@@ -44,12 +44,17 @@ export class RevealValueService implements OnApplicationBootstrap {
   }
 
   async checkRoundConditions(roundId: number) {
-    const contract =
-      this.stateManager.state.randomManagers[roundId].contract;
+    const contract = this.stateManager.state.randomManagers[roundId].contract;
 
     await fetchAccount({ publicKey: contract.address });
 
-    const commit = contract.commit.get();
+    const COMMIT_PARTY_ID = Number(process.env.COMMIT_PARTY_ID);
+
+    const commit =
+      COMMIT_PARTY_ID == 0
+        ? contract.firstCommit.get()
+        : contract.secondCommit.get();
+
     const result = contract.result.get();
 
     if (commit.toBigInt() != 0 && result.toBigInt() == 0) {
@@ -128,87 +133,92 @@ export class RevealValueService implements OnApplicationBootstrap {
     this.isRunning = true;
     console.log('Reveal value module started');
 
-      try {
-        const currentRound = await this.stateManager.getCurrentRound(
-        );
+    try {
+      const currentRound = await this.stateManager.getCurrentRound();
 
-        this.logger.debug('Last reveal in round: ', this.lastRevealInRound);
-        this.logger.debug('Current round: ', currentRound);
+      this.logger.debug('Last reveal in round: ', this.lastRevealInRound);
+      this.logger.debug('Current round: ', currentRound);
 
-        for (
-          let roundId = this.lastRevealInRound;
-          roundId < currentRound;
-          roundId++
-        ) {
-          this.logger.debug('Checking round: ', roundId);
-          const { shouldStart, commitValue, commitSalt, isRevealed } =
-            await this.checkRoundConditions(roundId);
+      for (
+        let roundId = this.lastRevealInRound;
+        roundId < currentRound;
+        roundId++
+      ) {
+        this.logger.debug('Checking round: ', roundId);
+        const { shouldStart, commitValue, commitSalt, isRevealed } =
+          await this.checkRoundConditions(roundId);
 
-          if (isRevealed) {
-            this.lastRevealInRound = roundId;
-            continue;
-          }
-
-          // If can't reveal current round - do not check following rounds
-          if (!shouldStart) {
-            break;
-          }
-
-          if (shouldStart) {
-            await this.stateManager.transactionMutex.runExclusive(async () => {
-              this.logger.debug('Revealing value for round: ', roundId);
-
-              const sender = PrivateKey.fromBase58(process.env.PK);
-
-              this.logger.log(
-                'Revealing value ',
-                commitValue,
-                ' salt: ',
-                commitSalt,
-              );
-
-              const contract =
-                this.stateManager.state.randomManagers[
-                  roundId
-                ].contract;
-
-              console.log(`Value: ${commitValue} salt: ${commitSalt}`);
-
-              const commitValueValue = new CommitValue({
-                value: Field(commitValue),
-                salt: Field(commitSalt),
-              });
-
-              console.log(
-                `Commit value hash: ${commitValueValue.hash().toString()}`,
-              );
-              console.log(`Onchain state: ${contract.commit.get().toString()}`);
-
-              console.log(
-                `${commitValueValue.hash().toString()} =? ${contract.commit.get().toString()}`,
-              );
-
-              let tx = await Mina.transaction(
-                { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
-                async () => {
-                  await contract.reveal(commitValueValue);
-                },
-              );
-              this.logger.debug('Proving tx');
-              await tx.prove();
-              this.logger.debug('Proved tx');
-              let txResult = await tx.sign([sender]).send();
-
-              this.logger.debug(`Tx successful. Hash: `, txResult.hash);
-              this.logger.debug('Waiting for tx');
-              await txResult.wait();
-            });
-          }
+        if (isRevealed) {
+          this.lastRevealInRound = roundId;
+          continue;
         }
-      } catch (e) {
-        this.logger.error('Error', e.stack);
+
+        // If can't reveal current round - do not check following rounds
+        if (!shouldStart) {
+          break;
+        }
+
+        if (shouldStart) {
+          await this.stateManager.transactionMutex.runExclusive(async () => {
+            this.logger.debug('Revealing value for round: ', roundId);
+
+            const sender = PrivateKey.fromBase58(process.env.PK);
+
+            this.logger.log(
+              'Revealing value ',
+              commitValue,
+              ' salt: ',
+              commitSalt,
+            );
+
+            const contract =
+              this.stateManager.state.randomManagers[roundId].contract;
+
+            console.log(`Value: ${commitValue} salt: ${commitSalt}`);
+
+            const commitValueValue = new CommitValue({
+              value: Field(commitValue),
+              salt: Field(commitSalt),
+            });
+
+            const COMMIT_PARTY_ID = Number(process.env.COMMIT_PARTY_ID);
+
+            const commit =
+              COMMIT_PARTY_ID == 0
+                ? contract.firstCommit.get()
+                : contract.secondCommit.get();
+
+            console.log(
+              `Commit value hash: ${commitValueValue.hash().toString()}`,
+            );
+            console.log(`Onchain state: ${commit.toString()}`);
+
+            console.log(
+              `${commitValueValue.hash().toString()} =? ${commit.toString()}`,
+            );
+
+            let tx = await Mina.transaction(
+              { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
+              async () => {
+                COMMIT_PARTY_ID == 0
+                  ? await contract.revealFirstCommit(commitValueValue)
+                  : await contract.revealSecondCommit(commitValueValue);
+              },
+            );
+            this.logger.debug('Proving tx');
+            await tx.prove();
+            this.logger.debug('Proved tx');
+            let txResult = await tx.sign([sender]).send();
+
+            this.logger.debug(`Tx successful. Hash: `, txResult.hash);
+            this.logger.debug('Waiting for tx');
+            await txResult.wait();
+          });
+        }
       }
-    
+    } catch (e) {
+      this.logger.error('Error', e.stack);
+    }
 
     this.isRunning = false;
   }
