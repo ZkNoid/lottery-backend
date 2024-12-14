@@ -12,6 +12,7 @@
     "start": "nest start",
     "start-rp": "nest start --entryFile main-reduce-proving.js",
     "start-staketab-proxy": "nest start --entryFile main-staketab-proxy.js",
+    "start-second-party": "nest start --entryFile main-second-party.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
