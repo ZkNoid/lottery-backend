@@ -16,7 +16,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { FactoryManager } from 'l1-lottery-contracts';
 import { PlotteryFactory } from 'l1-lottery-contracts';
 import { ZkonRequestCoordinator, ZkonZkProgram } from 'zkon-zkapp';
-import { RandomManager } from 'node_modules/l1-lottery-contracts/build/src/Random/RandomManager.js';
+import { RandomManager } from 'l1-lottery-contracts';
 import { getCurrentSlot } from '../lib.js';
 import { Mutex } from 'async-mutex';
 

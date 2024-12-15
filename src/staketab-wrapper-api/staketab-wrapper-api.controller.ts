@@ -1,7 +1,8 @@
 import { HttpService } from '@nestjs/axios';
 import { Body, Controller, Post, Get, Res, Req } from '@nestjs/common';
-import { NETWORKS, NetworkIds } from '../constants/networks.js';
+import { NetworkIds, Network } from '../constants/networks.js';
 import { Response } from 'express';
+import { STAKETAB_NETWORKS } from './staketab-networks.js';
 
 @Controller('mina-node')
 export class StaketabProxyController {
@@ -14,7 +15,7 @@ export class StaketabProxyController {
   ) {
 
     const data = await this.httpService.axiosRef.post(
-      NETWORKS[NetworkIds.MINA_DEVNET].graphql,
+      STAKETAB_NETWORKS[NetworkIds.MINA_DEVNET].graphql,
       body,
       {
         headers: {
@@ -36,7 +37,7 @@ export class StaketabProxyController {
   ) {
 
     const data = await this.httpService.axiosRef.post(
-      NETWORKS[NetworkIds.MINA_DEVNET].archive,
+      STAKETAB_NETWORKS[NetworkIds.MINA_DEVNET].archive,
       body,
       {
         headers: {

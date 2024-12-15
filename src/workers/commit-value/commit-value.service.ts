@@ -15,7 +15,7 @@ export class CommitValueService implements OnApplicationBootstrap {
   private isRunning = false;
   private lastCommitInRound = process.env.START_FROM_ROUND
     ? +process.env.START_FROM_ROUND
-    : 0;
+    : 1;
 
   constructor(
     private stateManager: StateService,
@@ -30,8 +30,10 @@ export class CommitValueService implements OnApplicationBootstrap {
   async checkRoundConditions() {
     const currentRound = await this.stateManager.getCurrentRound();
 
-    for (let i = this.lastCommitInRound; i < currentRound; i++) {
+    // Rounds numeration goes from 1
+    for (let i = this.lastCommitInRound; i <= currentRound + 1; i++) {
       const rmContract = this.stateManager.state.randomManagers[i].contract;
+      await fetchAccount({ publicKey: rmContract.address });
 
       const COMMIT_PARTY_ID = Number(process.env.COMMIT_PARTY_ID);
       const contractCommit =
@@ -39,7 +41,6 @@ export class CommitValueService implements OnApplicationBootstrap {
           ? rmContract.firstCommit.get().toBigInt()
           : rmContract.secondCommit.get().toBigInt();
 
-      await fetchAccount({ publicKey: rmContract.address });
       if (contractCommit > 0) {
         this.lastCommitInRound = i;
         continue;
@@ -75,7 +76,7 @@ export class CommitValueService implements OnApplicationBootstrap {
         await this.stateManager.transactionMutex.runExclusive(async () => {
           this.logger.debug('Commiting value for round: ', round);
 
-          const sender = PrivateKey.fromBase58(process.env.PK);
+          const sender = PrivateKey.fromBase58(process.env.PARTY_PK);
 
           const randomValue = Field.random();
           const randomSalt = Field.random();
@@ -123,6 +124,8 @@ export class CommitValueService implements OnApplicationBootstrap {
           const COMMIT_PARTY_ID = Number(process.env.COMMIT_PARTY_ID);
 
           try {
+            await fetchAccount({ publicKey: sender.toPublicKey() });
+            
             let tx = await Mina.transaction(
               { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
               async () => {

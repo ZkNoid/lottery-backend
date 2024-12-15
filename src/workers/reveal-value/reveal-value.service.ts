@@ -162,7 +162,7 @@ export class RevealValueService implements OnApplicationBootstrap {
           await this.stateManager.transactionMutex.runExclusive(async () => {
             this.logger.debug('Revealing value for round: ', roundId);
 
-            const sender = PrivateKey.fromBase58(process.env.PK);
+            const sender = PrivateKey.fromBase58(process.env.PARTY_PK);
 
             this.logger.log(
               'Revealing value ',
