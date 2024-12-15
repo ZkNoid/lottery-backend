@@ -9,11 +9,7 @@ export class StaketabProxyController {
   constructor(private readonly httpService: HttpService) {}
 
   @Post('devnet-main-node')
-  async devnetMainNode(
-    @Body() body,
-    @Res() response: Response,
-  ) {
-
+  async devnetMainNode(@Body() body, @Res() response: Response) {
     const data = await this.httpService.axiosRef.post(
       STAKETAB_NETWORKS[NetworkIds.MINA_DEVNET].graphql,
       body,
@@ -25,17 +21,11 @@ export class StaketabProxyController {
       },
     );
 
-    response
-      .status(data.status)
-      .send(data.data);
+    response.status(data.status).send(data.data);
   }
 
   @Post('devnet-archive-node')
-  async devnetArchiveNode(
-    @Body() body,
-    @Res() response: Response,
-  ) {
-
+  async devnetArchiveNode(@Body() body, @Res() response: Response) {
     const data = await this.httpService.axiosRef.post(
       STAKETAB_NETWORKS[NetworkIds.MINA_DEVNET].archive,
       body,
@@ -47,8 +37,38 @@ export class StaketabProxyController {
       },
     );
 
-    response
-      .status(data.status)
-      .send(data.data);
+    response.status(data.status).send(data.data);
+  }
+
+  @Post('mainnet-main-node')
+  async mainnetMainNode(@Body() body, @Res() response: Response) {
+    const data = await this.httpService.axiosRef.post(
+      STAKETAB_NETWORKS[NetworkIds.MINA_MAINNET].graphql,
+      body,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        responseType: 'json',
+      },
+    );
+
+    response.status(data.status).send(data.data);
+  }
+
+  @Post('mainnet-archive-node')
+  async mainnetArchiveNode(@Body() body, @Res() response: Response) {
+    const data = await this.httpService.axiosRef.post(
+      STAKETAB_NETWORKS[NetworkIds.MINA_MAINNET].archive,
+      body,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        responseType: 'json',
+      },
+    );
+
+    response.status(data.status).send(data.data);
   }
 }
