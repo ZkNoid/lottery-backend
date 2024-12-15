@@ -18,7 +18,7 @@ services:
 
     command: sh -c "pnpm start"
     ports:
-      - "5100:3040"
+      - "5101:3040"
     restart: unless-stopped
 
     healthcheck:
