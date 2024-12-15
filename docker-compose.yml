@@ -56,7 +56,7 @@ services:
     environment:
       TZ: Europe/Moscow
 
-    command: sh -c "pnpm start-second_party"
+    command: sh -c "pnpm start-second-party"
     restart: unless-stopped
   
     healthcheck:
