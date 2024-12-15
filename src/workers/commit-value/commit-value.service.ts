@@ -30,8 +30,7 @@ export class CommitValueService implements OnApplicationBootstrap {
   async checkRoundConditions() {
     const currentRound = await this.stateManager.getCurrentRound();
 
-    // Rounds numeration goes from 1
-    for (let i = this.lastCommitInRound; i <= currentRound + 1; i++) {
+    for (let i = this.lastCommitInRound; i <= currentRound; i++) {
       const rmContract = this.stateManager.state.randomManagers[i].contract;
       const accountInfo = await fetchAccount({ publicKey: rmContract.address });
 

@@ -32,7 +32,7 @@ export class DeployRoundService implements OnApplicationBootstrap {
     const currentRound = await this.stateManager.getCurrentRound();
 
     const lastRound = await this.rounds.findOne().sort({ roundId: -1 }) || {
-      roundId: 0
+      roundId: -1
     };
 
     const gap = lastRound.roundId - currentRound;
