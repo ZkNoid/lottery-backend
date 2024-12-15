@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { SyncEventsModule } from '../workers/sync-events/sync-events.module.js';
 import { CommitValueModule } from '../workers/commit-value/commit-value.module.js';
 import { RevealValueModule } from '../workers/reveal-value/reveal-value.module.js';
-import { HealthController } from 'src/health-api/health-api.controller.js';
+import { HealthController } from '../health-api/health-api.controller.js';
 
 @Module({
   imports: [
