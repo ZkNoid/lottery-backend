@@ -15,7 +15,7 @@ export class CommitValueService implements OnApplicationBootstrap {
   private isRunning = false;
   private lastCommitInRound = process.env.START_FROM_ROUND
     ? +process.env.START_FROM_ROUND
-    : 1;
+    : 0;
 
   constructor(
     private stateManager: StateService,
