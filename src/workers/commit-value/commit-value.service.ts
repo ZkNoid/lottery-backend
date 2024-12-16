@@ -31,6 +31,7 @@ export class CommitValueService implements OnApplicationBootstrap {
     const currentRound = await this.stateManager.getCurrentRound();
 
     for (let i = this.lastCommitInRound; i <= currentRound; i++) {
+      console.log()
       const rmContract = this.stateManager.state.randomManagers[i].contract;
       const accountInfo = await fetchAccount({ publicKey: rmContract.address });
 

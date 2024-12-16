@@ -53,6 +53,7 @@ export class StateService implements OnModuleInit {
     console.log('Network choosing', network_);
 
     const Network = Mina.Network({
+      networkId: network_?.isMainnet ? 'mainnet' : 'testnet',
       mina: network_?.graphql,
       archive: network_?.archive,
     });
