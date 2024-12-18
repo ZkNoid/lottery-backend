@@ -84,7 +84,7 @@ export class StateService implements OnModuleInit {
     console.log('Compilation ended');
 
     console.log('Compilation');
-    await PLottery.compile({
+    const lotteryCompileInfo = await PLottery.compile({
       cache: Cache.FileSystem('./cache'),
     });
 
@@ -113,9 +113,17 @@ export class StateService implements OnModuleInit {
     console.log(randomManagerCompileInfo.verificationKey.hash.toString());
 
     console.log('Factory compile');
-    await PlotteryFactory.compile({
+    const factoryCompileInfo = await PlotteryFactory.compile({
       cache: Cache.FileSystem('./cache'),
     });
+
+    console.log(`fc verification key`);
+    console.log(factoryCompileInfo.verificationKey.hash.toString());
+
+
+    console.log(`lm verification key`);
+    console.log(lotteryCompileInfo.verificationKey.hash.toString());
+
 
     console.log('Compilation ended');
 
@@ -386,6 +394,7 @@ export class StateService implements OnModuleInit {
     const factory = this.factory;
 
     await fetchAccount({ publicKey: factory.address });
+    console.log(await Mina.activeInstance.getNetworkId())
     const initSlot = factory.startSlot.get();
     const currentSlot = await getCurrentSlot();
     const currentRound = Math.floor(

@@ -12,8 +12,8 @@ export const FACTORY_ADDRESS: {
   readonly [networkId: string]: string | 'not-deployed';
 } = {
   [NetworkIds.MINA_DEVNET]:
-    'B62qrEZ2z4ERbYKVW8RMChVEaWE8hDEzSuoAV46RHFZyyxv5oR6NXda',
+    'B62qqtJ6BbCPzPK7ncn5ZrA2mSKD3VjdGHBA7eTjKVZgceKKE1dm249',
   [NetworkIds.MINA_MAINNET]:
-    'B62qoJ59ASv7orJxqM7uVXeyeBf2C3TaPC3rcCe1viJCrQnUb5Hv65X',
+    'B62qp1AZXxLWvYaKT5cNJzuLCRXfBBn9HwNLwebbcRLaiyNuuJNXkLk',
   [NetworkIds.ZEKO_TESTNET]: 'not-deployed',
 };

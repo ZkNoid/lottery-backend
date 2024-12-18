@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Field, Mina, PrivateKey, fetchAccount } from 'o1js';
-import { BLOCK_PER_ROUND, ZkOnCoordinatorAddress } from 'l1-lottery-contracts';
+import { BLOCK_PER_ROUND, PLottery, ZkOnCoordinatorAddress } from 'l1-lottery-contracts';
 import { StateService } from '../../state-service/state.service.js';
 import { getCurrentSlot } from '../../lib.js';
 import { Model } from 'mongoose';

@@ -17,8 +17,8 @@ export const NETWORKS: {readonly [networkId: string]: Network} = {
     isMainnet: true,
     networkID: NetworkIds.MINA_MAINNET,
     name: 'Mainnet',
-    graphql: 'https://proxy.zknoid.io/mina-node/mainnet-main-node',
-    archive: 'https://proxy.zknoid.io/mina-node/mainnet-archive-node',
+    graphql: 'https://api.minascan.io/node/mainnet/v1/graphql',
+    archive: 'https://api.minascan.io/archive/mainnet/v1/graphql',
   },
   [NetworkIds.MINA_DEVNET]: {
     isMainnet: false,
