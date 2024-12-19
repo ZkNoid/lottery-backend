@@ -19,8 +19,6 @@ import { StateService } from '../state-service/state.service.js';
 @Injectable()
 export class BuyApiService implements OnApplicationBootstrap {
   constructor(
-    @InjectModel(RoundsData.name)
-    private rounds: Model<RoundsData>,
     private stateManager: StateService,
   ) {}
   async onApplicationBootstrap() {
@@ -28,11 +26,11 @@ export class BuyApiService implements OnApplicationBootstrap {
   }
 
   async getBuyData(
-    roundId: number,
     ticketNums: number[],
     senderAccount: string,
     amount: number,
   ) {
+    const currentRoundId = await this.stateManager.getCurrentRound();
     const stateM = this.stateManager.state;
     const sender = PublicKey.fromBase58(senderAccount);
     const ticket = Ticket.from(
@@ -42,7 +40,9 @@ export class BuyApiService implements OnApplicationBootstrap {
     );
 
     let tx = await Mina.transaction(sender, async () => {
-      await stateM.plotteryManagers[roundId].contract!.buyTicket!(ticket);
+      await stateM.plotteryManagers[currentRoundId].contract!.buyTicket!(
+        ticket,
+      );
     });
 
     await tx.prove();

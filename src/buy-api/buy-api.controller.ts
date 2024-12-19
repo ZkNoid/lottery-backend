@@ -13,7 +13,6 @@ export class BuyApiController {
     console.log('Received model', buyData);
     try {
       return await this.buyApiService.getBuyData(
-        buyData.roundId,
         buyData.ticketNums,
         buyData.senderAccount,
         buyData.amount,
