@@ -14,6 +14,6 @@ export const FACTORY_ADDRESS: {
   [NetworkIds.MINA_DEVNET]:
     'B62qqtJ6BbCPzPK7ncn5ZrA2mSKD3VjdGHBA7eTjKVZgceKKE1dm249',
   [NetworkIds.MINA_MAINNET]:
-    'B62qp1AZXxLWvYaKT5cNJzuLCRXfBBn9HwNLwebbcRLaiyNuuJNXkLk',
+    'B62qkmwNKgW5TsU95HhzLd1jFAEpsiGG27aiga1crLaUkPBeR4pZ5FU',
   [NetworkIds.ZEKO_TESTNET]: 'not-deployed',
 };
