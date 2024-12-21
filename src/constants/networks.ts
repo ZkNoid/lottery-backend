@@ -3,7 +3,8 @@ export interface Network {
   name: string;
   graphql: string;
   archive: string;
-  isMainnet: boolean,
+  isMainnet: boolean;
+  blockberryEndpoint: string;
 }
 
 export const NetworkIds = {
@@ -19,6 +20,7 @@ export const NETWORKS: {readonly [networkId: string]: Network} = {
     name: 'Mainnet',
     graphql: 'https://api.minascan.io/node/mainnet/v1/graphql',
     archive: 'https://api.minascan.io/archive/mainnet/v1/graphql',
+    blockberryEndpoint: 'https://api.blockberry.one/mina-mainnet/v1'
   },
   [NetworkIds.MINA_DEVNET]: {
     isMainnet: false,
@@ -26,12 +28,14 @@ export const NETWORKS: {readonly [networkId: string]: Network} = {
     name: 'Devnet',
     graphql: 'https://proxy.zknoid.io/mina-node/devnet-main-node',
     archive: 'https://proxy.zknoid.io/mina-node/devnet-archive-node',
+    blockberryEndpoint: 'https://api.blockberry.one/mina-devnet/v1'
   },
   [NetworkIds.ZEKO_TESTNET]: {
     isMainnet: false,
     networkID: NetworkIds.ZEKO_TESTNET,
     name: 'Zeko',
     graphql: 'https://devnet.zeko.io/graphql',
-    archive: ''
+    archive: '',
+    blockberryEndpoint: ''
   }
 };

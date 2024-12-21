@@ -12,6 +12,7 @@ import {
 } from '../schema/gift-codes.schema.js';
 
 import { ApproveGiftCodesService } from './approve-gift-codes.service.js';
+import { StateModule } from '../../state-service/state.module.js';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ApproveGiftCodesService } from './approve-gift-codes.service.js';
         maxRedirects: 5,
       }),
     }),
+    StateModule,
   ],
   providers: [ApproveGiftCodesService],
 })

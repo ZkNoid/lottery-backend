@@ -4,8 +4,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { GiftCodesRequestedData } from '../schema/gift-codes-requested.schema.js';
 import { GiftCodesData } from '../schema/gift-codes.schema.js';
-
-const TICKET_PRICE = 10.0;
+import { StateService } from '../../state-service/state.service.js';
+import { TICKET_PRICE } from 'l1-lottery-contracts';
 
 @Injectable()
 export class ApproveGiftCodesService implements OnApplicationBootstrap {
@@ -16,6 +16,7 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
     private giftCodesRequested: Model<GiftCodesRequestedData>,
     @InjectModel(GiftCodesData.name)
     private giftCodes: Model<GiftCodesData>,
+    private stateManager: StateService,
   ) {}
   async onApplicationBootstrap() {}
 
@@ -23,13 +24,11 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
     this.logger.log('Requested gift', giftRequested);
     this.logger.log('Checking tx status', giftRequested);
 
-    if (
-      !giftRequested.paymentHash.match(/^[5KL][1-9A-HJ-NP-Za-km-z]{50,58}$/)
-    )
+    if (!giftRequested.paymentHash.match(/^[5KL][1-9A-HJ-NP-Za-km-z]{50,58}$/))
       throw new Error('Incorrect tx hash');
 
     const txInfoRequest = await fetch(
-      `https://api.blockberry.one/mina-devnet/v1/transactions/${giftRequested.paymentHash}`,
+      `${this.stateManager.network.blockberryEndpoint}/transactions/${giftRequested.paymentHash}`,
       {
         headers: {
           'x-api-key': process.env.BLOCKBERRY_API_KEY,
@@ -38,7 +37,7 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
     );
 
     const confirmationInfoRequest = await fetch(
-      `https://api.blockberry.one/mina-devnet/v1/block-confirmation/${giftRequested.paymentHash}`,
+      `${this.stateManager.network.blockberryEndpoint}/block-confirmation/${giftRequested.paymentHash}`,
       {
         headers: {
           'x-api-key': process.env.BLOCKBERRY_API_KEY,
@@ -52,7 +51,7 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
     this.logger.log('Confirmation info', confirmationInfo);
     this.logger.log('Tx info', txInfo);
 
-    if (txInfo.amount != giftRequested.codes.length * TICKET_PRICE) {
+    if (txInfo.amount != giftRequested.codes.length * Number(TICKET_PRICE.toBigInt() / 10n ** 9n)) {
       throw new Error('Incorrect gift code amount');
     }
 
