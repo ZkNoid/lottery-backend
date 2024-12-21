@@ -32,7 +32,7 @@ import { DeployRoundModule } from './deploy-rounds/deploy-rounds.module.js';
         GiftTicketBuyerModule,
         QuestUpdateModule,
         RewardClaimerModule,
-        // DeployRoundModule,
+        DeployRoundModule,
       ],
       useFactory: async () => ({
         uri: process.env.MONGODB_URI,
