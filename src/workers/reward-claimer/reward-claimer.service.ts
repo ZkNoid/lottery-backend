@@ -161,7 +161,7 @@ export class RewardClaimerService implements OnApplicationBootstrap {
           if (totalErrorAmount >= NUM_OF_ERRORS_TO_FAIL) {
             await this.claimRequestData.updateOne(
               { _id: pendingRequest._id },
-              { status: 'failed', reasons: {'$push': e?.stack || '' }},
+              { status: 'failed', reason: e?.stack || ''},
             );
           } else {
             await this.claimRequestData.updateOne(
