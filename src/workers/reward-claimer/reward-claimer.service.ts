@@ -31,8 +31,7 @@ export class RewardClaimerService implements OnApplicationBootstrap {
     amount: number,
     pos: number = 0, // If there are two similar ticket allows to pick one of those
   ): number {
-    const contractSM =
-      this.stateManager.state.plotteryManagers[roundId];
+    const contractSM = this.stateManager.state.plotteryManagers[roundId];
 
     const ticket = new Ticket({
       owner: PublicKey.fromBase58(owner),
@@ -90,9 +89,7 @@ export class RewardClaimerService implements OnApplicationBootstrap {
           );
 
           const contractSM =
-            this.stateManager.state.plotteryManagers[
-              pendingRequest.roundId
-            ];
+            this.stateManager.state.plotteryManagers[pendingRequest.roundId];
 
           if (
             !(await this.stateManager.checkPlotteryConsistency(
@@ -100,9 +97,7 @@ export class RewardClaimerService implements OnApplicationBootstrap {
             ))
           ) {
             this.logger.debug('Incosistent state. Refetch');
-            await this.infoUpdater.updateInfoForRound(
-              pendingRequest.roundId,
-            );
+            await this.infoUpdater.updateInfoForRound(pendingRequest.roundId);
           }
           const contract = contractSM.contract;
 
@@ -161,12 +156,26 @@ export class RewardClaimerService implements OnApplicationBootstrap {
           if (totalErrorAmount >= NUM_OF_ERRORS_TO_FAIL) {
             await this.claimRequestData.updateOne(
               { _id: pendingRequest._id },
-              { status: 'failed', reason: e?.stack || ''},
+              {
+                $set: {
+                  status: 'failed',
+                },
+                $push: {
+                  reasons: e?.stack || '',
+                },
+              },
             );
           } else {
             await this.claimRequestData.updateOne(
               { _id: pendingRequest._id },
-              { numOfErrors: totalErrorAmount, reason: e?.stack || '' },
+              {
+                $set: {
+                  numOfErrors: totalErrorAmount,
+                },
+                $push: {
+                  reasons: e?.stack || '',
+                },
+              },
             );
           }
         }
