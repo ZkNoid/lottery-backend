@@ -147,13 +147,14 @@ export class RewardClaimerService implements OnApplicationBootstrap {
           );
         } catch (e) {
           this.logger.error(
-            `Failed to fulfill claim request for round ${pendingRequest.roundId}`,
+            `|Failed to fulfill claim request for round ${pendingRequest.roundId}`,
             e.stack,
           );
 
           const totalErrorAmount = (pendingRequest.numOfErrors ?? 0) + 1;
 
           if (totalErrorAmount >= NUM_OF_ERRORS_TO_FAIL) {
+            console.log('B1')
             await this.claimRequestData.updateOne(
               { _id: pendingRequest._id },
               {
@@ -165,7 +166,9 @@ export class RewardClaimerService implements OnApplicationBootstrap {
                 },
               },
             );
+            console.log('B1e')
           } else {
+            console.log('B2')
             await this.claimRequestData.updateOne(
               { _id: pendingRequest._id },
               {
@@ -177,6 +180,7 @@ export class RewardClaimerService implements OnApplicationBootstrap {
                 },
               },
             );
+            console.log('B2e')
           }
         }
       });
