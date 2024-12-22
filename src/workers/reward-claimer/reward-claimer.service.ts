@@ -166,7 +166,7 @@ export class RewardClaimerService implements OnApplicationBootstrap {
           } else {
             await this.claimRequestData.updateOne(
               { _id: pendingRequest._id },
-              { numOfErrors: totalErrorAmount },
+              { numOfErrors: totalErrorAmount, reason: e?.stack || '' },
             );
           }
         }
