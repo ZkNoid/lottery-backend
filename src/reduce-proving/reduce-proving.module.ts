@@ -15,6 +15,7 @@ import { ZknoidConfigModule } from '../config/config.module.js';
 import { ConfigService } from '@nestjs/config';
 import { SyncEventsModule } from '../workers/sync-events/sync-events.module.js';
 import { HealthController } from '../health-api/health-api.controller.js';
+import { RoundInfoUpdaterModule } from 'src/workers/round-infos-updater/round-infos-updater.module.js';
 
 
 @Module({
@@ -33,6 +34,7 @@ import { HealthController } from '../health-api/health-api.controller.js';
       },
     ]),
     StateModule,
+    RoundInfoUpdaterModule
   ],
   providers: [ProveReduceService],
   controllers: [HealthController]
