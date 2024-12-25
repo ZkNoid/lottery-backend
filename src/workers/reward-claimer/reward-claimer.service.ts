@@ -24,42 +24,6 @@ export class RewardClaimerService implements OnApplicationBootstrap {
   ) {}
   async onApplicationBootstrap() {}
 
-  findTicketId(
-    roundId: number,
-    owner: string,
-    numbers: number[],
-    amount: number,
-    pos: number = 0, // If there are two similar ticket allows to pick one of those
-  ): number {
-    const contractSM = this.stateManager.state.plotteryManagers[roundId];
-
-    const ticket = new Ticket({
-      owner: PublicKey.fromBase58(owner),
-      numbers: numbers.map((n) => UInt32.from(n)),
-      amount: UInt64.from(amount),
-    });
-
-    for (
-      let ticketId = 0;
-      ticketId < contractSM.lastTicketInRound;
-      ticketId++
-    ) {
-      if (
-        contractSM.ticketMap
-          .get(Field(ticketId))
-          .equals(ticket.hash())
-          .toBoolean()
-      ) {
-        if (pos == 0) {
-          return ticketId;
-        }
-        pos--;
-      }
-    }
-
-    return -1;
-  }
-
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
     if (this.isRunning) {
@@ -102,24 +66,16 @@ export class RewardClaimerService implements OnApplicationBootstrap {
           const contract = contractSM.contract;
 
           this.logger.log(`Finding ticket for request ${pendingRequest}`);
-          const ticketId = this.findTicketId(
-            pendingRequest.roundId,
-            pendingRequest.userAddress,
-            pendingRequest.ticketNumbers,
-            pendingRequest.ticketAmount,
-            pendingRequest.pos ?? 0,
-          );
-          if (ticketId === -1) {
-            throw new Error('Ticket not found');
-          }
+          const ticketId = pendingRequest.ticketId;
 
           const ticket = contractSM.roundTickets[ticketId];
 
           // #TODO remove round form getReward
-          let rewardParams = await contractSM.getReward(
-            pendingRequest.roundId,
-            ticket,
-          );
+          let rewardParams = await contractSM.getRewardByTicketId(ticketId);
+
+          console.log('Claimming ticket', ticket);
+          console.log('Claimming ticket', ticket.numbers.map(x => x.toString()));
+          console.log('Claimming ticket', ticket.amount.toString());
 
           let tx = await Mina.transaction(
             { sender: signerAccount, fee: Number('0.1') * 1e9 },
@@ -147,14 +103,13 @@ export class RewardClaimerService implements OnApplicationBootstrap {
           );
         } catch (e) {
           this.logger.error(
-            `|Failed to fulfill claim request for round ${pendingRequest.roundId}`,
+            `Failed to fulfill claim request for round ${pendingRequest.roundId}`,
             e.stack,
           );
 
           const totalErrorAmount = (pendingRequest.numOfErrors ?? 0) + 1;
 
           if (totalErrorAmount >= NUM_OF_ERRORS_TO_FAIL) {
-            console.log('B1')
             await this.claimRequestData.updateOne(
               { _id: pendingRequest._id },
               {
@@ -166,9 +121,7 @@ export class RewardClaimerService implements OnApplicationBootstrap {
                 },
               },
             );
-            console.log('B1e')
           } else {
-            console.log('B2')
             await this.claimRequestData.updateOne(
               { _id: pendingRequest._id },
               {
@@ -180,7 +133,6 @@ export class RewardClaimerService implements OnApplicationBootstrap {
                 },
               },
             );
-            console.log('B2e')
           }
         }
       });

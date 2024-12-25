@@ -316,35 +316,12 @@ export class StateService implements OnModuleInit {
         // stateM.bankMap.set(data.round, newBankValue);
       }
       if (event.type == 'get-reward') {
+
+        
         // console.log('Got reward', event.event.data, 'round' + round);
 
-        let ticketId = 0;
-        let ticketWitness;
-
-        for (; ticketId < stateM.lastTicketInRound; ticketId++) {
-          if (
-            stateM.ticketMap
-              .get(Field(ticketId))
-              .equals(data.ticket.hash())
-              .toBoolean()
-          ) {
-            ticketWitness = stateM.ticketMap.getWitness(Field.from(ticketId));
-            break;
-          }
-        }
-
-        // console.log(
-        //   `Before: ${stateM.ticketNullifierMap.getRoot().toString()}`,
-        // );
-        // console.log(
-        //   JSON.stringify(
-        //     stateM.ticketNullifierMap.getWitness(Field(ticketId)),
-        //     null,
-        //     2,
-        //   ),
-        // );
-        stateM.ticketNullifierMap.set(Field(ticketId), Field(1));
-        claimedTicketsHashes_[round][ticketId] =
+        stateM.ticketNullifierMap.set(Field(data.ticketId), Field(1));
+        claimedTicketsHashes_[round][Number(Field(data.ticketId).toBigInt())] =
           event.event.transactionInfo.transactionHash;
 
         // console.log(`After ${stateM.ticketNullifierMap.getRoot().toString()}`);
