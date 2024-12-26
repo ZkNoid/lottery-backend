@@ -146,7 +146,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
               numbers: x.numbers.map((x) => Number(x.toBigint())),
               owner: x.owner.toBase58(),
               funds: totalShares
-                ? (roundBank * ticketsShares[i] * BigInt(PRECISION)) / ((totalShares * BigInt(COMMISSION + PRECISION)))
+                ? ((roundBank - roundBank * BigInt(COMMISSION) / BigInt(PRECISION)) * ticketsShares[i]) / totalShares
                 : 0n,
               claimed: roundStateManager.ticketNullifierMap
                 .get(Field.from(i))
