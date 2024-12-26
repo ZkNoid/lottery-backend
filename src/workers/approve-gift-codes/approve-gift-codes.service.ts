@@ -58,6 +58,7 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
     const paymentHashData = await this.giftCodesRequested.findOne(
       {
         paymentHash: giftRequested.paymentHash,
+        processed: true
       }
     );
 
