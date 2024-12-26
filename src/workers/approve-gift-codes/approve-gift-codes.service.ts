@@ -55,6 +55,16 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
       throw new Error('Incorrect gift code amount');
     }
 
+    const paymentHashData = await this.giftCodesRequested.findOne(
+      {
+        paymentHash: giftRequested.paymentHash,
+      }
+    );
+
+    if (paymentHashData) {
+      throw new Error('Code already requested');
+    }
+
     if (
       confirmationInfo.blockConfirmationsCount > 5 &&
       confirmationInfo.isCanonical &&
