@@ -6,7 +6,9 @@ import { fetchAccount, Field } from 'o1js';
 import { HttpService } from '@nestjs/axios';
 import {
   BLOCK_PER_ROUND,
+  COMMISSION,
   NumberPacked,
+  PRECISION,
   TICKET_PRICE,
 } from 'l1-lottery-contracts';
 import { RoundsData } from '../schema/rounds.schema.js';
@@ -144,7 +146,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
               numbers: x.numbers.map((x) => Number(x.toBigint())),
               owner: x.owner.toBase58(),
               funds: totalShares
-                ? (roundBank * ticketsShares[i]) / ((totalShares * 103n) / 100n)
+                ? (roundBank * ticketsShares[i] * BigInt(PRECISION)) / ((totalShares * BigInt(COMMISSION + PRECISION)))
                 : 0n,
               claimed: roundStateManager.ticketNullifierMap
                 .get(Field.from(i))
