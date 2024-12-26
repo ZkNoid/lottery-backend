@@ -28,18 +28,20 @@ export class DeployRoundService implements OnApplicationBootstrap {
     // await this.handleCron();
   }
 
-  async checkRoundConditions() {
+  async checkRoundConditions(onStartup: boolean) {
     const currentRound = await this.stateManager.getCurrentRound();
 
-    const lastRound = await this.rounds.findOne().sort({ roundId: -1 }) || {
-      roundId: -1
+    const lastRound = (await this.rounds.findOne().sort({ roundId: -1 })) || {
+      roundId: -1,
     };
 
     const gap = lastRound.roundId - currentRound;
 
-    const expectedGap = process.env.MAX_DEPLOYED_ROUNDS_GAP
-      ? +process.env.MAX_DEPLOYED_ROUNDS_GAP
-      : 5;
+    const expectedGap = onStartup
+      ? 1
+      : process.env.MAX_DEPLOYED_ROUNDS_GAP
+        ? +process.env.MAX_DEPLOYED_ROUNDS_GAP
+        : 5;
 
     this.logger.log(`Current gap: ${gap}, expected: ${expectedGap}`);
 
@@ -109,11 +111,14 @@ export class DeployRoundService implements OnApplicationBootstrap {
   }
 
   async onModuleInit() {
-    await this.handleCron();
+    await this.deploy(true);
   }
 
   @Cron(CronExpression.EVERY_6_HOURS)
   async handleCron() {
+    await this.deploy(false);
+  }
+  async deploy(onStartup: boolean) {
     if (this.isRunning) {
       this.logger.log('Already running');
       return;
@@ -125,7 +130,7 @@ export class DeployRoundService implements OnApplicationBootstrap {
     try {
       this.logger.debug('Checking conditions');
       await this.stateManager.fetchRounds();
-      let { shouldDeploy, round } = await this.checkRoundConditions();
+      let { shouldDeploy, round } = await this.checkRoundConditions(onStartup);
 
       if (shouldDeploy) {
         await this.stateManager.transactionMutex.runExclusive(async () => {
