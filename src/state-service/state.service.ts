@@ -69,7 +69,7 @@ export class StateService implements OnModuleInit {
 
     this.factory = factory_;
     this.state = new FactoryManager(false, false);
-    
+
     this.network = network_;
 
     await this.fetchRounds();
@@ -120,10 +120,8 @@ export class StateService implements OnModuleInit {
     console.log(`fc verification key`);
     console.log(factoryCompileInfo.verificationKey.hash.toString());
 
-
     console.log(`lm verification key`);
     console.log(lotteryCompileInfo.verificationKey.hash.toString());
-
 
     console.log('Compilation ended');
 
@@ -131,23 +129,43 @@ export class StateService implements OnModuleInit {
   }
 
   async fetchRounds() {
-    console.log('fetchRounds');
-      const state_ = new FactoryManager(false, false);
-      const events = await this.factory.fetchEvents();
+    console.log('fetchRounds for contract: ', this.factory.address.toBase58());
+    const state_ = new FactoryManager(false, false);
+    let events = await this.factory.fetchEvents();
 
-      events.forEach((event) => {
-        // console.log(event.event.data);
-        const data = event.event.data as any;
+    if (events.length < 7 || +(events[6].event.data as any).round != 6) {
+      events = [
+        ...events.slice(0, 6),
+        {
+          event: {
+            data: {
+              round: 6,
+              randomManager: PublicKey.fromBase58(
+                'B62qna1oLNLR9oLJKGQQGnyyyTVtEPp8AVqcwKHDKfD32JRr37JUFWE',
+              ),
+              plottery: PublicKey.fromBase58(
+                'B62qqWn6decELnnNVMpzfX1mYj7EjdbvSrpS1vDiM5rF4eKV84LDZiC',
+              ),
+            },
+          },
+        } as any,
+        ...events.slice(6),
+      ];
+    }
 
-        // console.log(
-        //   `Adding: ${data.round} ${data.randomManager} ${data.plottery}`,
-        // );
+    events.forEach((event) => {
+      const data = event.event.data as any;
 
-        state_.addDeploy(data.round, data.randomManager, data.plottery);
-      });
+      console.log(
+        `Adding: ${data.round} ${data.randomManager.toBase58()} ${data.plottery.toBase58()}`,
+      );
 
-      this.state = state_;
-    
+      state_.addDeploy(data.round, data.randomManager, data.plottery);
+
+      console.log(`New root: ${state_.roundsMap.getRoot()}`);
+    });
+
+    this.state = state_;
   }
 
   async fetchEvents(round: number, startBlock: number = 0) {
@@ -316,8 +334,6 @@ export class StateService implements OnModuleInit {
         // stateM.bankMap.set(data.round, newBankValue);
       }
       if (event.type == 'get-reward') {
-
-        
         // console.log('Got reward', event.event.data, 'round' + round);
 
         stateM.ticketNullifierMap.set(Field(data.ticketId), Field(1));
@@ -371,7 +387,7 @@ export class StateService implements OnModuleInit {
     const factory = this.factory;
 
     await fetchAccount({ publicKey: factory.address });
-    console.log(await Mina.activeInstance.getNetworkId())
+    console.log(await Mina.activeInstance.getNetworkId());
     const initSlot = factory.startSlot.get();
     const currentSlot = await getCurrentSlot();
     const currentRound = Math.floor(
@@ -381,9 +397,7 @@ export class StateService implements OnModuleInit {
     return currentRound;
   }
 
-  async checkPlotteryConsistency(
-    roundId: number,
-  ): Promise<boolean> {
+  async checkPlotteryConsistency(roundId: number): Promise<boolean> {
     const stateM = this.state!;
     const roundStateManager = stateM.plotteryManagers[roundId];
     const contract = roundStateManager.contract;
