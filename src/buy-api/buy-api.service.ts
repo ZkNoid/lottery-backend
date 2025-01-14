@@ -42,6 +42,13 @@ export class BuyApiService implements OnApplicationBootstrap {
     let tx;
 
     await this.stateManager.cloudProvingMutex.runExclusive(async () => {
+      if (!stateM.plotteryManagers[currentRoundId]) {
+        console.log(
+          `No contract for round ${currentRoundId} found. Fetching rounds`,
+        );
+        await this.stateManager.fetchRounds();
+      }
+
       tx = await Mina.transaction(sender, async () => {
         await stateM.plotteryManagers[currentRoundId].contract!.buyTicket!(
           ticket,
