@@ -30,7 +30,7 @@ import { DeployRoundModule } from './deploy-rounds/deploy-rounds.module.js';
         RoundInfoUpdaterModule,
         ApproveGiftCodesModule,
         GiftTicketBuyerModule,
-        QuestUpdateModule,
+        // QuestUpdateModule,
         RewardClaimerModule,
         DeployRoundModule,
       ],
