@@ -47,6 +47,9 @@ services:
       - autoheal
 
   buy_server:
+    ports:
+      - '3049:3049'
+
     env_file: .env
     build: .
 
