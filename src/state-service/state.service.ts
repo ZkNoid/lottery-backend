@@ -41,6 +41,7 @@ export class StateService implements OnModuleInit {
   network: Network = undefined;
 
   transactionMutex: Mutex = new Mutex();
+  cloudProvingMutex: Mutex = new Mutex();
 
   async onModuleInit() {
     await this.initialize();
@@ -69,7 +70,7 @@ export class StateService implements OnModuleInit {
 
     this.factory = factory_;
     this.state = new FactoryManager(false, false);
-    
+
     this.network = network_;
 
     await this.fetchRounds();
@@ -120,10 +121,8 @@ export class StateService implements OnModuleInit {
     console.log(`fc verification key`);
     console.log(factoryCompileInfo.verificationKey.hash.toString());
 
-
     console.log(`lm verification key`);
     console.log(lotteryCompileInfo.verificationKey.hash.toString());
-
 
     console.log('Compilation ended');
 
@@ -132,22 +131,21 @@ export class StateService implements OnModuleInit {
 
   async fetchRounds() {
     console.log('fetchRounds');
-      const state_ = new FactoryManager(false, false);
-      const events = await this.factory.fetchEvents();
+    const state_ = new FactoryManager(false, false);
+    const events = await this.factory.fetchEvents();
 
-      events.forEach((event) => {
-        // console.log(event.event.data);
-        const data = event.event.data as any;
+    events.forEach((event) => {
+      // console.log(event.event.data);
+      const data = event.event.data as any;
 
-        // console.log(
-        //   `Adding: ${data.round} ${data.randomManager} ${data.plottery}`,
-        // );
+      // console.log(
+      //   `Adding: ${data.round} ${data.randomManager} ${data.plottery}`,
+      // );
 
-        state_.addDeploy(data.round, data.randomManager, data.plottery);
-      });
+      state_.addDeploy(data.round, data.randomManager, data.plottery);
+    });
 
-      this.state = state_;
-    
+    this.state = state_;
   }
 
   async fetchEvents(round: number, startBlock: number = 0) {
@@ -316,8 +314,6 @@ export class StateService implements OnModuleInit {
         // stateM.bankMap.set(data.round, newBankValue);
       }
       if (event.type == 'get-reward') {
-
-        
         // console.log('Got reward', event.event.data, 'round' + round);
 
         stateM.ticketNullifierMap.set(Field(data.ticketId), Field(1));
@@ -371,7 +367,7 @@ export class StateService implements OnModuleInit {
     const factory = this.factory;
 
     await fetchAccount({ publicKey: factory.address });
-    console.log(await Mina.activeInstance.getNetworkId())
+    console.log(await Mina.activeInstance.getNetworkId());
     const initSlot = factory.startSlot.get();
     const currentSlot = await getCurrentSlot();
     const currentRound = Math.floor(
@@ -381,9 +377,7 @@ export class StateService implements OnModuleInit {
     return currentRound;
   }
 
-  async checkPlotteryConsistency(
-    roundId: number,
-  ): Promise<boolean> {
+  async checkPlotteryConsistency(roundId: number): Promise<boolean> {
     const stateM = this.state!;
     const roundStateManager = stateM.plotteryManagers[roundId];
     const contract = roundStateManager.contract;

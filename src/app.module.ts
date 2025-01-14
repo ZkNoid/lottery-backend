@@ -8,6 +8,6 @@ import { BuyApiModule } from './buy-api/buy-api.module.js';
 import { StaketabProxyModule } from './staketab-wrapper-api/staketab-wrapper-api.module.js';
 
 @Module({
-  imports: [WorkersModule, ClaimApiModule, BuyApiModule],
+  imports: [WorkersModule, ClaimApiModule],
 })
 export class AppModule {}

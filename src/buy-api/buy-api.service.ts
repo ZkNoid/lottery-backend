@@ -18,9 +18,7 @@ import { StateService } from '../state-service/state.service.js';
 
 @Injectable()
 export class BuyApiService implements OnApplicationBootstrap {
-  constructor(
-    private stateManager: StateService,
-  ) {}
+  constructor(private stateManager: StateService) {}
   async onApplicationBootstrap() {
     // await this.handleCron();
   }
@@ -39,13 +37,19 @@ export class BuyApiService implements OnApplicationBootstrap {
       amount,
     );
 
-    let tx = await Mina.transaction(sender, async () => {
-      await stateM.plotteryManagers[currentRoundId].contract!.buyTicket!(
-        ticket,
-      );
-    });
+    console.log(`Round: ${currentRoundId.toString()}`);
 
-    await tx.prove();
+    let tx;
+
+    await this.stateManager.cloudProvingMutex.runExclusive(async () => {
+      tx = await Mina.transaction(sender, async () => {
+        await stateM.plotteryManagers[currentRoundId].contract!.buyTicket!(
+          ticket,
+        );
+      });
+
+      await tx.prove();
+    });
 
     return {
       txJson: tx.toJSON(),

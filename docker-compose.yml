@@ -1,4 +1,4 @@
-version: "3"
+version: '3'
 services:
   autoheal:
     restart: always
@@ -9,8 +9,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   api_server:
-    env_file:
-      .env
+    env_file: .env
     build: .
 
     environment:
@@ -18,7 +17,7 @@ services:
 
     command: sh -c "pnpm start"
     ports:
-      - "5101:3040"
+      - '5101:3040'
     restart: unless-stopped
 
     healthcheck:
@@ -30,8 +29,7 @@ services:
       - autoheal
 
   reduce_prover:
-    env_file:
-      .env
+    env_file: .env
     build: .
 
     environment:
@@ -39,7 +37,7 @@ services:
 
     command: sh -c "pnpm start-rp"
     restart: unless-stopped
-  
+
     healthcheck:
       test: wget -S -O- http://reduce_prover:3042/health-api/health || exit 1
       interval: 5m
@@ -48,9 +46,26 @@ services:
     depends_on:
       - autoheal
 
+  buy_server:
+    env_file: .env
+    build: .
+
+    environment:
+      TZ: Europe/Moscow
+
+    command: sh -c "pnpm start-buy-server"
+    restart: unless-stopped
+
+    healthcheck:
+      test: wget -S -O- http://buy_server:3049/health-api/health || exit 1
+      interval: 5m
+      timeout: 5m
+      retries: 3
+    depends_on:
+      - autoheal
+
   second_party:
-    env_file:
-      .env.second-party
+    env_file: .env.second-party
     build: .
 
     environment:
@@ -58,7 +73,7 @@ services:
 
     command: sh -c "pnpm start-second-party"
     restart: unless-stopped
-  
+
     healthcheck:
       test: wget -S -O- http://reduce_prover:3044/health-api/health || exit 1
       interval: 5m
@@ -69,10 +84,9 @@ services:
 
   staketab_proxy_api:
     ports:
-      - "3043:3043"
+      - '3043:3043'
 
-    env_file:
-      .env
+    env_file: .env
     build: .
 
     environment:
@@ -80,7 +94,6 @@ services:
 
     command: sh -c "pnpm start-staketab-proxy"
     restart: unless-stopped
-  
+
     depends_on:
       - autoheal
-

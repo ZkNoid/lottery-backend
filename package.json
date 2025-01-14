@@ -10,6 +10,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
+    "start-buy-server": "nest start --entryFile main-buy-api.js",
     "start-rp": "nest start --entryFile main-reduce-proving.js",
     "start-staketab-proxy": "nest start --entryFile main-staketab-proxy.js",
     "start-second-party": "nest start --entryFile main-second-party.js",
