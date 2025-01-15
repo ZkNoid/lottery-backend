@@ -111,7 +111,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
         },
       );
 
-      this.logger.log('BUY TX', tx);
+      // this.logger.log('BUY TX', tx);
 
       await tx.prove();
       this.logger.log('Proved, Waiting for send');
@@ -158,6 +158,14 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
   async processManyPromoRequest(
     giftRequested: (Document<unknown, {}, PromoQueueData> & PromoQueueData)[],
   ) {
+    // Start processing
+    await this.promoQueueData.updateMany(
+      {
+        _id: { $in: giftRequested.map((request) => request._id) },
+      },
+      { $set: { processingStarted: true } },
+    );
+
     // Remove requests with same gift code
     let uniqueRequests = await this.rejectDuplicateRequests(giftRequested);
 
@@ -187,7 +195,9 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
       }
 
       await Promise.all(
-        transactions.filter((tx) => tx.success).map((tx) => tx.transaction),
+        transactions
+          .filter((tx) => tx.success)
+          .map((tx) => tx.transaction.safeWait()),
       );
     });
   }
@@ -228,7 +238,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
         await this.processManyPromoRequest(giftRequested);
       } catch (e) {
         for (const request of giftRequested) {
-          this.rejectRequest(request._id, e.toString());
+          await this.rejectRequest(request._id, e.toString());
         }
       }
     } finally {
