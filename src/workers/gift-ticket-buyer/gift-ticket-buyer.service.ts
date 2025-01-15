@@ -200,6 +200,10 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
     }
     this.isRunning = true;
 
+    const batchSize = process.env.PROMO_BATCH_SIZE
+      ? +process.env.PROMO_BATCH_SIZE
+      : 1;
+
     try {
       this.logger.log('Promo queue checking');
 
@@ -210,7 +214,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
           processed: { $ne: true },
           processingStarted: { $ne: true },
         })
-        .limit(10);
+        .limit(batchSize);
 
       if (giftRequested.length == 0) {
         this.logger.log('No gift codes left');
