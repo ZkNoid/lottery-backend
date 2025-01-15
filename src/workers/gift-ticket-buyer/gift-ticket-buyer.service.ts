@@ -27,7 +27,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
     const dbPromo = await this.giftCodes.findOneAndUpdate(
       {
         code: giftRequested.giftCode,
-        used: {$ne: true},
+        used: { $ne: true },
       },
       {
         $set: {
@@ -72,6 +72,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
       await tx.prove();
       this.logger.log('Proved, Waiting for send');
       const sentTx = await tx.sign([signer]).send();
+      await sentTx.safeWait();
       this.logger.log('Got tx');
 
       await this.promoQueueData.updateOne(
