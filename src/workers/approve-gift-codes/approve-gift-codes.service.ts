@@ -51,23 +51,24 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
     this.logger.log('Confirmation info', confirmationInfo);
     this.logger.log('Tx info', txInfo);
 
-    if (txInfo.amount != giftRequested.codes.length * Number(TICKET_PRICE.toBigInt() / 10n ** 9n)) {
+    if (
+      txInfo.amount !=
+      giftRequested.codes.length * Number(TICKET_PRICE.toBigInt() / 10n ** 9n)
+    ) {
       throw new Error('Incorrect gift code amount');
     }
 
-    const paymentHashData = await this.giftCodesRequested.findOne(
-      {
-        paymentHash: giftRequested.paymentHash,
-        processed: true
-      }
-    );
+    const paymentHashData = await this.giftCodesRequested.findOne({
+      paymentHash: giftRequested.paymentHash,
+      processed: true,
+    });
 
     if (paymentHashData) {
       throw new Error('Code already requested');
     }
 
     if (
-      confirmationInfo.blockConfirmationsCount > 5 &&
+      confirmationInfo.blockConfirmationsCount > 20 &&
       confirmationInfo.isCanonical &&
       confirmationInfo.txStatus == 'applied'
     ) {
