@@ -3,7 +3,16 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Ticket } from 'l1-lottery-contracts';
-import { Field, Mina, PrivateKey, PublicKey, UInt32, UInt64 } from 'o1js';
+import {
+  AccountUpdate,
+  fetchAccount,
+  Field,
+  Mina,
+  PrivateKey,
+  PublicKey,
+  UInt32,
+  UInt64,
+} from 'o1js';
 import { StateService } from '../../state-service/state.service.js';
 import { NetworkIds } from '../../constants/networks.js';
 import { ClaimRequestData } from '../schema/claim-request.schema.js';
@@ -74,12 +83,21 @@ export class RewardClaimerService implements OnApplicationBootstrap {
           let rewardParams = await contractSM.getRewardByTicketId(ticketId);
 
           console.log('Claimming ticket', ticket);
-          console.log('Claimming ticket', ticket.numbers.map(x => x.toString()));
+          console.log(
+            'Claimming ticket',
+            ticket.numbers.map((x) => x.toString()),
+          );
           console.log('Claimming ticket', ticket.amount.toString());
+
+          const ownerInfo = await fetchAccount({ publicKey: ticket.owner });
+          const isNewAccount = ownerInfo.account == undefined;
 
           let tx = await Mina.transaction(
             { sender: signerAccount, fee: Number('0.1') * 1e9 },
             async () => {
+              if (isNewAccount) {
+                AccountUpdate.fundNewAccount(signerAccount);
+              }
               await contract.getReward(
                 ticket,
                 rewardParams.ticketWitness,
