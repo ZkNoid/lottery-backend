@@ -19,6 +19,7 @@ import {
 
 import { GiftCodesBuyerService } from './gift-ticket-buyer.service.js';
 import { StateService } from '../../state-service/state.service.js';
+import { StateModule } from '../../state-service/state.module.js';
 
 @Module({
   imports: [
@@ -43,7 +44,8 @@ import { StateService } from '../../state-service/state.service.js';
         maxRedirects: 5,
       }),
     }),
+    StateModule,
   ],
-  providers: [GiftCodesBuyerService, StateService],
+  providers: [GiftCodesBuyerService],
 })
 export class GiftTicketBuyerModule {}
