@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   o1js:
-    hash: opnobzagayfgg575fntxr432iu
+    hash: 7nqqq3g6w77z3hczap22rrrie4
     path: patches/o1js.patch
 
 importers:
@@ -27,13 +27,13 @@ importers:
         version: 10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4)(reflect-metadata@0.2.2)(rxjs@7.8.1)
       '@nestjs/mongoose':
         specifier: ^10.0.6
-        version: 10.0.10(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4)(reflect-metadata@0.2.2)(rxjs@7.8.1))(mongoose@8.7.1)(rxjs@7.8.1)
+        version: 10.0.10(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4)(mongoose@8.7.1)(rxjs@7.8.1)
       '@nestjs/platform-express':
         specifier: ^10.0.0
         version: 10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4)
       '@nestjs/schedule':
         specifier: ^4.0.2
-        version: 4.1.1(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4)(reflect-metadata@0.2.2)(rxjs@7.8.1))
+        version: 4.1.1(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4)
       async-mutex:
         specifier: ^0.5.0
         version: 0.5.0
@@ -41,23 +41,20 @@ importers:
         specifier: ^1.7.2
         version: 1.7.7
       l1-lottery-contracts:
-        specifier: '=2.8.18'
-        version: 2.8.18(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu))
+        specifier: '=2.8.19'
+        version: 2.8.19(o1js@1.8.0(patch_hash=7nqqq3g6w77z3hczap22rrrie4))
       mongoose:
         specifier: ^8.4.4
         version: 8.7.1
       o1js:
         specifier: ^1.8.0
-        version: 1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)
+        version: 1.8.0(patch_hash=7nqqq3g6w77z3hczap22rrrie4)
       reflect-metadata:
         specifier: ^0.2.0
         version: 0.2.2
       rxjs:
         specifier: ^7.8.1
         version: 7.8.1
-      zkon-zkapp:
-        specifier: git://github.com/ZKON-Network/zkTLS-Mina-zkApp.git#fa772df63e10f29155ef1ea60fe6fae23485c80f
-        version: zkonmina@https://codeload.github.com/ZKON-Network/zkTLS-Mina-zkApp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu))
     devDependencies:
       '@nestjs/cli':
         specifier: ^10.0.0
@@ -67,7 +64,7 @@ importers:
         version: 10.1.4(chokidar@3.6.0)(typescript@5.6.3)
       '@nestjs/testing':
         specifier: ^10.0.0
-        version: 10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4))
+        version: 10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4)(@nestjs/platform-express@10.4.4)
       '@types/express':
         specifier: ^4.17.17
         version: 4.17.21
@@ -562,14 +559,6 @@ packages:
       '@nestjs/platform-express':
         optional: true
 
-  '@noble/curves@1.6.0':
-    resolution: {integrity: sha512-TlaHRXDehJuRNR9TfZDNQ45mMEd5dwUwmicsafcIX4SsNiqnCHKjE/1alYPd/lDRVhxdhUAlv8uEhMCI5zjIJQ==}
-    engines: {node: ^14.21.3 || >=16}
-
-  '@noble/hashes@1.5.0':
-    resolution: {integrity: sha512-1j6kQFb7QRru7eKN3ZDvRcP13rugwdxZqCjbiAVZfIJwgj2A65UmT4TgARXGlXgnRkORLTDTrO19ZErt7+QXgA==}
-    engines: {node: ^14.21.3 || >=16}
-
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -615,6 +604,12 @@ packages:
 
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
+
+  '@typegoose/typegoose@12.10.1':
+    resolution: {integrity: sha512-ueJx86GkNQX9ZaWGAeAHItKPK31OhcHVGSbzjSmjsocXztw7QEN+y7NeFgDRB/2O4TK2i36cbkVmVWjHV1B/cg==}
+    engines: {node: '>=16.20.1'}
+    peerDependencies:
+      mongoose: ~8.9.0
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -1019,6 +1014,10 @@ packages:
   bser@2.1.1:
     resolution: {integrity: sha512-gQxTNE/GAfIIrmHLUE3oJyp5FO6HRBfhjnw4/wMmA63ZGDJnWBmgY/lyQBpnDUkGmAhbSe39tx2d/iTOAfglwQ==}
 
+  bson@6.10.1:
+    resolution: {integrity: sha512-P92xmHDQjSKPLHqFxefqMxASNq/aWJMEZugpCjf+AF/pgcUpMMQCg7t7+ewko0/u8AapvF3luf/FoehddEK+sA==}
+    engines: {node: '>=16.20.1'}
+
   bson@6.8.0:
     resolution: {integrity: sha512-iOJg8pr7wq2tg/zSlCCHMi3hMm5JTOxLTagf3zxhcenHsFp+c6uOs6K7W5UE7A4QIJGtqh/ZovFNMP4mOPJynQ==}
     engines: {node: '>=16.20.1'}
@@ -1237,10 +1236,6 @@ packages:
   cross-spawn@7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
     engines: {node: '>= 8'}
-
-  data-uri-to-buffer@4.0.1:
-    resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
-    engines: {node: '>= 12'}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -1554,10 +1549,6 @@ packages:
   fd-slicer@1.1.0:
     resolution: {integrity: sha512-cE1qsB/VwyQozZ+q1dGxR8LBYNZeofhEdUNGSMbQD3Gw2lAzX9Zb3uIU6Ebc/Fmyjo9AWWfnn0AUCHqtevs/8g==}
 
-  fetch-blob@3.2.0:
-    resolution: {integrity: sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==}
-    engines: {node: ^12.20 || >= 14.13}
-
   figures@3.2.0:
     resolution: {integrity: sha512-yaduQFRKLXYOGgEn6AZau90j3ggSOyiqXU0F9JZfeXYhNa+Jk4X+s45A2zg5jns87GAFa34BBm2kXw4XpNcbdg==}
     engines: {node: '>=8'}
@@ -1631,10 +1622,6 @@ packages:
   form-data@4.0.1:
     resolution: {integrity: sha512-tzN8e4TX8+kkxGPK8D5u0FNmjPUjw3lwC9lSLxxoB/+GtsJG91CO8bSWy73APlgAZzZbXEYZJuxjkHH2w+Ezhw==}
     engines: {node: '>= 6'}
-
-  formdata-polyfill@4.0.10:
-    resolution: {integrity: sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==}
-    engines: {node: '>=12.20.0'}
 
   formidable@2.1.2:
     resolution: {integrity: sha512-CM3GuJ57US06mlpQ47YcunuUZ9jpm8Vx+P2CGt2j7HpgkKZO/DJYQ0Bobim8G6PFQmK5lOqOOdUXboU+h73A4g==}
@@ -2133,8 +2120,8 @@ packages:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
 
-  l1-lottery-contracts@2.8.18:
-    resolution: {integrity: sha512-1q2rNoCZt7tMs9QA3UTvfivu97PWWlNdQSMopK2L21gJWs1s980Aa5mMRythyizTDmqOfO/ujyUaE7Enkaz+Yw==}
+  l1-lottery-contracts@2.8.19:
+    resolution: {integrity: sha512-1PUxuaepwkWfbDAfHyDInPo6sCUV38LYLniR8XfCfYpDrZan1xMsSGkFYLAdtNw/uG7d4gPc/FiNKOmcFneHlA==}
     engines: {node: '>=18.14.0'}
     peerDependencies:
       o1js: 1.8.0
@@ -2181,6 +2168,10 @@ packages:
   log-symbols@6.0.0:
     resolution: {integrity: sha512-i24m8rpwhmPIS4zscNzK6MSEhk0DUWa/8iYQWxhffV8jkI4Phvs3F+quL5xvS0gdQR0FyTCMMH33Y78dDTzzIw==}
     engines: {node: '>=18'}
+
+  loglevel@1.9.2:
+    resolution: {integrity: sha512-HgMmCqIJSAKqo68l0rS2AanEWfkxaZ5wNiEFb5ggm08lDs9Xl2KxBlX3PTcaD2chBM1gXAYf491/M2Rv8Jwayg==}
+    engines: {node: '>= 0.6.0'}
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
@@ -2265,12 +2256,6 @@ packages:
     resolution: {integrity: sha512-VP79XUPxV2CigYP3jWwAUFSku2aKqBH7uTAapFWCBqutsbmDo96KY5o8uh6U+/YSIn5OxJnXp73beVkpqMIGhA==}
     engines: {node: '>=18'}
 
-  mina-fungible-token@https://codeload.github.com/MinaFoundation/mina-fungible-token/tar.gz/971bf58962d47870d5bcf5a220dc3a80ca5321a0:
-    resolution: {tarball: https://codeload.github.com/MinaFoundation/mina-fungible-token/tar.gz/971bf58962d47870d5bcf5a220dc3a80ca5321a0}
-    version: 0.0.0-local
-    peerDependencies:
-      o1js: ^1.1.0
-
   mina-signer@3.0.7:
     resolution: {integrity: sha512-7eYp/6WWj2VzJjvfC8dNeGMud/brdBrzkUsCdysFFXnfV2/FVpVhAGCMfaS6hs0HJtS4+eplmiD2hXfshQS8CQ==}
 
@@ -2303,6 +2288,33 @@ packages:
   mongodb-connection-string-url@3.0.1:
     resolution: {integrity: sha512-XqMGwRX0Lgn05TDB4PyG2h2kKO/FfWJyCzYQbIhXUxz7ETt0I/FqHjUeqj37irJ+Dl1ZtU82uYyj14u2XsZKfg==}
 
+  mongodb@6.12.0:
+    resolution: {integrity: sha512-RM7AHlvYfS7jv7+BXund/kR64DryVI+cHbVAy9P61fnb1RcWZqOW1/Wj2YhqMCx+MuYhqTRGv7AwHBzmsCKBfA==}
+    engines: {node: '>=16.20.1'}
+    peerDependencies:
+      '@aws-sdk/credential-providers': ^3.188.0
+      '@mongodb-js/zstd': ^1.1.0 || ^2.0.0
+      gcp-metadata: ^5.2.0
+      kerberos: ^2.0.1
+      mongodb-client-encryption: '>=6.0.0 <7'
+      snappy: ^7.2.2
+      socks: ^2.7.1
+    peerDependenciesMeta:
+      '@aws-sdk/credential-providers':
+        optional: true
+      '@mongodb-js/zstd':
+        optional: true
+      gcp-metadata:
+        optional: true
+      kerberos:
+        optional: true
+      mongodb-client-encryption:
+        optional: true
+      snappy:
+        optional: true
+      socks:
+        optional: true
+
   mongodb@6.9.0:
     resolution: {integrity: sha512-UMopBVx1LmEUbW/QE0Hw18u583PEDVQmUmVzzBRH0o/xtE9DBRA5ZYLOjpLIa03i8FXjzvQECJcqoMvCXftTUA==}
     engines: {node: '>=16.20.1'}
@@ -2332,6 +2344,10 @@ packages:
 
   mongoose@8.7.1:
     resolution: {integrity: sha512-RpNMyhyzLVCVbf8xTVbrf/18G3MqQzNw5pJdvOJ60fzbCa3cOZzz9L+8XpqzBXtRlgZGWv0T7MmOtvrT8ocp1Q==}
+    engines: {node: '>=16.20.1'}
+
+  mongoose@8.9.5:
+    resolution: {integrity: sha512-SPhOrgBm0nKV3b+IIHGqpUTOmgVL5Z3OO9AwkFEmvOZznXTvplbomstCnPOGAyungtRXE5pJTgKpKcZTdjeESg==}
     engines: {node: '>=16.20.1'}
 
   mpath@0.9.0:
@@ -2372,10 +2388,6 @@ packages:
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
 
-  node-domexception@1.0.0:
-    resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
-    engines: {node: '>=10.5.0'}
-
   node-emoji@1.11.0:
     resolution: {integrity: sha512-wo2DpQkQp7Sjm2A0cq+sN7EHKO6Sl0ctXeBdFZrL9T9+UywORbufTcTZxom8YqpLQt/FqNMUkOpkZrJVYSKD3A==}
 
@@ -2387,10 +2399,6 @@ packages:
     peerDependenciesMeta:
       encoding:
         optional: true
-
-  node-fetch@3.3.2:
-    resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   node-int64@0.4.0:
     resolution: {integrity: sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==}
@@ -3041,6 +3049,9 @@ packages:
   tslib@2.7.0:
     resolution: {integrity: sha512-gLXCKdN1/j47AiHiOkJN69hJmcbGTHI0ImLmbYLHykhgeN0jVGola9yVjFgzCUklsZQMW55o+dW7IXv3RCXDzA==}
 
+  tslib@2.8.1:
+    resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
@@ -3132,10 +3143,6 @@ packages:
 
   wcwidth@1.0.1:
     resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}
-
-  web-streams-polyfill@3.3.3:
-    resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
-    engines: {node: '>= 8'}
 
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
@@ -3234,12 +3241,6 @@ packages:
     resolution: {integrity: sha512-TTpjp9WhLome5MI+EVYn3hAGuvrzLnu8UtgPJjfqUcLOXPDZGh70BQPgFvgUg58KhrDcu+6sB1X93SnDRb9pUQ==}
     engines: {node: '>=18.14.0'}
     hasBin: true
-
-  zkonmina@https://codeload.github.com/ZKON-Network/zkTLS-Mina-zkApp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f:
-    resolution: {tarball: https://codeload.github.com/ZKON-Network/zkTLS-Mina-zkApp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f}
-    version: 0.1.0
-    peerDependencies:
-      o1js: ^1.2.0
 
 snapshots:
 
@@ -3805,7 +3806,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@nestjs/mongoose@10.0.10(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4)(reflect-metadata@0.2.2)(rxjs@7.8.1))(mongoose@8.7.1)(rxjs@7.8.1)':
+  '@nestjs/mongoose@10.0.10(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4)(mongoose@8.7.1)(rxjs@7.8.1)':
     dependencies:
       '@nestjs/common': 10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1)
       '@nestjs/core': 10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4)(reflect-metadata@0.2.2)(rxjs@7.8.1)
@@ -3824,7 +3825,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@nestjs/schedule@4.1.1(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4)(reflect-metadata@0.2.2)(rxjs@7.8.1))':
+  '@nestjs/schedule@4.1.1(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4)':
     dependencies:
       '@nestjs/common': 10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1)
       '@nestjs/core': 10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4)(reflect-metadata@0.2.2)(rxjs@7.8.1)
@@ -3853,19 +3854,13 @@ snapshots:
     transitivePeerDependencies:
       - chokidar
 
-  '@nestjs/testing@10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4))':
+  '@nestjs/testing@10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4)(@nestjs/platform-express@10.4.4)':
     dependencies:
       '@nestjs/common': 10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1)
       '@nestjs/core': 10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4)(reflect-metadata@0.2.2)(rxjs@7.8.1)
       tslib: 2.7.0
     optionalDependencies:
       '@nestjs/platform-express': 10.4.4(@nestjs/common@10.4.4(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.4)
-
-  '@noble/curves@1.6.0':
-    dependencies:
-      '@noble/hashes': 1.5.0
-
-  '@noble/hashes@1.5.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -3909,6 +3904,15 @@ snapshots:
   '@tsconfig/node14@1.0.3': {}
 
   '@tsconfig/node16@1.0.4': {}
+
+  '@typegoose/typegoose@12.10.1(mongoose@8.9.5)':
+    dependencies:
+      lodash: 4.17.21
+      loglevel: 1.9.2
+      mongoose: 8.9.5
+      reflect-metadata: 0.2.2
+      semver: 7.6.3
+      tslib: 2.8.1
 
   '@types/babel__core@7.20.5':
     dependencies:
@@ -4432,6 +4436,8 @@ snapshots:
     dependencies:
       node-int64: 0.4.0
 
+  bson@6.10.1: {}
+
   bson@6.8.0: {}
 
   buffer-alloc-unsafe@1.1.0: {}
@@ -4641,8 +4647,6 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
-
-  data-uri-to-buffer@4.0.1: {}
 
   debug@2.6.9:
     dependencies:
@@ -4985,11 +4989,6 @@ snapshots:
     dependencies:
       pend: 1.2.0
 
-  fetch-blob@3.2.0:
-    dependencies:
-      node-domexception: 1.0.0
-      web-streams-polyfill: 3.3.3
-
   figures@3.2.0:
     dependencies:
       escape-string-regexp: 1.0.5
@@ -5073,10 +5072,6 @@ snapshots:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       mime-types: 2.1.35
-
-  formdata-polyfill@4.0.10:
-    dependencies:
-      fetch-blob: 3.2.0
 
   formidable@2.1.2:
     dependencies:
@@ -5752,17 +5747,26 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  l1-lottery-contracts@2.8.18(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)):
+  l1-lottery-contracts@2.8.19(o1js@1.8.0(patch_hash=7nqqq3g6w77z3hczap22rrrie4)):
     dependencies:
+      '@typegoose/typegoose': 12.10.1(mongoose@8.9.5)
       '@types/node': 20.16.11
       axios: 1.7.7
       dotenv: 16.4.5
       minimist: 1.2.8
-      o1js: 1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)
+      mongoose: 8.9.5
+      o1js: 1.8.0(patch_hash=7nqqq3g6w77z3hczap22rrrie4)
       zkapp-cli: 0.21.7
     transitivePeerDependencies:
+      - '@aws-sdk/credential-providers'
+      - '@mongodb-js/zstd'
       - debug
       - encoding
+      - gcp-metadata
+      - kerberos
+      - mongodb-client-encryption
+      - snappy
+      - socks
       - supports-color
 
   leven@3.1.0: {}
@@ -5801,6 +5805,8 @@ snapshots:
     dependencies:
       chalk: 5.3.0
       is-unicode-supported: 1.3.0
+
+  loglevel@1.9.2: {}
 
   lru-cache@10.4.3: {}
 
@@ -5863,10 +5869,6 @@ snapshots:
 
   mimic-function@5.0.1: {}
 
-  mina-fungible-token@https://codeload.github.com/MinaFoundation/mina-fungible-token/tar.gz/971bf58962d47870d5bcf5a220dc3a80ca5321a0(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)):
-    dependencies:
-      o1js: 1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)
-
   mina-signer@3.0.7:
     dependencies:
       blakejs: 1.2.1
@@ -5901,6 +5903,12 @@ snapshots:
       '@types/whatwg-url': 11.0.5
       whatwg-url: 13.0.0
 
+  mongodb@6.12.0:
+    dependencies:
+      '@mongodb-js/saslprep': 1.1.9
+      bson: 6.10.1
+      mongodb-connection-string-url: 3.0.1
+
   mongodb@6.9.0:
     dependencies:
       '@mongodb-js/saslprep': 1.1.9
@@ -5912,6 +5920,25 @@ snapshots:
       bson: 6.8.0
       kareem: 2.6.3
       mongodb: 6.9.0
+      mpath: 0.9.0
+      mquery: 5.0.0
+      ms: 2.1.3
+      sift: 17.1.3
+    transitivePeerDependencies:
+      - '@aws-sdk/credential-providers'
+      - '@mongodb-js/zstd'
+      - gcp-metadata
+      - kerberos
+      - mongodb-client-encryption
+      - snappy
+      - socks
+      - supports-color
+
+  mongoose@8.9.5:
+    dependencies:
+      bson: 6.10.1
+      kareem: 2.6.3
+      mongodb: 6.12.0
       mpath: 0.9.0
       mquery: 5.0.0
       ms: 2.1.3
@@ -5960,8 +5987,6 @@ snapshots:
 
   node-abort-controller@3.1.1: {}
 
-  node-domexception@1.0.0: {}
-
   node-emoji@1.11.0:
     dependencies:
       lodash: 4.17.21
@@ -5969,12 +5994,6 @@ snapshots:
   node-fetch@2.7.0:
     dependencies:
       whatwg-url: 5.0.0
-
-  node-fetch@3.3.2:
-    dependencies:
-      data-uri-to-buffer: 4.0.1
-      fetch-blob: 3.2.0
-      formdata-polyfill: 4.0.10
 
   node-int64@0.4.0: {}
 
@@ -5986,7 +6005,7 @@ snapshots:
     dependencies:
       path-key: 3.1.1
 
-  o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu):
+  o1js@1.8.0(patch_hash=7nqqq3g6w77z3hczap22rrrie4):
     dependencies:
       blakejs: 1.2.1
       cachedir: 2.4.0
@@ -6619,6 +6638,8 @@ snapshots:
 
   tslib@2.7.0: {}
 
+  tslib@2.8.1: {}
+
   type-check@0.4.0:
     dependencies:
       prelude-ls: 1.2.1
@@ -6693,8 +6714,6 @@ snapshots:
   wcwidth@1.0.1:
     dependencies:
       defaults: 1.0.4
-
-  web-streams-polyfill@3.3.3: {}
 
   webidl-conversions@3.0.1: {}
 
@@ -6817,26 +6836,13 @@ snapshots:
       find-npm-prefix: 1.0.2
       fs-extra: 11.2.0
       mina-signer: 3.0.7
-      o1js: 1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)
+      o1js: 1.8.0(patch_hash=7nqqq3g6w77z3hczap22rrrie4)
       opener: 1.5.2
       ora: 8.1.0
       semver: 7.6.3
       shelljs: 0.8.5
       table: 6.8.2
       yargs: 17.7.2
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-
-  zkonmina@https://codeload.github.com/ZKON-Network/zkTLS-Mina-zkApp/tar.gz/fa772df63e10f29155ef1ea60fe6fae23485c80f(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)):
-    dependencies:
-      '@noble/curves': 1.6.0
-      dotenv: 16.4.5
-      mina-fungible-token: https://codeload.github.com/MinaFoundation/mina-fungible-token/tar.gz/971bf58962d47870d5bcf5a220dc3a80ca5321a0(o1js@1.8.0(patch_hash=opnobzagayfgg575fntxr432iu))
-      mina-signer: 3.0.7
-      node-fetch: 3.3.2
-      o1js: 1.8.0(patch_hash=opnobzagayfgg575fntxr432iu)
-      zkapp-cli: 0.21.7
     transitivePeerDependencies:
       - encoding
       - supports-color

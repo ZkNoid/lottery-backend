@@ -18,7 +18,7 @@ import {
   RandomManager,
 } from 'node_modules/l1-lottery-contracts/build/src/Random/RandomManager.js';
 import { InjectModel } from '@nestjs/mongoose';
-import { ZkonRequestCoordinator, ZkonZkProgram } from 'zkon-zkapp';
+// import { ZkonRequestCoordinator, ZkonZkProgram } from 'zkon-zkapp';
 
 function randomIntFromInterval(min, max) {
   // min and max included

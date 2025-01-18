@@ -15,7 +15,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 
 import { FactoryManager } from 'l1-lottery-contracts';
 import { PlotteryFactory } from 'l1-lottery-contracts';
-import { ZkonRequestCoordinator, ZkonZkProgram } from 'zkon-zkapp';
+// import { ZkonRequestCoordinator, ZkonZkProgram } from 'zkon-zkapp';
 import { RandomManager } from 'l1-lottery-contracts';
 import { getCurrentSlot } from '../lib.js';
 import { Mutex } from 'async-mutex';
@@ -89,21 +89,21 @@ export class StateService implements OnModuleInit {
       cache: Cache.FileSystem('./cache'),
     });
 
-    console.log('ZkonZkProgramm compile');
-    let zk1 = await ZkonZkProgram.compile({
-      cache: Cache.FileSystem('./cache'),
-    });
+    // console.log('ZkonZkProgramm compile');
+    // let zk1 = await ZkonZkProgram.compile({
+    //   cache: Cache.FileSystem('./cache'),
+    // });
 
-    console.log(`Zkon programm proof: ${zk1.verificationKey.hash.toString()}`);
+    // console.log(`Zkon programm proof: ${zk1.verificationKey.hash.toString()}`);
 
-    console.log('ZkonRequestCoordinator compile');
-    let zk2 = await ZkonRequestCoordinator.compile({
-      cache: Cache.FileSystem('./cache'),
-    });
+    // console.log('ZkonRequestCoordinator compile');
+    // let zk2 = await ZkonRequestCoordinator.compile({
+    //   cache: Cache.FileSystem('./cache'),
+    // });
 
-    console.log(
-      `ZkonRequestCoordinator : ${zk2.verificationKey.hash.toString()}`,
-    );
+    // console.log(
+    //   `ZkonRequestCoordinator : ${zk2.verificationKey.hash.toString()}`,
+    // );
 
     console.log('RandomManager compile');
     const randomManagerCompileInfo = await RandomManager.compile({
