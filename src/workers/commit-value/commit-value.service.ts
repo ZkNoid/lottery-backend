@@ -30,7 +30,7 @@ export class CommitValueService implements OnApplicationBootstrap {
     const currentRound = await this.stateManager.getCurrentRound();
 
     for (let i = this.lastCommitInRound; i <= currentRound; i++) {
-      console.log()
+      console.log();
       const rmContract = this.stateManager.state.randomManagers[i].contract;
       const accountInfo = await fetchAccount({ publicKey: rmContract.address });
 
@@ -127,22 +127,23 @@ export class CommitValueService implements OnApplicationBootstrap {
 
           try {
             await fetchAccount({ publicKey: sender.toPublicKey() });
-            
+
             let tx = await Mina.transaction(
               { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
               async () => {
-                COMMIT_PARTY_ID == 0 ? 
-                await contract.firstPartyCommit(
-                  new CommitValue({
-                    value: randomValue,
-                    salt: randomSalt
-                  }),
-                ) : await contract.secondPartyCommit(
-                  new CommitValue({
-                    value: randomValue,
-                    salt: randomSalt
-                  }),
-                );
+                COMMIT_PARTY_ID == 0
+                  ? await contract.firstPartyCommit(
+                      new CommitValue({
+                        value: randomValue,
+                        salt: randomSalt,
+                      }),
+                    )
+                  : await contract.secondPartyCommit(
+                      new CommitValue({
+                        value: randomValue,
+                        salt: randomSalt,
+                      }),
+                    );
               },
             );
             this.logger.debug('Proving tx');
@@ -151,7 +152,7 @@ export class CommitValueService implements OnApplicationBootstrap {
 
             this.logger.debug(`Tx successful. Hash: `, txResult.hash);
             this.logger.debug('Waiting for tx');
-            await txResult.safeWait();
+            await txResult.wait();
             this.logger.debug('Got tx');
           } catch (e) {
             this.logger.debug(

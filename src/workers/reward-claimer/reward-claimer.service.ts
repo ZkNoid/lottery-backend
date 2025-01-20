@@ -109,7 +109,7 @@ export class RewardClaimerService implements OnApplicationBootstrap {
           await tx.prove();
           const txResult = await tx.sign([signer]).send();
           this.logger.debug('Sent transaction: ', txResult.hash);
-          await txResult.safeWait();
+          await txResult.wait();
           this.logger.debug('Transaction included', txResult.hash);
 
           await this.claimRequestData.updateOne(

@@ -117,8 +117,8 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
       this.logger.log('Proved, Waiting for send');
       const sentTx = await tx.sign([signer]).send();
 
-      sentTx
-        .safeWait()
+      let waitPromise = sentTx
+        .wait()
         .then(async (tx) => {
           await this.promoQueueData.updateOne(
             {
@@ -148,7 +148,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
           await this.rejectRequest(request._id, e.toString());
         });
 
-      return { transaction: sentTx, source: request, success: true };
+      return { transaction: waitPromise, source: request, success: true };
     } catch (e) {
       await this.rejectRequest(request._id, e.toString());
       return { success: false };
@@ -195,9 +195,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
       }
 
       await Promise.all(
-        transactions
-          .filter((tx) => tx.success)
-          .map((tx) => tx.transaction.safeWait()),
+        transactions.filter((tx) => tx.success).map((tx) => tx.transaction),
       );
     });
   }
