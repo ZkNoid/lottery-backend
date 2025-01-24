@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Document } from 'mongoose';
+import { Model, Document, ObjectId, Types } from 'mongoose';
 import { GiftCodesRequestedData } from '../schema/gift-codes-requested.schema.js';
 import { GiftCodesData } from '../schema/gift-codes.schema.js';
 import { PromoQueueData } from '../schema/promo-queue.schema.js';
@@ -23,10 +23,10 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
   ) {}
   async onApplicationBootstrap() {}
 
-  async rejectRequest(_id, reason: string) {
+  async rejectRequests(_ids: Types.ObjectId[], reason: string) {
     await this.promoQueueData.updateOne(
       {
-        _id,
+        _id: { $in: _ids },
       },
       {
         $set: {
@@ -46,7 +46,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
 
     for (const request of giftRequested) {
       if (usedGiftCodes.includes(request.giftCode)) {
-        await this.rejectRequest(request._id, 'Gift code already used');
+        await this.rejectRequests([request._id], 'Gift code already used');
         continue;
       }
 
@@ -76,7 +76,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
       );
 
       if (dbPromo.modifiedCount == 0) {
-        await this.rejectRequest(request._id, 'No such unused gift code');
+        await this.rejectRequests([request._id], 'No such unused gift code');
       } else {
         readyRequests.push(request);
       }
@@ -85,18 +85,23 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
     return readyRequests;
   }
 
-  async processOneGiftCode(
-    request: Document<unknown, {}, PromoQueueData> & PromoQueueData,
+  async processGiftCodeChunk(
+    requests: Document<unknown, {}, PromoQueueData> & PromoQueueData[],
     nonce: number,
     signer: PrivateKey,
   ) {
     const signerAccount = signer.toPublicKey();
 
-    const ticket = Ticket.from(
-      request.ticket.numbers,
-      PublicKey.fromBase58(request.userAddress),
-      1,
+    const tickets = requests.map((request) =>
+      Ticket.from(
+        request.ticket.numbers,
+        PublicKey.fromBase58(request.userAddress),
+        1,
+      ),
     );
+    const requestIds = requests.map((request) => request._id);
+    const giftCodes = requests.map((request) => request.giftCode);
+
     console.log('Making tx from', signerAccount.toBase58());
 
     const curRound = await this.stateManager.getCurrentRound();
@@ -105,9 +110,11 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
       let tx = await Mina.transaction(
         { sender: signerAccount, fee: Number('0.1') * 1e9, nonce },
         async () => {
-          await this.stateManager.state.plotteryManagers[
-            curRound
-          ].contract.buyTicket(ticket);
+          for (const ticket of tickets) {
+            await this.stateManager.state.plotteryManagers[
+              curRound
+            ].contract.buyTicket(ticket);
+          }
         },
       );
 
@@ -122,7 +129,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
         .then(async (tx) => {
           await this.promoQueueData.updateOne(
             {
-              _id: request._id,
+              _id: { $in: requestIds },
             },
             {
               $set: {
@@ -135,7 +142,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
 
           await this.giftCodes.updateOne(
             {
-              code: request.giftCode,
+              code: { $in: giftCodes },
             },
             {
               $set: {
@@ -145,12 +152,12 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
           );
         })
         .catch(async (e) => {
-          await this.rejectRequest(request._id, e.toString());
+          await this.rejectRequests(requestIds, e.toString());
         });
 
-      return { transaction: waitPromise, source: request, success: true };
+      return { transaction: waitPromise, source: requests, success: true };
     } catch (e) {
-      await this.rejectRequest(request._id, e.toString());
+      await this.rejectRequests(requestIds, e.toString());
       return { success: false };
     }
   }
@@ -188,9 +195,19 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
 
       let transactions = [];
 
-      for (const request of readyRequests) {
+      let requestChunks = [];
+
+      const chunkSize = process.env.PROMO_CHUNK_SIZE
+        ? +process.env.PROMO_CHUNK_SIZE
+        : 1;
+
+      for (let i = 0; i < readyRequests.length; i += chunkSize) {
+        requestChunks.push(readyRequests.slice(i, i + chunkSize));
+      }
+
+      for (const chunk of requestChunks) {
         transactions.push(
-          await this.processOneGiftCode(request, nonce++, signer),
+          await this.processGiftCodeChunk(chunk, nonce++, signer),
         );
       }
 
@@ -236,7 +253,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
         await this.processManyPromoRequest(giftRequested);
       } catch (e) {
         for (const request of giftRequested) {
-          await this.rejectRequest(request._id, e.toString());
+          await this.rejectRequests([request._id], e.toString());
         }
       }
     } finally {
