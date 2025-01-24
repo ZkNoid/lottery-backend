@@ -214,8 +214,9 @@ export class SyncEventsService implements OnModuleInit {
           // console.log(eventToAdd);
           await this.minaEventData.updateOne(
             {
-              'event.transactionInfo.transactionHash':
-                eventToAdd.event.transactionInfo.transactionHash,
+              _id: eventToAdd._id,
+              // 'event.transactionInfo.transactionHash':
+              //   eventToAdd.event.transactionInfo.transactionHash,
             },
             {
               $set: eventToAdd,
