@@ -17,6 +17,7 @@ import { StateService } from '../../state-service/state.service.js';
 import { NetworkIds } from '../../constants/networks.js';
 import { ClaimRequestData } from '../schema/claim-request.schema.js';
 import { RoundInfoUpdaterService } from '../round-infos-updater/round-infos-updater.service.js';
+import { LocalContext } from '../../lib.js';
 
 const NUM_OF_ERRORS_TO_FAIL = 3;
 
@@ -33,6 +34,39 @@ export class RewardClaimerService implements OnApplicationBootstrap {
   ) {}
   async onApplicationBootstrap() {}
 
+  async failRequest(request: ClaimRequestData, e: Error) {
+    this.logger.error(
+      `Failed to fulfill claim request for round ${request.roundId}`,
+      e.stack,
+    );
+    const totalErrorAmount = (request.numOfErrors ?? 0) + 1;
+    if (totalErrorAmount >= NUM_OF_ERRORS_TO_FAIL) {
+      await this.claimRequestData.updateOne(
+        { _id: request._id },
+        {
+          $set: {
+            status: 'failed',
+          },
+          $push: {
+            reasons: e?.stack || '',
+          },
+        },
+      );
+    } else {
+      await this.claimRequestData.updateOne(
+        { _id: request._id },
+        {
+          $set: {
+            numOfErrors: totalErrorAmount,
+          },
+          $push: {
+            reasons: e?.stack || '',
+          },
+        },
+      );
+    }
+  }
+
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
     if (this.isRunning) {
@@ -41,19 +75,33 @@ export class RewardClaimerService implements OnApplicationBootstrap {
     }
     this.isRunning = true;
 
+    const batchSize = process.env.CLAIM_BATCH_SIZE
+      ? +process.env.CLAIM_BATCH_SIZE
+      : 1;
+
     try {
-      const pendingRequest = await this.claimRequestData.findOne({
+      // Get roundId with pending requests
+      const firstPendingRequest = await this.claimRequestData.findOne({
         status: 'pending',
       });
 
-      if (!pendingRequest) {
+      if (!firstPendingRequest) {
         this.logger.debug('No pending request for claimer');
         return;
       }
 
+      const roundId = firstPendingRequest.roundId;
+
+      const pendingRequests = await this.claimRequestData
+        .find({
+          status: 'pending',
+          roundId,
+        })
+        .limit(batchSize);
+
       await this.stateManager.transactionMutex.runExclusive(async () => {
         try {
-          this.logger.debug('Preparing transaction for claimer');
+          this.logger.debug('Preparing transactions for claimer');
           const signer = PrivateKey.fromBase58(
             process.env.GIFT_CODES_TREASURY_PRIVATE,
           );
@@ -61,101 +109,94 @@ export class RewardClaimerService implements OnApplicationBootstrap {
             signer.toPublicKey().toBase58(),
           );
 
-          const contractSM =
-            this.stateManager.state.plotteryManagers[pendingRequest.roundId];
+          const signerAccountData = await fetchAccount({
+            publicKey: signerAccount,
+          });
 
-          if (
-            !(await this.stateManager.checkPlotteryConsistency(
-              pendingRequest.roundId,
-            ))
-          ) {
+          const contractSM = this.stateManager.state.plotteryManagers[roundId];
+          const txPromises = [];
+
+          if (!(await this.stateManager.checkPlotteryConsistency(roundId))) {
             this.logger.debug('Incosistent state. Refetch');
-            await this.infoUpdater.updateInfoForRound(pendingRequest.roundId);
+            await this.infoUpdater.updateInfoForRound(roundId);
           }
           const contract = contractSM.contract;
 
-          this.logger.log(`Finding ticket for request ${pendingRequest}`);
-          const ticketId = pendingRequest.ticketId;
+          const context = await LocalContext(contract.address);
+          let nonce = +signerAccountData.account.nonce;
 
-          const ticket = contractSM.roundTickets[ticketId];
-
-          // #TODO remove round form getReward
-          let rewardParams = await contractSM.getRewardByTicketId(ticketId);
-
-          console.log('Claimming ticket', ticket);
-          console.log(
-            'Claimming ticket',
-            ticket.numbers.map((x) => x.toString()),
-          );
-          console.log('Claimming ticket', ticket.amount.toString());
-
-          const ownerInfo = await fetchAccount({ publicKey: ticket.owner });
-          const isNewAccount = ownerInfo.account == undefined;
-
-          let tx = await Mina.transaction(
-            { sender: signerAccount, fee: Number('0.1') * 1e9 },
-            async () => {
-              if (isNewAccount) {
-                AccountUpdate.fundNewAccount(signerAccount);
-              }
-              await contract.getReward(
-                ticket,
-                rewardParams.ticketWitness,
-                rewardParams.nullifierWitness,
+          for (const pendingRequest of pendingRequests) {
+            try {
+              this.logger.log(
+                `Finding ticket for request _id=${pendingRequest._id}, ticketId=${pendingRequest.ticketId}`,
               );
-            },
-          );
+              const ticketId = pendingRequest.ticketId;
 
-          await tx.prove();
-          const txResult = await tx.sign([signer]).send();
-          this.logger.debug('Sent transaction: ', txResult.hash);
-          await txResult.wait();
-          this.logger.debug('Transaction included', txResult.hash);
+              const ticket = contractSM.roundTickets[ticketId];
 
-          await this.claimRequestData.updateOne(
-            { _id: pendingRequest._id },
-            {
-              status: 'fulfilled',
-              tx: txResult.hash,
-            },
-          );
-        } catch (e) {
-          this.logger.error(
-            `Failed to fulfill claim request for round ${pendingRequest.roundId}`,
-            e.stack,
-          );
+              let rewardParams = await contractSM.getRewardByTicketId(ticketId);
 
-          const totalErrorAmount = (pendingRequest.numOfErrors ?? 0) + 1;
+              console.log('Claiming ticket', ticket);
+              console.log(
+                'Claiming ticket',
+                ticket.numbers.map((x) => x.toString()),
+              );
+              console.log('Claiming ticket', ticket.amount.toString());
 
-          if (totalErrorAmount >= NUM_OF_ERRORS_TO_FAIL) {
-            await this.claimRequestData.updateOne(
-              { _id: pendingRequest._id },
-              {
-                $set: {
-                  status: 'failed',
+              const ownerInfo = await fetchAccount({ publicKey: ticket.owner });
+              const isNewAccount = ownerInfo.account == undefined;
+
+              let tx = await context.transaction(
+                {
+                  sender: signerAccount,
+                  fee: Number('0.1') * 1e9,
+                  nonce: nonce++,
                 },
-                $push: {
-                  reasons: e?.stack || '',
+                async () => {
+                  if (isNewAccount) {
+                    AccountUpdate.fundNewAccount(signerAccount);
+                  }
+                  await contract.getReward(
+                    ticket,
+                    rewardParams.ticketWitness,
+                    rewardParams.nullifierWitness,
+                  );
                 },
-              },
-            );
-          } else {
-            await this.claimRequestData.updateOne(
-              { _id: pendingRequest._id },
-              {
-                $set: {
-                  numOfErrors: totalErrorAmount,
-                },
-                $push: {
-                  reasons: e?.stack || '',
-                },
-              },
-            );
+              );
+
+              await tx.prove();
+              const txResult = await tx.sign([signer]).send();
+
+              let txPromise = txResult
+                .wait()
+                .then(async () => {
+                  await this.claimRequestData.updateOne(
+                    { _id: pendingRequest._id },
+                    {
+                      status: 'fulfilled',
+                      tx: txResult.hash,
+                    },
+                  );
+
+                  this.logger.debug('Transaction included', txResult.hash);
+                })
+                .catch(async (e) => {
+                  await this.failRequest(pendingRequest, e);
+                });
+
+              txPromises.push(txPromise);
+            } catch (e) {
+              await this.failRequest(pendingRequest, e);
+            }
           }
+
+          await Promise.all(txPromises);
+        } catch (e) {
+          this.logger.error('Reward claim error', String(e));
         }
       });
     } catch (e) {
-      this.logger.error('Approve gift codes error', e.stack);
+      this.logger.error('Reward claim error', String(e));
     } finally {
       this.isRunning = false;
     }
