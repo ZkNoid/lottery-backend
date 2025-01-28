@@ -108,7 +108,12 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
 
     try {
       let tx = await Mina.transaction(
-        { sender: signerAccount, fee: Number('0.1') * 1e9, nonce },
+        {
+          sender: signerAccount,
+          fee: Number('0.1') * 1e9,
+          nonce,
+          memo: 'ZkNoid: Gift tickets purchase',
+        },
         async () => {
           for (const ticket of tickets) {
             await this.stateManager.state.plotteryManagers[

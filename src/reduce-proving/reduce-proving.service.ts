@@ -34,14 +34,9 @@ export class ProveReduceService implements OnApplicationBootstrap {
     // await this.handleCron();
   }
 
-  async checkConditions(
-    round: number,
-    currentRound: number,
-  ) {
-    const contract =
-      this.stateManager.state.plotteryManagers[round].contract;
-    const rm =
-      this.stateManager.state.randomManagers[round].contract;
+  async checkConditions(round: number, currentRound: number) {
+    const contract = this.stateManager.state.plotteryManagers[round].contract;
+    const rm = this.stateManager.state.randomManagers[round].contract;
 
     await fetchAccount({ publicKey: contract.address });
     await fetchAccount({ publicKey: rm.address });
@@ -61,16 +56,12 @@ export class ProveReduceService implements OnApplicationBootstrap {
     };
   }
 
-  async reduceTickets(
-    roundId: number,
-  ): Promise<TicketReduceProof> {
-    console.log('Log 1')
-    const contract =
-      this.stateManager.state.plotteryManagers[roundId].contract;
-    const rm =
-      this.stateManager.state.randomManagers[roundId].contract;
+  async reduceTickets(roundId: number): Promise<TicketReduceProof> {
+    console.log('Log 1');
+    const contract = this.stateManager.state.plotteryManagers[roundId].contract;
+    const rm = this.stateManager.state.randomManagers[roundId].contract;
     const actionLists = await contract.reducer.fetchActions();
-    console.log('Log 2')
+    console.log('Log 2');
 
     // Compute winning numbers
     const rmResult = rm.result.get();
@@ -78,7 +69,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
     const winningNumbersPacked = NumberPacked.pack(winningNumbers);
 
     const ticketMap = new MerkleMap20();
-    console.log('Log 3')
+    console.log('Log 3');
 
     // ticketMap.set(Field.from(0), F)
 
@@ -89,7 +80,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
       }),
       ticketWitness: ticketMap.getWitness(Field(0)),
     });
-    console.log('Log 4')
+    console.log('Log 4');
 
     let savedReduceInfo = await this.rounds.findOne({ roundId });
 
@@ -98,7 +89,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
       round: 0,
     };
     let lastReducedTicket = savedReduceInfo?.lastReducedTicket || -1;
-    console.log('Log 5')
+    console.log('Log 5');
 
     let curProof = savedReduceInfo?.reduceProof
       ? // @ts-ignore
@@ -231,14 +222,10 @@ export class ProveReduceService implements OnApplicationBootstrap {
             const sender = PrivateKey.fromBase58(process.env.PK);
 
             const plotteryState =
-              this.stateManager.state.plotteryManagers[
-                roundId
-              ];
+              this.stateManager.state.plotteryManagers[roundId];
 
             // Reduce tickets
-            let reduceProof = await this.reduceTickets(
-              roundId,
-            );
+            let reduceProof = await this.reduceTickets(roundId);
 
             this.logger.debug(
               'Reduce proof',
@@ -248,7 +235,11 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
             this.logger.debug('Creating transaction');
             let tx2_1 = await Mina.transaction(
-              { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
+              {
+                sender: sender.toPublicKey(),
+                fee: Number('0.1') * 1e9,
+                memo: 'ZkNoid: Reduce',
+              },
               async () => {
                 await plotteryState.contract.reduceTicketsAndProduceResult(
                   reduceProof,

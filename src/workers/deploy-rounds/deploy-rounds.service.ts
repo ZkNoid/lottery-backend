@@ -79,7 +79,11 @@ export class DeployRoundService implements OnApplicationBootstrap {
       `Deploying plottery: ${plotteryAddress.toBase58()} and random manager: ${randomManagerAddress.toBase58()} for round ${roundId}`,
     );
     let tx = await Mina.transaction(
-      { sender: sender, fee: Number('0.5') * 1e9 },
+      {
+        sender: sender,
+        fee: Number('0.5') * 1e9,
+        memo: 'ZkNoid: Deploy new round',
+      },
       async () => {
         AccountUpdate.fundNewAccount(sender);
         AccountUpdate.fundNewAccount(sender);

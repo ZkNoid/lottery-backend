@@ -2,7 +2,12 @@ import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Ticket } from 'l1-lottery-contracts';
+import {
+  convertToUInt64,
+  NumberPacked,
+  PLottery,
+  Ticket,
+} from 'l1-lottery-contracts';
 import {
   AccountUpdate,
   fetchAccount,
@@ -33,6 +38,22 @@ export class RewardClaimerService implements OnApplicationBootstrap {
     private claimRequestData: Model<ClaimRequestData>,
   ) {}
   async onApplicationBootstrap() {}
+
+  getRewardAmount(contract: PLottery, ticket: Ticket): number {
+    try {
+      const winningNumbers = contract.result.get();
+      const score = ticket.getScore(NumberPacked.unpack(winningNumbers));
+      const totalScore = contract.totalScore.get();
+      const bank = contract.bank.get();
+
+      const payAmount = convertToUInt64(bank).mul(score).div(totalScore);
+      return +payAmount / 1e9;
+    } catch (e) {
+      this.logger.error('Error calculating reward amount', String(e));
+    }
+
+    return 0;
+  }
 
   async failRequest(request: ClaimRequestData, e: Error) {
     this.logger.error(
@@ -136,21 +157,30 @@ export class RewardClaimerService implements OnApplicationBootstrap {
 
               let rewardParams = await contractSM.getRewardByTicketId(ticketId);
 
-              console.log('Claiming ticket', ticket);
-              console.log(
-                'Claiming ticket',
-                ticket.numbers.map((x) => x.toString()),
-              );
-              console.log('Claiming ticket', ticket.amount.toString());
+              // console.log('Claiming ticket', ticket);
+              // console.log(
+              //   'Claiming ticket',
+              //   ticket.numbers.map((x) => x.toString()),
+              // );
+              // console.log('Claiming ticket', ticket.amount.toString());
 
               const ownerInfo = await fetchAccount({ publicKey: ticket.owner });
               const isNewAccount = ownerInfo.account == undefined;
+
+              this.logger.debug(
+                `Ticket nullifier before transaction: `,
+                contract.ticketNullifier.get().toString(),
+              );
+
+              // Just for memo
+              const rewardAmount = this.getRewardAmount(contract, ticket);
 
               let tx = await context.transaction(
                 {
                   sender: signerAccount,
                   fee: Number('0.1') * 1e9,
                   nonce: nonce++,
+                  memo: `ZkNoid: Reward claim ${rewardAmount ? `(${rewardAmount.toFixed()} MINA)` : ''}`,
                 },
                 async () => {
                   if (isNewAccount) {
@@ -162,6 +192,11 @@ export class RewardClaimerService implements OnApplicationBootstrap {
                     rewardParams.nullifierWitness,
                   );
                 },
+              );
+
+              this.logger.debug(
+                `Ticket nullifier after transaction: `,
+                contract.ticketNullifier.get().toString(),
               );
 
               await tx.prove();

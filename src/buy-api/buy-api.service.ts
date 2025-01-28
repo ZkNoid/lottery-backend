@@ -49,11 +49,14 @@ export class BuyApiService implements OnApplicationBootstrap {
         await this.stateManager.fetchRounds();
       }
 
-      tx = await Mina.transaction(sender, async () => {
-        await stateM.plotteryManagers[currentRoundId].contract!.buyTicket!(
-          ticket,
-        );
-      });
+      tx = await Mina.transaction(
+        { sender, memo: 'ZkNoid: Buy Ticket' },
+        async () => {
+          await stateM.plotteryManagers[currentRoundId].contract!.buyTicket!(
+            ticket,
+          );
+        },
+      );
 
       await tx.prove();
     });

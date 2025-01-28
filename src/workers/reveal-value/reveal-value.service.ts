@@ -198,7 +198,11 @@ export class RevealValueService implements OnApplicationBootstrap {
             );
 
             let tx = await Mina.transaction(
-              { sender: sender.toPublicKey(), fee: Number('0.1') * 1e9 },
+              {
+                sender: sender.toPublicKey(),
+                fee: Number('0.1') * 1e9,
+                memo: 'ZkNoid: Reveal',
+              },
               async () => {
                 COMMIT_PARTY_ID == 0
                   ? await contract.revealFirstCommit(commitValueValue)
