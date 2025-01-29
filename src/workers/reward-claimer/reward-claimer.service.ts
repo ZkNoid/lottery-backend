@@ -143,6 +143,7 @@ export class RewardClaimerService implements OnApplicationBootstrap {
           }
           const contract = contractSM.contract;
 
+          const nullifierUpdatedIds = [];
           const context = await LocalContext(contract.address);
           let nonce = +signerAccountData.account.nonce;
 
@@ -194,6 +195,10 @@ export class RewardClaimerService implements OnApplicationBootstrap {
                 },
               );
 
+              // Update nullifier for next transactions
+              contractSM.ticketNullifierMap.set(Field(ticketId), Field(1));
+              nullifierUpdatedIds.push(Field(ticketId));
+
               this.logger.debug(
                 `Ticket nullifier after transaction: `,
                 contract.ticketNullifier.get().toString(),
@@ -224,6 +229,11 @@ export class RewardClaimerService implements OnApplicationBootstrap {
               await this.failRequest(pendingRequest, e);
             }
           }
+
+          // Restore nullifier
+          nullifierUpdatedIds.forEach((ticketId) =>
+            contractSM.ticketNullifierMap.set(Field(ticketId), Field(0)),
+          );
 
           await Promise.all(txPromises);
         } catch (e) {
