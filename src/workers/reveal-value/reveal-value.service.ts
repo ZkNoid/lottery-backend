@@ -50,14 +50,27 @@ export class RevealValueService implements OnApplicationBootstrap {
 
     const COMMIT_PARTY_ID = Number(process.env.COMMIT_PARTY_ID);
 
-    const commit =
-      COMMIT_PARTY_ID == 0
-        ? contract.firstCommit.get()
-        : contract.secondCommit.get();
+    const isFirstParty = COMMIT_PARTY_ID == 0;
+
+    const commit = isFirstParty
+      ? contract.firstCommit.get()
+      : contract.secondCommit.get();
+
+    const value = isFirstParty
+      ? contract.firstValue.get()
+      : contract.secondValue.get();
+
+    const firstValue = contract.firstValue.get();
+    const shouldWaitFirst = !isFirstParty && firstValue.toBigInt() == 0;
 
     const result = contract.result.get();
 
-    if (commit.toBigInt() != 0 && result.toBigInt() == 0) {
+    if (
+      !shouldWaitFirst &&
+      commit.toBigInt() != 0 &&
+      result.toBigInt() == 0 &&
+      value.toBigInt() == 0
+    ) {
       const commitData = await this.commitData.findOne({
         round: roundId,
         hash: commit.toString(),
