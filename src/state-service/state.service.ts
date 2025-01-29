@@ -261,7 +261,7 @@ export class StateService implements OnModuleInit {
       : ({} as Record<number, boolean>);
 
     // if (updateOnly) {
-    console.log('[sm] initing bought tickets', boughtTickets_.length);
+    // console.log('[sm] initing bought tickets', boughtTickets_.length);
     for (let i = boughtTickets_.length; i < round + 1; i++) {
       boughtTickets_.push([]);
     }
@@ -331,7 +331,7 @@ export class StateService implements OnModuleInit {
       }
 
       if (event.type == 'produce-result') {
-        console.log('Reduce: ', event.event.data, 'round' + round);
+        // console.log('Reduce: ', event.event.data, 'round' + round);
         // let fromActionState = data.startActionState;
         // let endActionState = data.endActionState;
 
@@ -367,7 +367,7 @@ export class StateService implements OnModuleInit {
     const factory = this.factory;
 
     await fetchAccount({ publicKey: factory.address });
-    console.log(await Mina.activeInstance.getNetworkId());
+    // console.log(await Mina.activeInstance.getNetworkId());
     const initSlot = factory.startSlot.get();
     const currentSlot = await getCurrentSlot();
     const currentRound = Math.floor(

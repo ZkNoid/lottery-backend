@@ -46,7 +46,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
 
     const winningCombinationIsGenerated = !!roundInfo?.winningCombination;
 
-    console.log(
+    this.logger.log(
       `Round: ${roundId}. ${roundId < currentRound} ${winningCombinationIsGenerated}`,
     );
 
@@ -88,8 +88,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
     this.logger.debug('Fetching bought tickets', roundId);
 
     const boughtTickets = this.stateManager.boughtTickets[roundId];
-    const boughtTicketsHashes =
-      this.stateManager.boughtTicketsHashes[roundId];
+    const boughtTicketsHashes = this.stateManager.boughtTicketsHashes[roundId];
     const claimedTicketsHashes =
       this.stateManager.claimedTicketsHashes[roundId];
 
@@ -128,7 +127,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
     const randomManagerAddress =
       stateM.randomManagers[roundId].contract.address.toBase58();
 
-    console.log(`Adding round info for round ${roundId}`);
+    this.logger.debug(`Adding round info for round ${roundId}`);
 
     await this.rounds
       .updateOne(
@@ -146,7 +145,10 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
               numbers: x.numbers.map((x) => Number(x.toBigint())),
               owner: x.owner.toBase58(),
               funds: totalShares
-                ? ((roundBank - roundBank * BigInt(COMMISSION) / BigInt(PRECISION)) * ticketsShares[i]) / totalShares
+                ? ((roundBank -
+                    (roundBank * BigInt(COMMISSION)) / BigInt(PRECISION)) *
+                    ticketsShares[i]) /
+                  totalShares
                 : 0n,
               claimed: roundStateManager.ticketNullifierMap
                 .get(Field.from(i))
@@ -191,11 +193,7 @@ export class RoundInfoUpdaterService implements OnApplicationBootstrap {
 
       this.logger.debug('Deployed rounds data');
 
-      this.logger.debug(
-        Object.keys(
-          this.stateManager.state.plotteryManagers,
-        ),
-      );
+      this.logger.debug(Object.keys(this.stateManager.state.plotteryManagers));
 
       const startFrom = process.env.START_FROM_ROUND
         ? +process.env.START_FROM_ROUND

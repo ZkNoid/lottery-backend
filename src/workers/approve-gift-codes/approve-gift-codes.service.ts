@@ -115,7 +115,7 @@ export class ApproveGiftCodesService implements OnApplicationBootstrap {
         try {
           await this.processGiftCodeRequest(giftRequested);
         } catch (e) {
-          console.log('Process error', e);
+          this.logger.error('Process error', e);
           await this.giftCodesRequested.updateOne(
             {
               _id: giftRequested._id,

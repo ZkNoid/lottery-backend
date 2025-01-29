@@ -102,8 +102,6 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
     const requestIds = requests.map((request) => request._id);
     const giftCodes = requests.map((request) => request.giftCode);
 
-    console.log('Making tx from', signerAccount.toBase58());
-
     const curRound = await this.stateManager.getCurrentRound();
 
     try {

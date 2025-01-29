@@ -30,12 +30,10 @@ export class CommitValueService implements OnApplicationBootstrap {
     const currentRound = await this.stateManager.getCurrentRound();
 
     for (let i = this.lastCommitInRound; i <= currentRound; i++) {
-      console.log();
       const rmContract = this.stateManager.state.randomManagers[i].contract;
       const accountInfo = await fetchAccount({ publicKey: rmContract.address });
 
       const COMMIT_PARTY_ID = Number(process.env.COMMIT_PARTY_ID);
-      console.log('Commit party id', COMMIT_PARTY_ID);
       const contractCommit =
         COMMIT_PARTY_ID == 0
           ? rmContract.firstCommit.get().toBigInt()
@@ -122,8 +120,6 @@ export class CommitValueService implements OnApplicationBootstrap {
           // });
 
           const COMMIT_PARTY_ID = Number(process.env.COMMIT_PARTY_ID);
-
-          console.log('Commit party id', COMMIT_PARTY_ID);
 
           try {
             await fetchAccount({ publicKey: sender.toPublicKey() });

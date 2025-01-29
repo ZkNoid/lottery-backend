@@ -71,10 +71,6 @@ export class SyncEventsService implements OnModuleInit {
       await fetchAccount({ publicKey: contract.address });
       const startSlot = contract.startSlot.get();
 
-      console.log(
-        `startSlot: ${startSlot}; slotSinceGenesis: ${slotSinceGenesis}`,
-      );
-
       const startFrom = process.env.START_FROM_ROUND
         ? +process.env.START_FROM_ROUND
         : 0;
@@ -96,7 +92,7 @@ export class SyncEventsService implements OnModuleInit {
       //     : [curRound]
       //   : allRounds;
 
-      console.log(`Rounds to check: ${roundsToCheck}`);
+      // console.log(`Rounds to check: ${roundsToCheck}`);
 
       // const dbEvents = await this.minaEventData.find({});
 
@@ -226,7 +222,7 @@ export class SyncEventsService implements OnModuleInit {
             },
           );
         }
-        console.log(`Events added`);
+        // console.log(`Events added`);
 
         // Update state if not initially updated or if there are new events
         if (

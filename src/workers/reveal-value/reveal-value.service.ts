@@ -144,7 +144,7 @@ export class RevealValueService implements OnApplicationBootstrap {
       return;
     }
     this.isRunning = true;
-    console.log('Reveal value module started');
+    this.logger.debug('Reveal value module started');
 
     try {
       const currentRound = await this.stateManager.getCurrentRound();
@@ -187,8 +187,6 @@ export class RevealValueService implements OnApplicationBootstrap {
             const contract =
               this.stateManager.state.randomManagers[roundId].contract;
 
-            console.log(`Value: ${commitValue} salt: ${commitSalt}`);
-
             const commitValueValue = new CommitValue({
               value: Field(commitValue),
               salt: Field(commitSalt),
@@ -200,15 +198,6 @@ export class RevealValueService implements OnApplicationBootstrap {
               COMMIT_PARTY_ID == 0
                 ? contract.firstCommit.get()
                 : contract.secondCommit.get();
-
-            console.log(
-              `Commit value hash: ${commitValueValue.hash().toString()}`,
-            );
-            console.log(`Onchain state: ${commit.toString()}`);
-
-            console.log(
-              `${commitValueValue.hash().toString()} =? ${commit.toString()}`,
-            );
 
             let tx = await Mina.transaction(
               {
