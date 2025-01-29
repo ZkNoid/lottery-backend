@@ -24,7 +24,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
   async onApplicationBootstrap() {}
 
   async rejectRequests(_ids: Types.ObjectId[], reason: string) {
-    await this.promoQueueData.updateOne(
+    await this.promoQueueData.updateMany(
       {
         _id: { $in: _ids },
       },
@@ -128,7 +128,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
       const sentTx = await tx.sign([signer]).send();
 
       // Update buyTxHash so if server is restarted, we would be able to check if transaction was successful
-      await this.promoQueueData.updateOne(
+      await this.promoQueueData.updateMany(
         {
           _id: { $in: requestIds },
         },
@@ -142,7 +142,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
       let waitPromise = sentTx
         .wait()
         .then(async (tx) => {
-          await this.promoQueueData.updateOne(
+          await this.promoQueueData.updateMany(
             {
               _id: { $in: requestIds },
             },
@@ -155,7 +155,7 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
             },
           );
 
-          await this.giftCodes.updateOne(
+          await this.giftCodes.updateMany(
             {
               code: { $in: giftCodes },
             },
