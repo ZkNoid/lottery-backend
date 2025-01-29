@@ -129,6 +129,18 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
       this.logger.log('Proved, Waiting for send');
       const sentTx = await tx.sign([signer]).send();
 
+      // Update buyTxHash so if server is restarted, we would be able to check if transaction was successful
+      await this.promoQueueData.updateOne(
+        {
+          _id: { $in: requestIds },
+        },
+        {
+          $set: {
+            buyTxHash: sentTx.hash,
+          },
+        },
+      );
+
       let waitPromise = sentTx
         .wait()
         .then(async (tx) => {
