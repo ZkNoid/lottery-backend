@@ -50,7 +50,7 @@ export class BuyApiService implements OnApplicationBootstrap {
       }
 
       tx = await Mina.transaction(
-        { sender, memo: 'ZkNoid: Buy Ticket' },
+        { sender, memo: 'ZkNoid: Buy Ticket', fee: Number('0.01') * 1e9 },
         async () => {
           await stateM.plotteryManagers[currentRoundId].contract!.buyTicket!(
             ticket,
