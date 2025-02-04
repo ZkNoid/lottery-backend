@@ -17,6 +17,7 @@ import { GiftTicketBuyerModule } from './gift-ticket-buyer/gift-ticket-buyer.mod
 import { QuestUpdateModule } from './quest-update/quest-update.module.js';
 import { RewardClaimerModule } from './reward-claimer/reward-claimer.module.js';
 import { DeployRoundModule } from './deploy-rounds/deploy-rounds.module.js';
+import { DefaultBankModule } from './default-bank/default-bank.module.js';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { DeployRoundModule } from './deploy-rounds/deploy-rounds.module.js';
         // QuestUpdateModule,
         RewardClaimerModule,
         DeployRoundModule,
+        DefaultBankModule,
       ],
       useFactory: async () => ({
         uri: process.env.MONGODB_URI,
