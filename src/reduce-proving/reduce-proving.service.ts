@@ -131,6 +131,9 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
         curProof = await TicketReduceProgram.addTicket(input, curProof);
 
+        // Timeout for gc
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
         ticketMap.set(
           Field.from(processedTicketData.ticketId),
           action.ticket.hash(),
