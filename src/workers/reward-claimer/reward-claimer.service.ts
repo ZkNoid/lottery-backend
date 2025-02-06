@@ -88,7 +88,7 @@ export class RewardClaimerService implements OnApplicationBootstrap {
     }
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron('*/3 * * * *')
   async handleCron() {
     if (this.isRunning) {
       this.logger.debug('Already running');
