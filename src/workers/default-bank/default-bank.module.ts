@@ -11,6 +11,10 @@ import { StateModule } from '../../state-service/state.module.js';
 import { ConfigService } from '@nestjs/config';
 import { SyncEventsModule } from '../sync-events/sync-events.module.js';
 import { ZknoidConfigModule } from '../../config/config.module.js';
+import {
+  ClaimRequestData,
+  ClaimRequestDataSchema,
+} from '../schema/claim-request.schema.js';
 
 @Module({
   imports: [
@@ -19,6 +23,10 @@ import { ZknoidConfigModule } from '../../config/config.module.js';
       {
         name: DefaultBankData.name,
         schema: DefaultBankSchema,
+      },
+      {
+        name: ClaimRequestData.name,
+        schema: ClaimRequestDataSchema,
       },
     ]),
     StateModule,

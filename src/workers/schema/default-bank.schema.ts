@@ -16,6 +16,8 @@ export class BaseDefaultBankDocument extends Document {
   amount: number;
   @Prop()
   numbers: number[];
+  @Prop({ type: SchemaTypes.ObjectId })
+  claimId: Types.ObjectId | null;
 }
 
 @Schema({ timestamps: true, collection: 'default_bank' })

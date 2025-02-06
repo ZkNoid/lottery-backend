@@ -10,6 +10,10 @@ import {
   DefaultBankDocument,
 } from '../schema/default-bank.schema.js';
 import { Ticket } from 'l1-lottery-contracts';
+import {
+  ClaimRequestData,
+  MinaClaimRequestDocument,
+} from '../schema/claim-request.schema.js';
 
 @Injectable()
 export class DefaultBankService implements OnApplicationBootstrap {
@@ -20,7 +24,114 @@ export class DefaultBankService implements OnApplicationBootstrap {
     private readonly stateService: StateService,
     @InjectModel(DefaultBankData.name)
     private readonly defaultBankModel: Model<DefaultBankDocument>,
+    @InjectModel(ClaimRequestData.name)
+    private readonly claimRequestModel: Model<MinaClaimRequestDocument>,
   ) {}
+
+  async updateDefaultBanksClaims(currentRound: number) {
+    try {
+      // Get all records with round < currentRound and empty claimData
+      const unclaimedTickets = await this.defaultBankModel.find({
+        roundId: { $lt: currentRound },
+        claimId: null,
+      });
+
+      const checkRound = (() => {
+        let store: { [roundId: number]: boolean } = {};
+
+        return async (roundId: number) => {
+          if (store[roundId] == null) {
+            const contract =
+              this.stateService.state.plotteryManagers[roundId].contract;
+
+            await fetchAccount({ publicKey: contract.address });
+
+            const result =
+              this.stateService.state.plotteryManagers[
+                roundId
+              ].contract.result.get();
+
+            let isComplete = +result > 0;
+            store[roundId] = isComplete;
+          }
+
+          return store[roundId];
+        };
+      })();
+
+      for (const ticket of unclaimedTickets) {
+        this.logger.debug('Updating claim info for ticket: ', ticket._id);
+
+        if (!(await checkRound(ticket.roundId))) {
+          this.logger.debug(`Round ${ticket.roundId} is not produced yet`);
+          continue;
+        }
+
+        try {
+          // Get ticket Id
+          const ticketId = this.stateService.boughtTickets[
+            ticket.roundId
+          ].findIndex((v) => {
+            return (
+              v.owner.toBase58() == ticket.account &&
+              v.numbers.map((n) => n.toString()).join() ===
+                ticket.numbers.join() &&
+              +v.amount == ticket.amount
+            );
+          });
+
+          if (ticketId == -1) {
+            this.logger.error(`Can't find ticket in round`, ticket);
+            continue;
+          }
+
+          // Check if it was claimed manually
+          const existingClaim = await this.claimRequestModel.findOne({
+            roundId: ticket.roundId,
+            ticketId,
+            userAddress: ticket.account,
+          });
+
+          let claimId;
+
+          if (existingClaim) {
+            claimId = existingClaim._id;
+          } else {
+            // Create request
+            const claimRequest = new this.claimRequestModel({
+              userAddress: ticket.account,
+              roundId: ticket.roundId,
+              ticketId,
+              status: 'pending',
+            });
+
+            await claimRequest.save();
+            claimId = claimRequest._id;
+          }
+
+          // Update defaultBank record
+          await this.defaultBankModel.updateOne(
+            {
+              _id: ticket._id,
+            },
+            {
+              $set: {
+                claimId,
+              },
+            },
+          );
+        } catch (e) {
+          this.logger.error(
+            `Error during claiming ticket: `,
+            ticket,
+            String(e),
+          );
+        }
+      }
+    } catch (e) {
+      this.logger.error(`Error during updateDefaultBanksClaims: `, String(e));
+    }
+  }
 
   async onApplicationBootstrap() {}
 
@@ -44,6 +155,9 @@ export class DefaultBankService implements OnApplicationBootstrap {
 
     try {
       const currentRound = await this.stateService.getCurrentRound();
+
+      this.updateDefaultBanksClaims(currentRound);
+
       const contract =
         this.stateService.state.plotteryManagers[currentRound].contract;
 
