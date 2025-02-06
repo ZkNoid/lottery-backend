@@ -12,7 +12,7 @@ import { BLOCK_PER_ROUND } from 'l1-lottery-contracts';
 import { StateService } from '../../state-service/state.service.js';
 import { fetchAccount, Mina } from 'o1js';
 
-const BLOCK_UPDATE_DEPTH = 6;
+const BLOCK_UPDATE_DEPTH = 20;
 
 @Injectable()
 export class SyncEventsService implements OnModuleInit {
