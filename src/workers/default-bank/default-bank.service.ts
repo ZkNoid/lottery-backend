@@ -9,7 +9,7 @@ import {
   DefaultBankData,
   DefaultBankDocument,
 } from '../schema/default-bank.schema.js';
-import { Ticket } from 'l1-lottery-contracts';
+import { NumberPacked, Ticket } from 'l1-lottery-contracts';
 import {
   ClaimRequestData,
   MinaClaimRequestDocument,
@@ -68,6 +68,38 @@ export class DefaultBankService implements OnApplicationBootstrap {
         }
 
         try {
+          // Get ticket numbers
+          const ticketNumbers = ticket.numbers;
+
+          // Get winning numbers
+          const plotteryContract =
+            this.stateService.state.plotteryManagers[ticket.roundId].contract;
+          const winningNumbers = NumberPacked.unpackToBigints(
+            plotteryContract.result.get(),
+          )
+            .map((v) => Number(v))
+            .slice(0, 6);
+
+          // Check them
+          let haveAnyRewards = ticketNumbers
+            .map((v, i) => v == winningNumbers[i])
+            .some((v) => v);
+
+          if (!haveAnyRewards) {
+            await this.defaultBankModel.updateOne(
+              {
+                _id: ticket._id,
+              },
+              {
+                $set: {
+                  claimId: 'No rewards',
+                },
+              },
+            );
+
+            continue;
+          }
+
           // Get ticket Id
           const ticketId = this.stateService.boughtTickets[
             ticket.roundId
