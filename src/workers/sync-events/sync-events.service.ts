@@ -178,7 +178,8 @@ export class SyncEventsService implements OnModuleInit {
         // Find equal prefix of eventsToBeDeleted and fetchedEvents. We can ommit it
         for (
           ;
-          deleteStartIndex < eventsToBeDeleted.length;
+          deleteStartIndex <
+          Math.min(eventsToBeDeleted.length, fetchedEvents.length);
           deleteStartIndex++
         ) {
           let dbEvent = eventsToBeDeleted[deleteStartIndex];
