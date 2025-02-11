@@ -156,6 +156,29 @@ export class RewardClaimerService implements OnApplicationBootstrap {
 
               const ticket = contractSM.roundTickets[ticketId];
 
+              // Check if ticket have been already claimed
+              const currentNullifierStatus = contractSM.ticketNullifierMap.get(
+                Field(ticketId),
+              );
+
+              // Skip already claimed tickets
+              if (+currentNullifierStatus == 1) {
+                this.logger.log(`Ticket was already claimed`);
+                await this.claimRequestData.updateOne(
+                  { _id: pendingRequest._id },
+                  {
+                    $set: {
+                      status: 'failed',
+                    },
+                    $push: {
+                      reasons: 'Already claimed',
+                    },
+                  },
+                );
+
+                continue;
+              }
+
               let rewardParams = await contractSM.getRewardByTicketId(ticketId);
 
               // console.log('Claiming ticket', ticket);
