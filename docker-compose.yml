@@ -11,92 +11,79 @@ services:
   api_server:
     env_file: .env
     build: .
-
     environment:
       TZ: Europe/Moscow
-
     command: sh -c "pnpm start"
     ports:
       - '5101:3040'
     restart: unless-stopped
-
     healthcheck:
       test: wget -S -O- http://api_server:3040/health-api/health || exit 1
-      interval: 5m
-      timeout: 5m
+      interval: 1m
+      timeout: 10s
       retries: 3
+      start_period: 10m
     depends_on:
       - autoheal
 
   reduce_prover:
     env_file: .env
     build: .
-
     environment:
       TZ: Europe/Moscow
-
     command: sh -c "pnpm start-rp"
     restart: unless-stopped
-
     healthcheck:
       test: wget -S -O- http://reduce_prover:3042/health-api/health || exit 1
-      interval: 5m
-      timeout: 5m
+      interval: 1m
+      timeout: 10s
       retries: 3
+      start_period: 10m
     depends_on:
       - autoheal
 
   buy_server:
     ports:
       - '3049:3049'
-
     env_file: .env
     build: .
-
     environment:
       TZ: Europe/Moscow
-
     command: sh -c "pnpm start-buy-server"
     restart: unless-stopped
-
     healthcheck:
       test: wget -S -O- http://buy_server:3049/health-api/health || exit 1
-      interval: 5m
-      timeout: 5m
+      interval: 1m
+      timeout: 10s
       retries: 3
+      start_period: 10m
     depends_on:
       - autoheal
 
   second_party:
     env_file: .env.second-party
     build: .
-
     environment:
       TZ: Europe/Moscow
-
     command: sh -c "pnpm start-second-party"
     restart: unless-stopped
-
     healthcheck:
-      test: wget -S -O- http://reduce_prover:3044/health-api/health || exit 1
-      interval: 5m
-      timeout: 5m
+      test: wget -S -O- http://second_party:3044/health-api/health || exit 1
+      interval: 1m
+      timeout: 10s
       retries: 3
+      start_period: 10m
     depends_on:
       - autoheal
 
   staketab_proxy_api:
     ports:
       - '3043:3043'
-
     env_file: .env
     build: .
-
     environment:
       TZ: Europe/Moscow
-
     command: sh -c "pnpm start-staketab-proxy"
     restart: unless-stopped
-
     depends_on:
       - autoheal
