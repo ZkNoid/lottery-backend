@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Mina, PrivateKey, Field, fetchAccount, UInt32, UInt64 } from 'o1js';
 
@@ -92,7 +92,8 @@ export class DefaultBankService implements OnApplicationBootstrap {
               },
               {
                 $set: {
-                  claimId: 'No rewards',
+                  claimId: new Types.ObjectId('000000000000000000000000'), // #TODO change it to flag processed == true
+                  comment: 'No rewards ',
                 },
               },
             );
