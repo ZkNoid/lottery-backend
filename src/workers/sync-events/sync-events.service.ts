@@ -28,6 +28,20 @@ export class SyncEventsService implements OnModuleInit {
     console.log('Initizlied');
   }
 
+  @Cron(CronExpression.EVERY_HOUR)
+  async updateRounds() {
+    if (this.stateManager.inReduceProving) {
+      console.log('It will kill reduce. Do not do it');
+      return;
+    }
+
+    try {
+      await this.stateManager.fetchRounds();
+    } catch (e) {
+      console.log('Rounds sync error', String(e));
+    }
+  }
+
   @Interval('events_sync', 30_000)
   async handleCron() {
     if (this.stateManager.inReduceProving) {
