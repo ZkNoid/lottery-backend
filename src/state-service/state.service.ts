@@ -132,14 +132,86 @@ export class StateService implements OnModuleInit {
   async fetchRounds() {
     console.log('fetchRounds');
     const state_ = new FactoryManager(false, false);
-    const events = await this.factory.fetchEvents();
+    let events = await this.factory.fetchEvents();
+
+    const defaultRounds = [
+      // Hotfix for missing fist rounds
+      {
+        event: {
+          data: {
+            round: 0,
+            randomManager: PublicKey.fromBase58(
+              'B62qnkq8azvvjVEcjqSUqDN3M8HPGvPAHfKuUfgdXgCiZioKmDkJK3o',
+            ),
+            plottery: PublicKey.fromBase58(
+              'B62qq8iczcy8F25ZPAmAAHPmQjPQQYVsfoeeYudEzjLKC23xi6rsApx',
+            ),
+          },
+        },
+      },
+      {
+        event: {
+          data: {
+            round: 1,
+            randomManager: PublicKey.fromBase58(
+              'B62qmeY6f7B1Yu6bj3KYDpTq8Gkon7SnyMGNFMvWsquW2N1QiwspKC6',
+            ),
+            plottery: PublicKey.fromBase58(
+              'B62qiqfwSLi3KCEAp2dpmmp7xEvEshbA5i88YphcBzYCabWgJ15wuqN',
+            ),
+          },
+        },
+      },
+      {
+        event: {
+          data: {
+            round: 2,
+            randomManager: PublicKey.fromBase58(
+              'B62qijJJajZ3JjsbPQfzNN8Fi4kT9ffL8rN9DCv4EiwM5gunCTRuxUk',
+            ),
+            plottery: PublicKey.fromBase58(
+              'B62qrcQJNmTmvhtsTFugTGXhdg3jtDb9Ufu24BCJam44eDtQu6EvBm3',
+            ),
+          },
+        },
+      },
+      {
+        event: {
+          data: {
+            round: 3,
+            randomManager: PublicKey.fromBase58(
+              'B62qpHSmUme9Puw3i4Vu1KeYxPVG29G8qWSKEV5fEgq6V1iBNwqg3Lm',
+            ),
+            plottery: PublicKey.fromBase58(
+              'B62qmKb7Ht9CsXPz5iog17FdkY3HPdBRvG9W6C3j6mytHc6kGmYqPoD',
+            ),
+          },
+        },
+      },
+      {
+        event: {
+          data: {
+            round: 4,
+            randomManager: PublicKey.fromBase58(
+              'B62qkSLxaf1UpD54XQPPUtypxi3twxrcPcs6zDujuY4cYQS7o49C9jV',
+            ),
+            plottery: PublicKey.fromBase58(
+              'B62qmSfzqB2ZNv5ixFh7donhFdys3NjxZtj9dcVxWA4mUi3jwiTTd54',
+            ),
+          },
+        },
+      },
+    ];
+
+    let firstEventsRound: number = (events[0].event.data as any).round;
+    events = [...(defaultRounds.slice(0, firstEventsRound) as any), ...events];
 
     events.forEach((event) => {
       // console.log(event.event.data);
       const data = event.event.data as any;
 
       // console.log(
-      //   `Adding: ${data.round} ${data.randomManager} ${data.plottery}`,
+      //   `Adding: ${data.round} ${data.randomManager.toBase58()} ${data.plottery.toBase58()}`,
       // );
 
       state_.addDeploy(data.round, data.randomManager, data.plottery);
