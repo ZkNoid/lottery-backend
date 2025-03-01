@@ -17,7 +17,7 @@ import { FactoryManager } from 'l1-lottery-contracts';
 import { PlotteryFactory } from 'l1-lottery-contracts';
 // import { ZkonRequestCoordinator, ZkonZkProgram } from 'zkon-zkapp';
 import { RandomManager } from 'l1-lottery-contracts';
-import { getCurrentSlot } from '../lib.js';
+import { getCurrentHeight, getCurrentSlot } from '../lib.js';
 import { Mutex } from 'async-mutex';
 
 @Injectable()
@@ -132,10 +132,20 @@ export class StateService implements OnModuleInit {
   async fetchRounds() {
     console.log('fetchRounds');
     const state_ = new FactoryManager(false, false);
-    let events = await this.factory.fetchEvents(UInt32.from(419984)); // From contract deploy time
+
+    let currentHeight = await getCurrentHeight();
+    let events = [];
+    const startBlock = 419984;
+
+    for (let i = startBlock; i < currentHeight; i += 10000) {
+      let newEvents = await this.factory.fetchEvents(
+        UInt32.from(i),
+        UInt32.from(i + 10000),
+      );
+      events = [...events, ...newEvents];
+    }
 
     events.forEach((event) => {
-      // console.log(event.event.data);
       const data = event.event.data as any;
 
       // console.log(

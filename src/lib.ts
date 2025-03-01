@@ -41,6 +41,13 @@ export const getCurrentSlot = async (): Promise<number> => {
     .slotSinceGenesis;
 };
 
+export const getCurrentHeight = async (): Promise<number> => {
+  const latestBlock = await getLatestBlock(process.env.NETWORK_ID);
+
+  return latestBlock.data.data.bestChain[0].protocolState.consensusState
+    .blockHeight;
+};
+
 export const LocalContext = async (zkAppAddress: PublicKey) => {
   await fetchAccount({ publicKey: zkAppAddress });
   let cachedZkappAccount = getCachedAccount(zkAppAddress, Field(1))!;
