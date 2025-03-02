@@ -140,8 +140,9 @@ export class StateService implements OnModuleInit {
     for (let i = startBlock; i < currentHeight; i += 10000) {
       let newEvents = await this.factory.fetchEvents(
         UInt32.from(i),
-        UInt32.from(i + 10000),
+        UInt32.from(i + 10000 - 1),
       );
+      // console.log(newEvents.map((x) => (x.event.data as any).round.toString()));
       events = [...events, ...newEvents];
     }
 
@@ -149,10 +150,14 @@ export class StateService implements OnModuleInit {
       const data = event.event.data as any;
 
       // console.log(
-      //   `Adding: ${data.round} ${data.randomManager.toBase58()} ${data.plottery.toBase58()}`,
+      //   `Adding: ${data.round.toString()} ${data.randomManager.toBase58()} ${data.plottery.toBase58()}`,
       // );
 
-      state_.addDeploy(data.round, data.randomManager, data.plottery);
+      try {
+        state_.addDeploy(data.round, data.randomManager, data.plottery);
+      } catch (e) {
+        console.log('Error', String(e));
+      }
     });
 
     this.state = state_;
