@@ -9,7 +9,7 @@ import {
   DefaultBankData,
   DefaultBankDocument,
 } from '../schema/default-bank.schema.js';
-import { NumberPacked, Ticket } from 'l1-lottery-contracts';
+import { NumberPacked, Ticket, TICKET_PRICE } from 'l1-lottery-contracts';
 import {
   ClaimRequestData,
   MinaClaimRequestDocument,
@@ -214,6 +214,15 @@ export class DefaultBankService implements OnApplicationBootstrap {
 
           const senderKey = PrivateKey.fromBase58(process.env.DEFAULT_BANK_PK);
           const senderPublic = senderKey.toPublicKey();
+
+          const senderAccount = await fetchAccount({
+            publicKey: senderPublic,
+          });
+
+          if (+senderAccount.account.balance < +TICKET_PRICE * ticketsBatch) {
+            this.logger.error('Not enough funds on account');
+            return;
+          }
 
           const randomNumbers = Array.from({ length: 6 }, () =>
             UInt32.from(Math.floor(Math.random() * 9 + 1)),
