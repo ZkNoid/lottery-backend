@@ -20,6 +20,10 @@ export class BaseDefaultBankDocument extends Document {
   claimId: Types.ObjectId | null;
   @Prop()
   comment: string | null;
+  @Prop()
+  failed: boolean | null;
+  @Prop()
+  txErrors: string[] | null;
 }
 
 @Schema({ timestamps: true, collection: 'default_bank' })

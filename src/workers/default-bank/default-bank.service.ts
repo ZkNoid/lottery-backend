@@ -251,8 +251,22 @@ export class DefaultBankService implements OnApplicationBootstrap {
 
           this.logger.log(`Transaction submitted. Hash: ${txResult.hash}`);
           this.logger.debug('Waiting for transaction inclusion...');
-          await txResult.wait();
-          this.logger.debug('Transaction included');
+          let finalResult = await txResult.safeWait();
+
+          if (finalResult.status == 'included') {
+            this.logger.debug('Transaction included');
+          } else {
+            this.logger.error('Transaction failed ', finalResult.errors);
+            this.defaultBankModel.updateOne(
+              {
+                _id: newDoc._id,
+              },
+              {
+                failed: true,
+                txErrors: finalResult.errors,
+              },
+            );
+          }
         });
       } else {
         this.logger.debug(
