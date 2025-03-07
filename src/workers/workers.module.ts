@@ -42,6 +42,15 @@ import { DefaultBankModule } from './default-bank/default-bank.module.js';
       }),
       inject: [ConfigService],
     }),
+
+    MongooseModule.forRootAsync({
+      connectionName: 'zkApp', // This name distinguishes the connection.
+      useFactory: async () => ({
+        uri: process.env.MONGODB_URI,
+        dbName: process.env.MONGODB_ZKAPP_DB,
+      }),
+      inject: [ConfigService],
+    }),
   ],
 })
 export class WorkersModule {}

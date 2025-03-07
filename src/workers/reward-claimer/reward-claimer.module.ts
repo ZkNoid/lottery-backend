@@ -11,6 +11,7 @@ import {
 import { StateModule } from '../../state-service/state.module.js';
 import { RoundInfoUpdaterModule } from '../round-infos-updater/round-infos-updater.module.js';
 import { RoundInfoUpdaterService } from '../round-infos-updater/round-infos-updater.service.js';
+import { TxStoreData, TxStoreDataSchema } from '../schema/txstore.schema.js';
 
 @Module({
   imports: [
@@ -21,6 +22,15 @@ import { RoundInfoUpdaterService } from '../round-infos-updater/round-infos-upda
         schema: ClaimRequestDataSchema,
       },
     ]),
+    MongooseModule.forFeature(
+      [
+        {
+          name: TxStoreData.name,
+          schema: TxStoreDataSchema,
+        },
+      ],
+      'zkApp',
+    ),
     HttpModule.registerAsync({
       useFactory: () => ({
         timeout: 5000,

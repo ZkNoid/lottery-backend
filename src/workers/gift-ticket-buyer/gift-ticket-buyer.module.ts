@@ -20,6 +20,7 @@ import {
 import { GiftCodesBuyerService } from './gift-ticket-buyer.service.js';
 import { StateService } from '../../state-service/state.service.js';
 import { StateModule } from '../../state-service/state.module.js';
+import { TxStoreData, TxStoreDataSchema } from '../schema/txstore.schema.js';
 
 @Module({
   imports: [
@@ -38,6 +39,15 @@ import { StateModule } from '../../state-service/state.module.js';
         schema: PromoQueueDataSchema,
       },
     ]),
+    MongooseModule.forFeature(
+      [
+        {
+          name: TxStoreData.name,
+          schema: TxStoreDataSchema,
+        },
+      ],
+      'zkApp',
+    ),
     HttpModule.registerAsync({
       useFactory: () => ({
         timeout: 5000,

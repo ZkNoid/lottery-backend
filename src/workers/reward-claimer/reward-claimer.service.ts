@@ -23,6 +23,7 @@ import { NetworkIds } from '../../constants/networks.js';
 import { ClaimRequestData } from '../schema/claim-request.schema.js';
 import { RoundInfoUpdaterService } from '../round-infos-updater/round-infos-updater.service.js';
 import { LocalContext } from '../../lib.js';
+import { TxStoreData } from '../schema/txstore.schema.js';
 
 const NUM_OF_ERRORS_TO_FAIL = 3;
 
@@ -36,8 +37,18 @@ export class RewardClaimerService implements OnApplicationBootstrap {
     private infoUpdater: RoundInfoUpdaterService,
     @InjectModel(ClaimRequestData.name)
     private claimRequestData: Model<ClaimRequestData>,
+    @InjectModel(TxStoreData.name, 'zkApp')
+    private txStoreData: Model<TxStoreData>,
   ) {}
   async onApplicationBootstrap() {}
+
+  async addTxToStore(userAddress: string, txHash: string) {
+    await this.txStoreData.create({
+      userAddress,
+      txHash,
+      type: 'Lottery reward claim',
+    });
+  }
 
   getRewardAmount(contract: PLottery, ticket: Ticket): number {
     try {
@@ -229,6 +240,12 @@ export class RewardClaimerService implements OnApplicationBootstrap {
 
               await tx.prove();
               const txResult = await tx.sign([signer]).send();
+
+              // Add transaction to store
+              await this.addTxToStore(
+                pendingRequest.userAddress,
+                txResult.hash,
+              );
 
               let txPromise = txResult
                 .wait()

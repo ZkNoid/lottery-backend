@@ -8,6 +8,7 @@ import { PromoQueueData } from '../schema/promo-queue.schema.js';
 import { Ticket } from 'l1-lottery-contracts';
 import { fetchAccount, Field, Mina, PrivateKey, PublicKey } from 'o1js';
 import { StateService } from '../../state-service/state.service.js';
+import { TxStoreData } from '../schema/txstore.schema.js';
 
 @Injectable()
 export class GiftCodesBuyerService implements OnApplicationBootstrap {
@@ -19,9 +20,19 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
     private promoQueueData: Model<PromoQueueData>,
     @InjectModel(GiftCodesData.name)
     private giftCodes: Model<GiftCodesData>,
+    @InjectModel(TxStoreData.name, 'zkApp')
+    private txStoreData: Model<TxStoreData>,
     private stateManager: StateService,
   ) {}
   async onApplicationBootstrap() {}
+
+  async addTxToStore(userAddress: string, txHash: string) {
+    await this.txStoreData.create({
+      userAddress,
+      txHash,
+      type: 'Gift ticket purchase',
+    });
+  }
 
   async rejectRequests(_ids: Types.ObjectId[], reason: string) {
     await this.promoQueueData.updateMany(
@@ -138,6 +149,10 @@ export class GiftCodesBuyerService implements OnApplicationBootstrap {
           },
         },
       );
+
+      for (const ticket of tickets) {
+        await this.addTxToStore(ticket.owner.toBase58(), sentTx.hash);
+      }
 
       let waitPromise = sentTx
         .wait()
