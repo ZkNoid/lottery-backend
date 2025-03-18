@@ -35,25 +35,33 @@ export class ProveReduceService implements OnApplicationBootstrap {
   }
 
   async checkConditions(round: number, currentRound: number) {
-    const contract = this.stateManager.state.plotteryManagers[round].contract;
-    const rm = this.stateManager.state.randomManagers[round].contract;
+    try {
+      const contract = this.stateManager.state.plotteryManagers[round].contract;
+      const rm = this.stateManager.state.randomManagers[round].contract;
 
-    await fetchAccount({ publicKey: contract.address });
-    await fetchAccount({ publicKey: rm.address });
+      await fetchAccount({ publicKey: contract.address });
+      await fetchAccount({ publicKey: rm.address });
 
-    const isProduced = contract.result.get();
-    const haveRandomValue = rm.result.get();
+      const isProduced = contract.result.get();
+      const haveRandomValue = rm.result.get();
 
-    console.log(
-      `Round is produced: ${(isProduced as Field).greaterThan(0).toBoolean()}`,
-    );
-    return {
-      shouldStart:
-        round < currentRound &&
-        (isProduced as Field).equals(0).toBoolean() &&
-        (haveRandomValue as Field).greaterThan(0).toBoolean(),
-      isProduced: (isProduced as Field).greaterThan(0).toBoolean(),
-    };
+      console.log(
+        `Round is produced: ${(isProduced as Field).greaterThan(0).toBoolean()}`,
+      );
+      return {
+        shouldStart:
+          round < currentRound &&
+          (isProduced as Field).equals(0).toBoolean() &&
+          (haveRandomValue as Field).greaterThan(0).toBoolean(),
+        isProduced: (isProduced as Field).greaterThan(0).toBoolean(),
+      };
+    } catch (e) {
+      console.error('Error in checkConditions', e.stack);
+      return {
+        shouldStart: false,
+        isProduced: false,
+      };
+    }
   }
 
   async reduceTickets(roundId: number): Promise<TicketReduceProof> {
