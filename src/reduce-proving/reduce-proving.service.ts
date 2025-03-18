@@ -60,6 +60,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
       return {
         shouldStart: false,
         isProduced: false,
+        failed: true,
       };
     }
   }
@@ -210,12 +211,17 @@ export class ProveReduceService implements OnApplicationBootstrap {
         roundId++
       ) {
         this.logger.debug(`Checking round ${roundId}`);
-        const { shouldStart, isProduced } = await this.checkConditions(
+        const { shouldStart, isProduced, failed } = await this.checkConditions(
           roundId,
           currentRound,
         );
 
-        console.log({ shouldStart, isProduced });
+        console.log({ shouldStart, isProduced, failed });
+
+        if (failed) {
+          this.logger.error(`Failed to check conditions for round ${roundId}`);
+          continue;
+        }
 
         if (isProduced) {
           this.lastProducedRound = roundId;
