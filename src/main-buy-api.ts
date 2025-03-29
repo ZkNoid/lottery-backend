@@ -4,6 +4,6 @@ import { BuyApiModule } from './buy-api/buy-api.module.js';
 async function bootstrap() {
   const app = await NestFactory.create(BuyApiModule);
   app.enableCors();
-  await app.listen(3049);
+  await app.listen(4049);
 }
 bootstrap();

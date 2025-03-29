@@ -15,10 +15,10 @@ services:
       TZ: Europe/Moscow
     command: sh -c "pnpm start"
     ports:
-      - '5101:3040'
+      - '6101:4040'
     restart: unless-stopped
     healthcheck:
-      test: wget -S -O- http://api_server:3040/health-api/health || exit 1
+      test: wget -S -O- http://api_server:4040/health-api/health || exit 1
       interval: 1m
       timeout: 10s
       retries: 3
@@ -34,7 +34,7 @@ services:
     command: sh -c "pnpm start-rp"
     restart: unless-stopped
     healthcheck:
-      test: wget -S -O- http://reduce_prover:3042/health-api/health || exit 1
+      test: wget -S -O- http://reduce_prover:4042/health-api/health || exit 1
       interval: 1m
       timeout: 10s
       retries: 3
@@ -44,7 +44,7 @@ services:
 
   buy_server:
     ports:
-      - '3049:3049'
+      - '4049:4049'
     env_file: .env
     build: .
     environment:
@@ -52,7 +52,7 @@ services:
     command: sh -c "pnpm start-buy-server"
     restart: unless-stopped
     healthcheck:
-      test: wget -S -O- http://buy_server:3049/health-api/health || exit 1
+      test: wget -S -O- http://buy_server:4049/health-api/health || exit 1
       interval: 1m
       timeout: 10s
       retries: 3
@@ -68,7 +68,7 @@ services:
     command: sh -c "pnpm start-second-party"
     restart: unless-stopped
     healthcheck:
-      test: wget -S -O- http://second_party:3044/health-api/health || exit 1
+      test: wget -S -O- http://second_party:4044/health-api/health || exit 1
       interval: 1m
       timeout: 10s
       retries: 3
@@ -78,7 +78,7 @@ services:
 
   staketab_proxy_api:
     ports:
-      - '3043:3043'
+      - '4043:4043'
     env_file: .env
     build: .
     environment:

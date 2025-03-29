@@ -4,6 +4,6 @@ import { ProveReduceWorkersModule } from './reduce-proving/reduce-proving.module
 async function bootstrap() {
   const app = await NestFactory.create(ProveReduceWorkersModule);
   app.enableCors();
-  await app.listen(3042);
+  await app.listen(4042);
 }
 bootstrap();
