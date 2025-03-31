@@ -25,12 +25,12 @@ import { DefaultBankModule } from './default-bank/default-bank.module.js';
       imports: [
         ZknoidConfigModule,
         SyncEventsModule,
-        CommitValueModule,
-        RevealValueModule,
+        // CommitValueModule,
+        // RevealValueModule,
         // ProduceResultModule, Removed due to updated contract architecture
         RoundInfoUpdaterModule,
-        ApproveGiftCodesModule,
-        GiftTicketBuyerModule,
+        // ApproveGiftCodesModule,
+        // GiftTicketBuyerModule,
         // QuestUpdateModule,
         RewardClaimerModule,
         // DeployRoundModule,
