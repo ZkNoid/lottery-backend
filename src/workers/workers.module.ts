@@ -33,8 +33,8 @@ import { DefaultBankModule } from './default-bank/default-bank.module.js';
         GiftTicketBuyerModule,
         // QuestUpdateModule,
         RewardClaimerModule,
-        DeployRoundModule,
-        DefaultBankModule,
+        // DeployRoundModule,
+        // DefaultBankModule,
       ],
       useFactory: async () => ({
         uri: process.env.MONGODB_URI,
