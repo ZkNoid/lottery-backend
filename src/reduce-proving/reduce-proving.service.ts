@@ -140,10 +140,8 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
         curProof = await TicketReduceProgram.addTicket(input, curProof);
 
-        console.log(action);
-        console.log(
-          `Final state after <${processedTicketData.ticketId}> ticket: ${curProof.publicOutput.finalState.toString()}`
-        );
+        console.log(action.ticket.numbers.map(v => +v));
+        
 
         // Timeout for gc
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -168,6 +166,10 @@ export class ProveReduceService implements OnApplicationBootstrap {
               reduceProof: curProof.toJSON(),
             },
           },
+        );
+
+        console.log(
+          `Final state after <${processedTicketData.ticketId}> ticket: ${curProof.publicOutput.finalState.toString()}`
         );
       }
     }
