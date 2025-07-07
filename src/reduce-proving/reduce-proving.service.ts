@@ -140,6 +140,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
         curProof = await TicketReduceProgram.addTicket(input, curProof);
 
+        console.log(action);
         console.log(
           `Final state after <${processedTicketData.ticketId}> ticket: ${curProof.publicOutput.finalState.toString()}`
         );
@@ -152,7 +153,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
           action.ticket.hash(),
         );
         lastReducedTicket++;
-        break;
+        // break;
       }
 
       if (!cached) {
