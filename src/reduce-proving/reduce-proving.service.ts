@@ -140,6 +140,10 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
         curProof = await TicketReduceProgram.addTicket(input, curProof);
 
+        console.log(
+          `Final state after <${processedTicketData.ticketId}> ticket: ${curProof.publicOutput.finalState.toString()}`
+        );
+
         // Timeout for gc
         await new Promise((resolve) => setTimeout(resolve, 100));
 
