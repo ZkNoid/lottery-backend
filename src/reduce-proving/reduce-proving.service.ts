@@ -70,6 +70,14 @@ export class ProveReduceService implements OnApplicationBootstrap {
     const contract = this.stateManager.state.plotteryManagers[roundId].contract;
     const rm = this.stateManager.state.randomManagers[roundId].contract;
     const actionLists = await contract.reducer.fetchActions();
+
+    if (
+      contract.address.toBase58() ==
+      'B62qjjeCdBR9jfmx7jGagJm4tHb7oWc8nmbrLuQPfFdtmysFQiLUH5J'
+    ) {
+      actionLists[19] = [...actionLists[19], ...actionLists[20]];
+      actionLists.splice(20, 1);
+    }
     console.log('Log 2');
 
     // Compute winning numbers
@@ -140,8 +148,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
 
         curProof = await TicketReduceProgram.addTicket(input, curProof);
 
-        console.log(action.ticket.numbers.map(v => +v));
-        
+        console.log(action.ticket.numbers.map((v) => +v));
 
         // Timeout for gc
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -151,7 +158,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
           action.ticket.hash(),
         );
         lastReducedTicket++;
-        // break;
+        break;
       }
 
       if (!cached) {
@@ -169,7 +176,7 @@ export class ProveReduceService implements OnApplicationBootstrap {
         );
 
         console.log(
-          `Final state after <${processedTicketData.ticketId}> ticket: ${curProof.publicOutput.finalState.toString()}`
+          `Final state after <${processedTicketData.ticketId}> ticket: ${curProof.publicOutput.finalState.toString()}`,
         );
       }
     }
