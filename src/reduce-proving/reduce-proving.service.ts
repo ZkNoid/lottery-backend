@@ -39,6 +39,18 @@ export class ProveReduceService implements OnApplicationBootstrap {
       const contract = this.stateManager.state.plotteryManagers[round].contract;
       const rm = this.stateManager.state.randomManagers[round].contract;
 
+      // Skip round, it is broken for now
+      if (
+        contract.address.toBase58() ==
+        'B62qjjeCdBR9jfmx7jGagJm4tHb7oWc8nmbrLuQPfFdtmysFQiLUH5J'
+      ) {
+        return {
+          shouldStart: false,
+          isProduced: true,
+          failed: false,
+        };
+      }
+
       await fetchAccount({ publicKey: contract.address });
       await fetchAccount({ publicKey: rm.address });
 
